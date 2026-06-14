@@ -3,11 +3,13 @@ using equivale.Api.Configuration;
 using equivale.Api.Middleware;
 using equivale.Application.Interfaces.Services;
 using equivale.Application.Mappings;
+using equivale.Application.Models;
 using equivale.Application.Services;
 using equivale.Infrastructure.DependencyInjection;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using Serilog;
@@ -116,6 +118,18 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowFrontend");
+
+// Serve arquivos de upload estaticamente
+var fileSettings = app.Configuration.GetSection(FileStorageSettings.SectionName).Get<FileStorageSettings>()!;
+var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), fileSettings.BasePath);
+Directory.CreateDirectory(uploadsPath); // garante que o diretorio existe
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
+    RequestPath = fileSettings.UrlPrefix,
+    ContentTypeProvider = new FileExtensionContentTypeProvider()
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

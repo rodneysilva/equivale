@@ -1,6 +1,9 @@
+using equivale.Application.Interfaces.Services;
+using equivale.Application.Models;
 using equivale.Infrastructure.Persistence;
 using equivale.Infrastructure.Repositories;
 using equivale.Infrastructure.Security;
+using equivale.Infrastructure.Storage;
 using equivale.Domain.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +17,9 @@ public static class ServiceCollectionExtensions
     {
         services.Configure<MongoDbSettings>(
             configuration.GetSection("MongoDb"));
+
+        services.Configure<FileStorageSettings>(
+            configuration.GetSection(FileStorageSettings.SectionName));
 
         services.AddSingleton<IMongoClient>(sp =>
         {
@@ -37,6 +43,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<SearchRepository>();
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
         return services;
     }
