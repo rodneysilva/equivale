@@ -11,35 +11,41 @@ public class CreateTransactionCommandHandler : IRequestHandler<CreateTransaction
 {
     private readonly ITransactionRepository _transactionRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
     public CreateTransactionCommandHandler(
         ITransactionRepository transactionRepository,
         IUserRepository userRepository,
+        IUnitOfWork unitOfWork,
         IMapper mapper)
     {
         _transactionRepository = transactionRepository;
         _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<TransactionDto> Handle(CreateTransactionCommand request, CancellationToken cancellationToken)
     {
-        var fromUser = await _userRepository.GetByIdAsync(request.Transaction.FromUserId, cancellationToken)
-            ?? throw new InvalidOperationException("Sender user not found.");
-        var toUser = await _userRepository.GetByIdAsync(request.Transaction.ToUserId, cancellationToken)
-            ?? throw new InvalidOperationException("Recipient user not found.");
+        return await _unitOfWork.ExecuteInTransactionAsync(async (session, ct) =>
+        {
+            var fromUser = await _userRepository.GetByIdAsync(request.Transaction.FromUserId, ct)
+                ?? throw new InvalidOperationException("Sender user not found.");
 
-        // Debit from sender
-        fromUser.Debit(request.Transaction.Amount);
-        // Credit to recipient
-        toUser.Credit(request.Transaction.Amount);
+            var toUser = await _userRepository.GetByIdAsync(request.Transaction.ToUserId, ct)
+                ?? throw new InvalidOperationException("Recipient user not found.");
 
-        await _userRepository.UpdateAsync(fromUser, cancellationToken);
-        await _userRepository.UpdateAsync(toUser, cancellationToken);
+            fromUser.Debit(request.Transaction.Amount);
+            toUser.Credit(request.Transaction.Amount);
 
-        var transaction = _mapper.Map<Domain.Entities.Transaction>(request.Transaction);
-        await _transactionRepository.AddAsync(transaction, cancellationToken);
-        return _mapper.Map<TransactionDto>(transaction);
+            await _userRepository.UpdateAsync(fromUser, session, ct);
+            await _userRepository.UpdateAsync(toUser, session, ct);
+
+            var transaction = _mapper.Map<Domain.Entities.Transaction>(request.Transaction);
+            await _transactionRepository.AddAsync(transaction, session, ct);
+
+            return _mapper.Map<TransactionDto>(transaction);
+        }, cancellationToken);
     }
 }
