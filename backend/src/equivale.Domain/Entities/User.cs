@@ -7,7 +7,7 @@ public class User
 {
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
-    public Email Email { get; set; } = new(string.Empty);
+    public Email Email { get; set; } = null!;
     public string PasswordHash { get; set; } = string.Empty;
     public string? AvatarUrl { get; set; }
     public string? Bio { get; set; }
