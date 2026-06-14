@@ -18,8 +18,8 @@ public class ProductService : IProductService
     public async Task<ProductDto?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
         => await _mediator.Send(new GetProductByIdQuery(id), cancellationToken);
 
-    public async Task<IReadOnlyList<ProductDto>> GetAllAsync(CancellationToken cancellationToken = default)
-        => await _mediator.Send(new GetAllProductsQuery(), cancellationToken);
+    public async Task<PagedResult<ProductDto>> GetAllAsync(PaginationParams pagination, CancellationToken cancellationToken = default)
+        => await _mediator.Send(new GetAllProductsQuery(pagination), cancellationToken);
 
     public async Task<IReadOnlyList<ProductDto>> GetBySellerAsync(string sellerId, CancellationToken cancellationToken = default)
         => await _mediator.Send(new GetProductsBySellerQuery(sellerId), cancellationToken);

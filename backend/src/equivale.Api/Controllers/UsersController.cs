@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
 using equivale.Application.Interfaces.Services;
 using equivale.Domain.Interfaces;
+using MediatR;
 
 namespace equivale.Api.Controllers;
 
@@ -12,19 +13,23 @@ public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly IUserRepository _userRepository;
+    private readonly IMediator _mediator;
 
-    public UsersController(IUserService userService, IUserRepository userRepository)
+    public UsersController(IUserService userService, IUserRepository userRepository, IMediator mediator)
     {
         _userService = userService;
         _userRepository = userRepository;
+        _mediator = mediator;
     }
 
     [HttpGet]
     [Authorize]
-    public async Task<ActionResult<IReadOnlyList<UserDto>>> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResult<UserDto>>> GetAll(
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
     {
-        var users = await _userService.GetAllAsync(cancellationToken);
-        return Ok(users);
+        var query = new Application.Queries.Users.GetAllUsersQuery(new PaginationParams { Page = page, PageSize = pageSize });
+        var result = await _mediator.Send(query, cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("{id}")]

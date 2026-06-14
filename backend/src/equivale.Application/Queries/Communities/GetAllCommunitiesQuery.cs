@@ -2,12 +2,14 @@ using AutoMapper;
 using equivale.Application.DTOs;
 using equivale.Domain.Interfaces;
 using MediatR;
+using equivale.Application.Interfaces;
+using equivale.Domain.Entities;
 
 namespace equivale.Application.Queries.Communities;
 
-public record GetAllCommunitiesQuery : IRequest<IReadOnlyList<CommunityDto>>;
+public record GetAllCommunitiesQuery(PaginationParams Pagination) : IRequest<PagedResult<CommunityDto>>;
 
-public class GetAllCommunitiesQueryHandler : IRequestHandler<GetAllCommunitiesQuery, IReadOnlyList<CommunityDto>>
+public class GetAllCommunitiesQueryHandler : IRequestHandler<GetAllCommunitiesQuery, PagedResult<CommunityDto>>
 {
     private readonly ICommunityRepository _communityRepository;
     private readonly IMapper _mapper;
@@ -18,9 +20,17 @@ public class GetAllCommunitiesQueryHandler : IRequestHandler<GetAllCommunitiesQu
         _mapper = mapper;
     }
 
-    public async Task<IReadOnlyList<CommunityDto>> Handle(GetAllCommunitiesQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<CommunityDto>> Handle(GetAllCommunitiesQuery request, CancellationToken cancellationToken)
     {
-        var communities = await _communityRepository.GetAllAsync(cancellationToken);
-        return communities.Select(_mapper.Map<CommunityDto>).ToList().AsReadOnly();
+        var (items, total) = await ((IPaginatedRepository<Domain.Entities.Community>)_communityRepository)
+            .GetPagedAsync(request.Pagination.Page, request.Pagination.PageSize, cancellationToken);
+
+        return new PagedResult<CommunityDto>
+        {
+            Items = items.Select(_mapper.Map<CommunityDto>).ToList(),
+            Page = request.Pagination.Page,
+            PageSize = request.Pagination.PageSize,
+            TotalItems = total
+        };
     }
 }

@@ -18,8 +18,8 @@ public class CommunityService : ICommunityService
     public async Task<CommunityDto?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
         => await _mediator.Send(new GetCommunityByIdQuery(id), cancellationToken);
 
-    public async Task<IReadOnlyList<CommunityDto>> GetAllAsync(CancellationToken cancellationToken = default)
-        => await _mediator.Send(new GetAllCommunitiesQuery(), cancellationToken);
+    public async Task<PagedResult<CommunityDto>> GetAllAsync(PaginationParams pagination, CancellationToken cancellationToken = default)
+        => await _mediator.Send(new GetAllCommunitiesQuery(pagination), cancellationToken);
 
     public async Task<CommunityDto> CreateAsync(CreateCommunityDto dto, CancellationToken cancellationToken = default)
         => await _mediator.Send(new CreateCommunityCommand(dto), cancellationToken);

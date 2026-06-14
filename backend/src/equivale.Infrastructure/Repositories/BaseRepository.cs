@@ -1,10 +1,11 @@
 using MongoDB.Driver;
+using equivale.Application.Interfaces;
 using equivale.Domain.Interfaces;
 using equivale.Infrastructure.Persistence;
 
 namespace equivale.Infrastructure.Repositories;
 
-public class BaseRepository<T> : IBaseRepository<T>, ITransactionalRepository<T> where T : class
+public class BaseRepository<T> : IBaseRepository<T>, ITransactionalRepository<T>, IPaginatedRepository<T> where T : class
 {
     protected readonly IMongoCollection<T> _collection;
 
@@ -69,6 +70,19 @@ public class BaseRepository<T> : IBaseRepository<T>, ITransactionalRepository<T>
         var mongoSession = ResolveMongoSession(session);
         var filter = Builders<T>.Filter.Eq("_id", id);
         await _collection.DeleteOneAsync(mongoSession, filter, cancellationToken: cancellationToken);
+    }
+
+    public virtual async Task<(IReadOnlyList<T> Items, int Total)> GetPagedAsync(
+        int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var skip = (page - 1) * pageSize;
+        var total = (int)await _collection.CountDocumentsAsync(_ => true, cancellationToken: cancellationToken);
+        var items = await _collection
+            .Find(_ => true)
+            .Skip(skip)
+            .Limit(pageSize)
+            .ToListAsync(cancellationToken);
+        return (items.AsReadOnly(), total);
     }
 
     private static IClientSessionHandle ResolveMongoSession(IDbSession session)

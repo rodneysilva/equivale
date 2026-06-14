@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
 using equivale.Application.Interfaces.Services;
 using equivale.Domain.Interfaces;
+using MediatR;
 
 namespace equivale.Api.Controllers;
 
@@ -12,18 +13,22 @@ public class CommunitiesController : ControllerBase
 {
     private readonly ICommunityService _communityService;
     private readonly ICommunityRepository _communityRepository;
+    private readonly IMediator _mediator;
 
-    public CommunitiesController(ICommunityService communityService, ICommunityRepository communityRepository)
+    public CommunitiesController(ICommunityService communityService, ICommunityRepository communityRepository, IMediator mediator)
     {
         _communityService = communityService;
         _communityRepository = communityRepository;
+        _mediator = mediator;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<CommunityDto>>> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResult<CommunityDto>>> GetAll(
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
     {
-        var communities = await _communityService.GetAllAsync(cancellationToken);
-        return Ok(communities);
+        var query = new Application.Queries.Communities.GetAllCommunitiesQuery(new PaginationParams { Page = page, PageSize = pageSize });
+        var result = await _mediator.Send(query, cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("{id}")]

@@ -18,8 +18,8 @@ public class ServiceService : IServiceService
     public async Task<ServiceDto?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
         => await _mediator.Send(new GetServiceByIdQuery(id), cancellationToken);
 
-    public async Task<IReadOnlyList<ServiceDto>> GetAllAsync(CancellationToken cancellationToken = default)
-        => await _mediator.Send(new GetAllServicesQuery(), cancellationToken);
+    public async Task<PagedResult<ServiceDto>> GetAllAsync(PaginationParams pagination, CancellationToken cancellationToken = default)
+        => await _mediator.Send(new GetAllServicesQuery(pagination), cancellationToken);
 
     public async Task<IReadOnlyList<ServiceDto>> GetByProviderAsync(string providerId, CancellationToken cancellationToken = default)
         => await _mediator.Send(new GetServicesByProviderQuery(providerId), cancellationToken);

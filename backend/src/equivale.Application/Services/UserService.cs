@@ -18,8 +18,8 @@ public class UserService : IUserService
     public async Task<UserDto?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
         => await _mediator.Send(new GetUserByIdQuery(id), cancellationToken);
 
-    public async Task<IReadOnlyList<UserDto>> GetAllAsync(CancellationToken cancellationToken = default)
-        => await _mediator.Send(new GetAllUsersQuery(), cancellationToken);
+    public async Task<PagedResult<UserDto>> GetAllAsync(PaginationParams pagination, CancellationToken cancellationToken = default)
+        => await _mediator.Send(new GetAllUsersQuery(pagination), cancellationToken);
 
     public async Task<UserDto> CreateAsync(CreateUserDto dto, CancellationToken cancellationToken = default)
         => await _mediator.Send(new CreateUserCommand(dto), cancellationToken);

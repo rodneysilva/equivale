@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
 using equivale.Application.Interfaces.Services;
 using equivale.Domain.Interfaces;
+using MediatR;
 
 namespace equivale.Api.Controllers;
 
@@ -12,18 +13,22 @@ public class ProductsController : ControllerBase
 {
     private readonly IProductService _productService;
     private readonly IProductRepository _productRepository;
+    private readonly IMediator _mediator;
 
-    public ProductsController(IProductService productService, IProductRepository productRepository)
+    public ProductsController(IProductService productService, IProductRepository productRepository, IMediator mediator)
     {
         _productService = productService;
         _productRepository = productRepository;
+        _mediator = mediator;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<ProductDto>>> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResult<ProductDto>>> GetAll(
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
     {
-        var products = await _productService.GetAllAsync(cancellationToken);
-        return Ok(products);
+        var query = new Application.Queries.Products.GetAllProductsQuery(new PaginationParams { Page = page, PageSize = pageSize });
+        var result = await _mediator.Send(query, cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("{id}")]

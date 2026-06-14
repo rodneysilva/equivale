@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
 using equivale.Application.Interfaces.Services;
 using equivale.Domain.Interfaces;
+using MediatR;
 
 namespace equivale.Api.Controllers;
 
@@ -12,18 +13,22 @@ public class ServicesController : ControllerBase
 {
     private readonly IServiceService _serviceService;
     private readonly IServiceRepository _serviceRepository;
+    private readonly IMediator _mediator;
 
-    public ServicesController(IServiceService serviceService, IServiceRepository serviceRepository)
+    public ServicesController(IServiceService serviceService, IServiceRepository serviceRepository, IMediator mediator)
     {
         _serviceService = serviceService;
         _serviceRepository = serviceRepository;
+        _mediator = mediator;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<ServiceDto>>> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResult<ServiceDto>>> GetAll(
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
     {
-        var services = await _serviceService.GetAllAsync(cancellationToken);
-        return Ok(services);
+        var query = new Application.Queries.Services.GetAllServicesQuery(new PaginationParams { Page = page, PageSize = pageSize });
+        var result = await _mediator.Send(query, cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("{id}")]

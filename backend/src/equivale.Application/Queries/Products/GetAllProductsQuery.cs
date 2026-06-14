@@ -2,12 +2,14 @@ using AutoMapper;
 using equivale.Application.DTOs;
 using equivale.Domain.Interfaces;
 using MediatR;
+using equivale.Application.Interfaces;
+using equivale.Domain.Entities;
 
 namespace equivale.Application.Queries.Products;
 
-public record GetAllProductsQuery : IRequest<IReadOnlyList<ProductDto>>;
+public record GetAllProductsQuery(PaginationParams Pagination) : IRequest<PagedResult<ProductDto>>;
 
-public class GetAllProductsQueryHandler : IRequestHandler<GetAllProductsQuery, IReadOnlyList<ProductDto>>
+public class GetAllProductsQueryHandler : IRequestHandler<GetAllProductsQuery, PagedResult<ProductDto>>
 {
     private readonly IProductRepository _productRepository;
     private readonly IMapper _mapper;
@@ -18,9 +20,17 @@ public class GetAllProductsQueryHandler : IRequestHandler<GetAllProductsQuery, I
         _mapper = mapper;
     }
 
-    public async Task<IReadOnlyList<ProductDto>> Handle(GetAllProductsQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<ProductDto>> Handle(GetAllProductsQuery request, CancellationToken cancellationToken)
     {
-        var products = await _productRepository.GetAllAsync(cancellationToken);
-        return products.Select(_mapper.Map<ProductDto>).ToList().AsReadOnly();
+        var (items, total) = await ((IPaginatedRepository<Domain.Entities.Product>)_productRepository)
+            .GetPagedAsync(request.Pagination.Page, request.Pagination.PageSize, cancellationToken);
+
+        return new PagedResult<ProductDto>
+        {
+            Items = items.Select(_mapper.Map<ProductDto>).ToList(),
+            Page = request.Pagination.Page,
+            PageSize = request.Pagination.PageSize,
+            TotalItems = total
+        };
     }
 }
