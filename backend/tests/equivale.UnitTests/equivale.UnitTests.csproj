@@ -24,6 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\equivale.Domain\equivale.Domain.csproj" />
     <ProjectReference Include="..\..\src\equivale.Application\equivale.Application.csproj" />
+    <ProjectReference Include="..\..\src\equivale.Infrastructure\equivale.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
