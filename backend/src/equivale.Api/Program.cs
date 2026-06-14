@@ -9,8 +9,19 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Serilog - Logging estruturado
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Application", "Equivale.Api")
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -41,6 +52,13 @@ builder.Services.AddScoped<IServiceService, ServiceService>();
 builder.Services.AddScoped<ICommunityService, CommunityService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+
+// Health Checks - usa o IMongoClient ja registrado pelo Infrastructure
+builder.Services.AddHealthChecks()
+    .AddMongoDb(
+        sp => sp.GetRequiredService<IMongoClient>(),
+        name: "mongodb",
+        tags: ["db", "ready"]);
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()!;
@@ -84,6 +102,13 @@ var app = builder.Build();
 // Configure the HTTP request pipeline
 app.UseGlobalExceptionHandling();
 
+// Health Checks endpoints
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -95,4 +120,16 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-app.Run();
+try
+{
+    Log.Information("Starting Equivale API v{Version}", typeof(Program).Assembly.GetName().Version?.ToString() ?? "1.0.0");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
