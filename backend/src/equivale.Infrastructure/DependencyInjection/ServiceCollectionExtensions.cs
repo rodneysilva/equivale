@@ -1,5 +1,6 @@
 using equivale.Infrastructure.Persistence;
 using equivale.Infrastructure.Repositories;
+using equivale.Infrastructure.Security;
 using equivale.Domain.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +28,7 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddRepositories(this IServiceCollection services)
     {
+        services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IServiceRepository, ServiceRepository>();

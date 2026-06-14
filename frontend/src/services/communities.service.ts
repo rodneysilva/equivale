@@ -4,7 +4,8 @@ import type { Community, CreateCommunityDto } from '../types';
 export const communitiesService = {
   async getAll(page = 1, pageSize = 12): Promise<{ data: Community[]; total: number }> {
     const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
-    return api.get<{ data: Community[]; total: number }>(`/communities?${params}`);
+    const items = await api.get<Community[]>(`/communities?${params}`);
+    return { data: items, total: items.length };
   },
 
   async getById(id: string): Promise<Community> {

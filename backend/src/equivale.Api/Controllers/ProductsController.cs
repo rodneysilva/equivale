@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
 using equivale.Application.Interfaces.Services;
@@ -34,6 +35,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<ProductDto>> Create([FromBody] CreateProductDto dto, CancellationToken cancellationToken)
     {
         var product = await _productService.CreateAsync(dto, cancellationToken);
@@ -41,6 +43,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize]
     public async Task<ActionResult<ProductDto>> Update(string id, [FromBody] CreateProductDto dto, CancellationToken cancellationToken)
     {
         var product = await _productService.UpdateAsync(id, dto, cancellationToken);
@@ -49,6 +52,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize]
     public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
     {
         await _productService.DeleteAsync(id, cancellationToken);

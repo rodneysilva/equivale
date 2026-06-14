@@ -6,7 +6,7 @@ import CategoryFilter from '../components/marketplace/CategoryFilter';
 import GlassCard from '../components/ui/GlassCard';
 import type { Product } from '../types';
 
-const categories = ['Eletrônicos', 'Roupas', 'Livros', 'Casa & Jardim', 'Esportes', 'Arte', 'Música', 'Outros'];
+const categories = ['Artesanato', 'Fotografia', 'Arte', 'Madeira', 'Alimentacao', 'Jardinagem', 'Tecnologia', 'Bem-estar'];
 
 const ProductsPage: Component = () => {
   const [products, setProducts] = createSignal<Product[]>([]);

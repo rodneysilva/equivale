@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
 using equivale.Application.Interfaces.Services;
@@ -34,6 +35,7 @@ public class ServicesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<ServiceDto>> Create([FromBody] CreateServiceDto dto, CancellationToken cancellationToken)
     {
         var service = await _serviceService.CreateAsync(dto, cancellationToken);
@@ -41,6 +43,7 @@ public class ServicesController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize]
     public async Task<ActionResult<ServiceDto>> Update(string id, [FromBody] CreateServiceDto dto, CancellationToken cancellationToken)
     {
         var service = await _serviceService.UpdateAsync(id, dto, cancellationToken);
@@ -49,6 +52,7 @@ public class ServicesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize]
     public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
     {
         await _serviceService.DeleteAsync(id, cancellationToken);

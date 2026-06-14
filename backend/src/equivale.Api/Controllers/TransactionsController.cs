@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
 using equivale.Application.Interfaces.Services;
@@ -16,6 +17,7 @@ public class TransactionsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<TransactionDto>> Create([FromBody] CreateTransactionDto dto, CancellationToken cancellationToken)
     {
         try
@@ -30,6 +32,7 @@ public class TransactionsController : ControllerBase
     }
 
     [HttpGet("user/{userId}")]
+    [Authorize]
     public async Task<ActionResult<IReadOnlyList<TransactionDto>>> GetByUser(string userId, CancellationToken cancellationToken)
     {
         var transactions = await _transactionService.GetByUserAsync(userId, cancellationToken);
@@ -37,6 +40,7 @@ public class TransactionsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize]
     public async Task<ActionResult<TransactionDto>> GetById(string id, CancellationToken cancellationToken)
     {
         var transaction = await _transactionService.GetByIdAsync(id, cancellationToken);

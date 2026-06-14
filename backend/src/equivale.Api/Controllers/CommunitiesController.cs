@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
 using equivale.Application.Interfaces.Services;
@@ -34,6 +35,7 @@ public class CommunitiesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<CommunityDto>> Create([FromBody] CreateCommunityDto dto, CancellationToken cancellationToken)
     {
         var community = await _communityService.CreateAsync(dto, cancellationToken);
@@ -41,6 +43,7 @@ public class CommunitiesController : ControllerBase
     }
 
     [HttpPost("{id}/join")]
+    [Authorize]
     public async Task<IActionResult> Join(string id, [FromQuery] string userId, CancellationToken cancellationToken)
     {
         await _communityService.JoinAsync(id, userId, cancellationToken);

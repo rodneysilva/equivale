@@ -1,9 +1,12 @@
 using System.Text;
 using equivale.Api.Configuration;
+using equivale.Api.Middleware;
 using equivale.Application.Interfaces.Services;
 using equivale.Application.Mappings;
 using equivale.Application.Services;
 using equivale.Infrastructure.DependencyInjection;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -14,6 +17,10 @@ builder.Services.AddControllers();
 
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+// FluentValidation
+builder.Services.AddValidatorsFromAssembly(typeof(MappingProfile).Assembly);
+builder.Services.AddFluentValidationAutoValidation();
 
 // MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(MappingProfile).Assembly));
@@ -75,6 +82,8 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
+app.UseGlobalExceptionHandling();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

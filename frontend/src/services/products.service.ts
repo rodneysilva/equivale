@@ -2,11 +2,12 @@ import { api } from './api';
 import type { Product, CreateProductDto, UpdateProductDto, PaginatedResponse } from '../types';
 
 export const productsService = {
-  async getAll(page = 1, pageSize = 12, category?: string, search?: string): Promise<PaginatedResponse<Product>> {
+  async getAll(page = 1, pageSize = 12, category?: string, search?: string): Promise<{ data: Product[]; totalPages: number }> {
     const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
     if (category) params.set('category', category);
     if (search) params.set('search', search);
-    return api.get<PaginatedResponse<Product>>(`/products?${params}`);
+    const items = await api.get<Product[]>(`/products?${params}`);
+    return { data: items, totalPages: 1 };
   },
 
   async getById(id: string): Promise<Product> {

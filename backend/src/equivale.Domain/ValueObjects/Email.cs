@@ -1,24 +1,35 @@
-using System.Text.RegularExpressions;
-
 namespace equivale.Domain.ValueObjects;
 
-public sealed record Email
+/// <summary>
+/// Value Object que representa um endereco de email validado.
+/// </summary>
+public sealed class Email : IEquatable<Email>
 {
-    public string Value { get; }
+    public string Address { get; }
 
-    private Email(string value) => Value = value;
+    private Email() { Address = string.Empty; } // MongoDB deserialization
 
-    public static Email Create(string value)
+    public Email(string address)
     {
-        if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException("Email cannot be empty.", nameof(value));
+        if (string.IsNullOrWhiteSpace(address))
+            throw new ArgumentException("Email cannot be empty.", nameof(address));
 
-        var pattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
-        if (!Regex.IsMatch(value, pattern))
-            throw new ArgumentException("Invalid email format.", nameof(value));
+        var trimmed = address.Trim().ToLowerInvariant();
 
-        return new Email(value.ToLowerInvariant());
+        if (!trimmed.Contains('@') || !trimmed.Split('@')[1].Contains('.'))
+            throw new ArgumentException("Invalid email format.", nameof(address));
+
+        Address = trimmed;
     }
 
-    public static implicit operator string(Email email) => email.Value;
+    public static implicit operator string(Email email) => email.Address;
+    public static implicit operator Email(string address) => new(address);
+
+    public override string ToString() => Address;
+    public override bool Equals(object? obj) => obj is Email other && Address == other.Address;
+    public override int GetHashCode() => Address.GetHashCode();
+    public bool Equals(Email? other) => other is not null && Address == other.Address;
+
+    public static bool operator ==(Email? left, Email? right) => Equals(left, right);
+    public static bool operator !=(Email? left, Email? right) => !Equals(left, right);
 }

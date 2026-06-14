@@ -1,0 +1,76 @@
+{
+  "users": [
+    {"id": "user_admin", "name": "Admin Equivale", "email": "admin@equivale.com", "bio": "Administrador da plataforma.", "role": 0, "wallet": 0, "days": 90},
+    {"id": "user_maria", "name": "Maria Oliveira", "email": "maria@email.com", "bio": "Apaixonada por artesanato e costura. Croche e patchwork ha 10 anos.", "role": 1, "wallet": 350, "days": 60},
+    {"id": "user_joao", "name": "Joao Silva", "email": "joao@email.com", "bio": "Desenvolvedor full-stack e professor de programacao.", "role": 1, "wallet": 500, "days": 55},
+    {"id": "user_ana", "name": "Ana Costa", "email": "ana@email.com", "bio": "Nutricionista e cozinheira amadora. Especialista em comida vegana.", "role": 1, "wallet": 200, "days": 45},
+    {"id": "user_carlos", "name": "Carlos Mendes", "email": "carlos@email.com", "bio": "Fotografo freelancer e designer grafico.", "role": 1, "wallet": 420, "days": 40},
+    {"id": "user_lucia", "name": "Lucia Ferreira", "email": "lucia@email.com", "bio": "Professora de yoga e meditacao. Terapeuta holistica.", "role": 1, "wallet": 180, "days": 35},
+    {"id": "user_pedro", "name": "Pedro Santos", "email": "pedro@email.com", "bio": "Marceneiro e restaurador de moveis. Transformo madeira velha em arte.", "role": 1, "wallet": 275, "days": 30},
+    {"id": "user_julia", "name": "Julia Almeida", "email": "julia@email.com", "bio": "Musicista e professora de violao.", "role": 1, "wallet": 310, "days": 25},
+    {"id": "user_rafael", "name": "Rafael Lima", "email": "rafael@email.com", "bio": "Jardineiro e paisagista. Cultivo orquideas e plantas raras.", "role": 1, "wallet": 150, "days": 20}
+  ],
+  "products": [
+    {"id": "prod_01", "seller": "user_maria", "title": "Cachecol de Croche Artesanal", "desc": "Cachecol feito a mao com fio de algodao organico. Padrao exclusivo em tons terrosos. Tamanho universal.", "category": "Artesanato", "price": 45, "days": 20},
+    {"id": "prod_02", "seller": "user_maria", "title": "Conjunto Amigurumi - Familia de Ursos", "desc": "Conjunto com 4 ursinhos de croche (papai, mamae e 2 filhotes). Fio acrilico premium, seguro para criancas.", "category": "Artesanato", "price": 65, "days": 15},
+    {"id": "prod_03", "seller": "user_carlos", "title": "Kit Fotografico para Retrato em Casa", "desc": "Guia completo + templates de iluminacao caseira para fotos de retrato profissional. Inclui presets.", "category": "Fotografia", "price": 30, "days": 18},
+    {"id": "prod_04", "seller": "user_carlos", "title": "Impressao Fine Art A3 - Paisagem Brasileira", "desc": "Impressao em papel algodao 300g de paisagem do litoral paulista. Edicao limitada e assinada.", "category": "Arte", "price": 55, "days": 12},
+    {"id": "prod_05", "seller": "user_pedro", "title": "Banqueta de Madeira de Demolicao", "desc": "Banqueta rustica com madeira reaproveitada de construcoes. Acabamento em oleo natural. Cada peca e unica.", "category": "Madeira", "price": 80, "days": 10},
+    {"id": "prod_06", "seller": "user_pedro", "title": "Estante Flutuante de Pallet", "desc": "Estante com pallets tratados e lixados. Perfeita para livros e plantas. 1m x 0.60m.", "category": "Madeira", "price": 95, "days": 8},
+    {"id": "prod_07", "seller": "user_ana", "title": "Kit de Temperos Artesanais - 5 Especiarias", "desc": "Paprica defumada, curcuma, pimenta dedo-de-moca, alecrim seco e mix de ervas finas. Embalagem sustentavel.", "category": "Alimentacao", "price": 25, "days": 14},
+    {"id": "prod_08", "seller": "user_ana", "title": "Geleia de Pimenta com Manga", "desc": "Geleia artesanal de manga com pimenta biquinho. Perfeita para queijos e carnes. Pote de 250g.", "category": "Alimentacao", "price": 20, "days": 7},
+    {"id": "prod_09", "seller": "user_rafael", "title": "Muda de Orquidea Phalaenopsis", "desc": "Muda saudavel de orquidea Phalaenopsis branca. Inclui substrato e guia de cuidados. Vaso de ceramica.", "category": "Jardinagem", "price": 50, "days": 16},
+    {"id": "prod_10", "seller": "user_rafael", "title": "Kit de Suculentas Raras - 6 Variedades", "desc": "6 mudas de suculentas raras em vasinhos de barro. Echeveria, Haworthia, Lithops e mais.", "category": "Jardinagem", "price": 35, "days": 5},
+    {"id": "prod_11", "seller": "user_julia", "title": "Pulseira de Sementes e Cordao", "desc": "Pulseira com sementes de acai e cordao de algodao trancado a mao. Design boho.", "category": "Artesanato", "price": 15, "days": 11},
+    {"id": "prod_12", "seller": "user_joao", "title": "Template de Portfolio para Devs", "desc": "Template HTML/CSS/JS responsivo para portfolio de desenvolvedores. Secoes de projetos, blog e contato.", "category": "Tecnologia", "price": 40, "days": 13},
+    {"id": "prod_13", "seller": "user_lucia", "title": "Kit de Incensos Artesanais - 10 Un.", "desc": "Incensos com ervas naturais e oleos essenciais. Lavanda, sandalo, alecrim, eucalipto e mais.", "category": "Bem-estar", "price": 22, "days": 9},
+    {"id": "prod_14", "seller": "user_lucia", "title": "Vela Aromatica de Cera de Soja", "desc": "Vela de cera de soja 100% natural com oleo de laranja doce e canela. Duracao ~40h.", "category": "Bem-estar", "price": 28, "days": 3},
+    {"id": "prod_15", "seller": "user_carlos", "title": "Presets Lightroom - Pack Natureza", "desc": "15 presets para Lightroom com foco em paisagens brasileiras. Tons quentes e vibrantes.", "category": "Fotografia", "price": 20, "days": 2}
+  ],
+  "services": [
+    {"id": "serv_01", "provider": "user_joao", "title": "Aula Particular de JavaScript/TypeScript", "desc": "Aula de 1h para iniciantes ou intermediarios. Criamos um mini-projeto real juntos.", "category": "Educacao", "price": 35, "dur": "01:00", "location": "Online (Google Meet)", "days": 25},
+    {"id": "serv_02", "provider": "user_joao", "title": "Review e Refatoracao de Codigo", "desc": "Analiso seu codigo, dou feedback detalhado e sugiro melhorias de performance e boas praticas.", "category": "Tecnologia", "price": 50, "dur": "02:00", "location": "Online (assincrono)", "days": 18},
+    {"id": "serv_03", "provider": "user_ana", "title": "Cardapio Semanal Vegano", "desc": "Cardapio completo de 7 dias com receitas, lista de compras e dicas de preparo. 100% vegano.", "category": "Culinaria", "price": 40, "dur": "00:30", "location": "Online", "days": 20},
+    {"id": "serv_04", "provider": "user_ana", "title": "Aula de Culinaria - Massa Fresca", "desc": "Aula de 2h: pasta, nhoque e ravioli do zero. Inclui lista de ingredientes.", "category": "Culinaria", "price": 55, "dur": "02:00", "location": "Presencial - Sao Paulo", "days": 12},
+    {"id": "serv_05", "provider": "user_carlos", "title": "Ensaio Fotografico Profissional", "desc": "Ensaio de 1h em estudio ou local externo. 15 fotos editadas em alta resolucao.", "category": "Fotografia", "price": 100, "dur": "01:00", "location": "Sao Paulo capital", "days": 15},
+    {"id": "serv_06", "provider": "user_carlos", "title": "Design de Logo para Seu Projeto", "desc": "3 opcoes de logo. Inclui revisoes e entrega em PNG, SVG e PDF.", "category": "Design", "price": 75, "dur": "03:00", "location": "Online", "days": 8},
+    {"id": "serv_07", "provider": "user_lucia", "title": "Sessao de Yoga e Meditacao", "desc": "Sessao de 1h de Hatha Yoga e meditacao guiada. Adapta para todos os niveis.", "category": "Saude", "price": 30, "dur": "01:00", "location": "Online ou presencial", "days": 22},
+    {"id": "serv_08", "provider": "user_lucia", "title": "Consultoria de Bem-Estar", "desc": "Avaliacao de habitos diarios e plano de rotina saudavel. Acompanhamento por 2 semanas.", "category": "Saude", "price": 60, "dur": "01:30", "location": "Online", "days": 10},
+    {"id": "serv_09", "provider": "user_pedro", "title": "Restauracao de Movel Antigo", "desc": "Restauracao de 1 movel pequeno. Lixamento, pintura e acabamento.", "category": "Madeira", "price": 90, "dur": "05:00", "location": "Domicilio - Sao Paulo", "days": 17},
+    {"id": "serv_10", "provider": "user_julia", "title": "Aula de Violao para Iniciantes", "desc": "Aula de 1h para quem nunca tocou. Aprenda acordes basicos e sua primeira musica.", "category": "Musica", "price": 25, "dur": "01:00", "location": "Online ou presencial", "days": 14},
+    {"id": "serv_11", "provider": "user_julia", "title": "Seresta Personalizada - 3 Musicas", "desc": "Gravo 3 musicas em violao e voz com video HD para presentear.", "category": "Musica", "price": 70, "dur": "02:00", "location": "Online", "days": 6},
+    {"id": "serv_12", "provider": "user_rafael", "title": "Projeto de Jardim Pequeno", "desc": "Projeto para jardim de ate 20m2: plantas, disposicao, substrato e cronograma.", "category": "Jardinagem", "price": 45, "dur": "01:00", "location": "Online com visita opcional", "days": 9}
+  ],
+  "communities": [
+    {"id": "comm_01", "name": "Artesaos do Brasil", "desc": "Comunidade para artesanato: croche, trico, patchwork, ceramica e mais.", "creator": "user_maria", "members": ["user_maria", "user_ana", "user_julia", "user_lucia", "user_rafael"], "days": 50, "days2": 5},
+    {"id": "comm_02", "name": "Dev Exchange", "desc": "Desenvolvedores trocando conhecimento. Codigo review, pair programming, mentorias.", "creator": "user_joao", "members": ["user_joao", "user_carlos", "user_pedro"], "days": 40, "days2": 3},
+    {"id": "comm_03", "name": "Cozinha Colaborativa", "desc": "Receitas, dicas de culinaria e troca de alimentos artesanais.", "creator": "user_ana", "members": ["user_ana", "user_maria", "user_joao", "user_carlos", "user_julia", "user_pedro", "user_rafael"], "days": 35, "days2": 2},
+    {"id": "comm_04", "name": "Bem-Estar e Mindfulness", "desc": "Praticas de yoga, meditacao, alimentacao saudavel e cuidados com mente e corpo.", "creator": "user_lucia", "members": ["user_lucia", "user_ana", "user_julia", "user_maria"], "days": 30, "days2": 7},
+    {"id": "comm_05", "name": "Mao na Massa - Marcenaria", "desc": "Marceneiros e entusiastas de madeira. Projetos DIY e tecnicas.", "creator": "user_pedro", "members": ["user_pedro", "user_joao", "user_rafael"], "days": 25, "days2": 10},
+    {"id": "comm_06", "name": "Musicos Independentes", "desc": "Musicos para colaboracoes, jams e troca de servicos.", "creator": "user_julia", "members": ["user_julia", "user_carlos", "user_lucia", "user_ana"], "days": 15, "days2": 1}
+  ],
+  "transactions": [
+    {"id": "txn_01", "from": "user_joao", "to": "user_maria", "amount": 45, "desc": "Compra: Cachecol de Croche", "type": 0, "item": "prod_01", "days": 18},
+    {"id": "txn_02", "from": "user_carlos", "to": "user_joao", "amount": 50, "desc": "Compra: Review de Codigo", "type": 0, "item": "serv_02", "days": 16},
+    {"id": "txn_03", "from": "user_maria", "to": "user_lucia", "amount": 30, "desc": "Compra: Sessao de Yoga", "type": 0, "item": "serv_07", "days": 14},
+    {"id": "txn_04", "from": "user_ana", "to": "user_pedro", "amount": 90, "desc": "Compra: Restauracao Movel", "type": 0, "item": "serv_09", "days": 12},
+    {"id": "txn_05", "from": "user_julia", "to": "user_ana", "amount": 40, "desc": "Compra: Cardapio Vegano", "type": 0, "item": "serv_03", "days": 10},
+    {"id": "txn_06", "from": "user_rafael", "to": "user_carlos", "amount": 100, "desc": "Compra: Ensaio Fotografico", "type": 0, "item": "serv_05", "days": 8},
+    {"id": "txn_07", "from": "user_pedro", "to": "user_rafael", "amount": 50, "desc": "Compra: Orquidea", "type": 0, "item": "prod_09", "days": 6},
+    {"id": "txn_08", "from": "user_admin", "to": "user_joao", "amount": 100, "desc": "Bonus de boas-vindas", "type": 2, "item": null, "days": 55},
+    {"id": "txn_09", "from": "user_admin", "to": "user_maria", "amount": 100, "desc": "Bonus de boas-vindas", "type": 2, "item": null, "days": 60},
+    {"id": "txn_10", "from": "user_joao", "to": "user_julia", "amount": 25, "desc": "Transferencia: ajuda", "type": 1, "item": null, "days": 4}
+  ],
+  "reviews": [
+    {"id": "rev_01", "reviewer": "user_joao", "target": "user_maria", "item": "prod_01", "type": "Product", "rating": 5, "comment": "Cachecol lindo! A Maria foi super atenciosa e a qualidade e incrivel.", "days": 17},
+    {"id": "rev_02", "reviewer": "user_carlos", "target": "user_joao", "item": "serv_02", "type": "Service", "rating": 5, "comment": "Excelente review! Joao encontrou bugs que eu nao tinha percebido.", "days": 15},
+    {"id": "rev_03", "reviewer": "user_maria", "target": "user_lucia", "item": "serv_07", "type": "Service", "rating": 4, "comment": "Sessao muito relaxante. Me senti renovada!", "days": 13},
+    {"id": "rev_04", "reviewer": "user_ana", "target": "user_pedro", "item": "serv_09", "type": "Service", "rating": 5, "comment": "Pedro e um artesao! Minha cadeira ficou melhor que o original.", "days": 11},
+    {"id": "rev_05", "reviewer": "user_julia", "target": "user_ana", "item": "serv_03", "type": "Service", "rating": 5, "comment": "Cardapio incrivel! Receitas faceis e muito saborosas.", "days": 9},
+    {"id": "rev_06", "reviewer": "user_rafael", "target": "user_carlos", "item": "serv_05", "type": "Service", "rating": 5, "comment": "Melhor ensaio que ja fiz! Carlos tem um olhar unico.", "days": 7},
+    {"id": "rev_07", "reviewer": "user_pedro", "target": "user_rafael", "item": "prod_09", "type": "Product", "rating": 4, "comment": "Orquidea saudavel e bem embalada. Demorou um pouco mais.", "days": 5},
+    {"id": "rev_08", "reviewer": "user_joao", "target": "user_julia", "item": "serv_10", "type": "Service", "rating": 4, "comment": "Julia e paciente e didatica. Ja toquei minha primeira musica!", "days": 13},
+    {"id": "rev_09", "reviewer": "user_lucia", "target": "user_ana", "item": "prod_08", "type": "Product", "rating": 5, "comment": "Geleia deliciosa! Equilibrio perfeito entre doce e picante.", "days": 6},
+    {"id": "rev_10", "reviewer": "user_carlos", "target": "user_pedro", "item": "prod_06", "type": "Product", "rating": 5, "comment": "Estante linda! Acabamento impecavel. Recomendo demais.", "days": 3}
+  ]
+}

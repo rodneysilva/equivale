@@ -1,4 +1,5 @@
 using equivale.Domain.Enums;
+using equivale.Domain.ValueObjects;
 
 namespace equivale.Domain.Entities;
 
@@ -9,7 +10,7 @@ public class Service
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
-    public decimal PriceInEquivale { get; set; }
+    public Money PriceInEquivale { get; set; } = Money.Zero;
     public TimeSpan? Duration { get; set; }
     public string? Location { get; set; }
     public ItemStatus Status { get; set; } = ItemStatus.Active;
