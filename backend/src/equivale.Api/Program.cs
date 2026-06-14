@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using System.Text;
 using equivale.Api.Configuration;
 using equivale.Api.Middleware;
@@ -87,6 +88,33 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// Rate Limiting - protecao contra abuso de upload (10 uploads/minuto por usuario)
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.User.Identity?.Name ?? context.Request.Headers["X-Forwarded-For"].ToString() ?? "anonymous",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 2
+            }));
+
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            context.HttpContext.Response.Headers.RetryAfter = retryAfter.TotalSeconds.ToString("F0");
+        }
+        await context.HttpContext.Response.WriteAsJsonAsync(
+            new { error = "Muitas requisicoes. Tente novamente em breve." },
+            cancellationToken);
+    };
+});
+
 // CORS
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? ["http://localhost:3000"];
 builder.Services.AddCors(options =>
@@ -118,6 +146,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowFrontend");
+app.UseRateLimiter();
 
 // Serve arquivos de upload estaticamente
 var fileSettings = app.Configuration.GetSection(FileStorageSettings.SectionName).Get<FileStorageSettings>()!;

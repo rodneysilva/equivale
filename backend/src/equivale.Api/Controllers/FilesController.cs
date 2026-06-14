@@ -18,6 +18,7 @@ public class FilesController : ControllerBase
     /// <summary>
     /// Faz upload de uma imagem e retorna a URL.
     /// POST /api/files/upload
+    /// Rate limit: 10 uploads por minuto por usuario.
     /// </summary>
     [HttpPost("upload")]
     [Authorize]
