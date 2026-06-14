@@ -1,0 +1,24 @@
+{
+  "name": "equivale",
+  "version": "0.0.1",
+  "description": "Equivale marketplace - Troque talentos e produtos com moeda virtual",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0",
+    "vite-plugin-solid": "^2.11.0"
+  },
+  "dependencies": {
+    "@solidjs/router": "^0.15.0",
+    "solid-js": "^1.9.0",
+    "clsx": "^2.1.0",
+    "lucide-solid": "^0.460.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "tailwindcss": "^4.0.0"
+  }
+}

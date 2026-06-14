@@ -1,0 +1,168 @@
+// User types
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  fullName: string;
+  bio?: string;
+  avatarUrl?: string;
+  role: 'user' | 'admin';
+  walletBalance: number;
+  createdAt: string;
+  isBanned: boolean;
+}
+
+export interface RegisterDto {
+  username: string;
+  email: string;
+  password: string;
+  fullName: string;
+}
+
+export interface LoginDto {
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}
+
+// Product types
+export interface Product {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  imageUrl?: string;
+  images?: string[];
+  sellerId: string;
+  sellerName?: string;
+  sellerAvatar?: string;
+  condition: 'new' | 'used' | 'refurbished';
+  status: 'available' | 'sold' | 'pending_moderation';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateProductDto {
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  imageUrl?: string;
+  images?: string[];
+  condition: 'new' | 'used' | 'refurbished';
+}
+
+export interface UpdateProductDto extends Partial<CreateProductDto> {
+  status?: 'available' | 'sold';
+}
+
+// Service types
+export interface Service {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  imageUrl?: string;
+  providerId: string;
+  providerName?: string;
+  providerAvatar?: string;
+  status: 'available' | 'completed' | 'pending_moderation';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateServiceDto {
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  imageUrl?: string;
+}
+
+export interface UpdateServiceDto extends Partial<CreateServiceDto> {
+  status?: 'available' | 'completed';
+}
+
+// Community types
+export interface Community {
+  id: string;
+  name: string;
+  description: string;
+  imageUrl?: string;
+  coverUrl?: string;
+  ownerId: string;
+  ownerName?: string;
+  membersCount: number;
+  postsCount: number;
+  createdAt: string;
+}
+
+export interface CreateCommunityDto {
+  name: string;
+  description: string;
+  imageUrl?: string;
+  coverUrl?: string;
+}
+
+// Transaction / Wallet types
+export interface Transaction {
+  id: string;
+  type: 'purchase' | 'sale' | 'transfer' | 'bonus';
+  amount: number;
+  description: string;
+  fromUserId: string;
+  toUserId: string;
+  itemId?: string;
+  itemType?: 'product' | 'service';
+  createdAt: string;
+}
+
+export interface TransferDto {
+  toUserId: string;
+  amount: number;
+  description?: string;
+}
+
+// Review types
+export interface Review {
+  id: string;
+  rating: number;
+  comment: string;
+  reviewerId: string;
+  reviewerName?: string;
+  reviewerAvatar?: string;
+  targetId: string;
+  targetType: 'product' | 'service' | 'user';
+  createdAt: string;
+}
+
+export interface CreateReviewDto {
+  rating: number;
+  comment: string;
+}
+
+// Pagination
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+// Moderation
+export interface ModerationItem {
+  id: string;
+  type: 'product' | 'service';
+  title: string;
+  description: string;
+  submittedById: string;
+  submittedByName?: string;
+  createdAt: string;
+}

@@ -1,0 +1,39 @@
+using equivale.Infrastructure.Persistence;
+using equivale.Infrastructure.Repositories;
+using equivale.Domain.Interfaces;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Driver;
+
+namespace equivale.Infrastructure.DependencyInjection;
+
+public static class ServiceCollectionExtensions
+{
+    public static IServiceCollection AddMongoDb(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<MongoDbSettings>(
+            configuration.GetSection("MongoDb"));
+
+        services.AddSingleton<IMongoClient>(sp =>
+        {
+            var settings = configuration.GetSection("MongoDb").Get<MongoDbSettings>()!;
+            return new MongoClient(settings.ConnectionString);
+        });
+
+        services.AddScoped<MongoDbContext>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddRepositories(this IServiceCollection services)
+    {
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IServiceRepository, ServiceRepository>();
+        services.AddScoped<ICommunityRepository, CommunityRepository>();
+        services.AddScoped<ITransactionRepository, TransactionRepository>();
+        services.AddScoped<IReviewRepository, ReviewRepository>();
+
+        return services;
+    }
+}

@@ -1,0 +1,10 @@
+namespace equivale.Application.DTOs;
+
+public record CreateServiceDto(
+    string ProviderId,
+    string Title,
+    string Description,
+    string Category,
+    decimal PriceInEquivale,
+    TimeSpan? Duration = null,
+    string? Location = null);
