@@ -280,44 +280,130 @@ public class SeedService
     ];
 
     private static readonly (string Name, string Desc)[] CommunityThemes = [
-        ("Artes & Artesanato", "Comunidade de artesãos e criadores que valorizam o feito à mão."),
-        ("Devs Colaborativos", "Desenvolvedores que trocam conhecimento e serviços técnicos."),
-        ("Cozinha Vegana", "Receitas, produtos e serviços veganos para quem ama plantas."),
-        ("Músicos Independentes", "Músicos e produtores que colaboram e criam juntos."),
-        ("Clube da Fotografia", "Fotógrafos compartilhando técnica, shoots e equipamentos."),
-        ("Jardinagem & Permacultura", "Cultivadores urbanos e amantes de plantas."),
-        ("Madeira & Marcenaria", "Marceneiros e artesãos da madeira."),
-        ("Bem-estar & Saúde Natural", "Terapeutas e entusiastas de vida saudável."),
-        ("DIY & Makers", "Makers, inventores e entusiastas de faça-você-mesmo."),
-        ("Cultura Alternativa", "Arte alternativa, música indie e estilo de vida não convencional.")
+        ("Artes & Artesanato", "Comunidade de artesãos, ceramistas e criadores que valorizam o feito à mão. Compartilhamos técnicas, materiais sustentáveis e apoiamos o comércio justo entre produtores independentes."),
+        ("Devs Colaborativos", "Desenvolvedores que trocam conhecimento, código e serviços técnicos. Open source, mutualismo digital e tecnologia a serviço de pessoas, não de corporações."),
+        ("Cozinha Vegana", "Receitas, produtos e serviços veganos. Comunidade acolhedora para quem ama plantas, animais e comida de verdade. Sem exploração animal, com sabor de verdade."),
+        ("Músicos Independentes", "Músicos, produtores e DJs que colaboram, ensinam e criam juntos. Cenário independente, sem gravadoras, direto do artista para quem escuta."),
+        ("Clube da Fotografia", "Fotógrafos amadores e profissionais compartilhando técnica, equipamentos e shoots. Arte visual como ferramenta de expressão e resistência."),
+        ("Jardinagem & Permacultura", "Cultivadores urbanos, jardineiros e amantes de plantas. Autonomia alimentar, permacultura e conexão com a terra em plena cidade."),
+        ("Madeira & Marcenaria", "Marceneiros e artesãos da madeira. Móveis sob medida, utensílios e restauração. Trabalho manual com materiais nobres e reflorestados."),
+        ("Bem-estar & Saúde Natural", "Terapeutas, professores de yoga e entusiastas de vida saudável. Medicina natural, mindfulness e cuidado integral sem depender de indústria farmacêutica."),
+        ("DIY & Makers", "Makers, inventores e entusiastas de faça-você-mesmo. Eletrônica, impressão 3D, upcycling e tecnologia aberta para todos."),
+        ("Cultura Alternativa", "Arte alternativa, música indie e estilo de vida não convencional. Espaço livre para expressão sem amarras do mercado mainstream.")
     ];
 
-    private static readonly Dictionary<string, string[]> ProductTemplates = new()
+    // Produtos com descricões detalhadas e realistas
+    private record ProductSeed(string Name, string Desc, int MinPrice, int MaxPrice);
+
+    private static readonly Dictionary<string, ProductSeed[]> ProductData = new()
     {
-        ["Artesanato"] = ["Vaso de cerâmica","Bolsa de crochê","Porta-joias entalhado","Velas aromáticas","Mandala de macramê","Colar de sementes","Renda bordada","Sabonete artesanal","Dreamcatcher","Tapete tecido à mão"],
-        ["Fotografia"] = ["Câmera analógica","Print de paisagem","Tripé profissional","Lente 50mm","Bolsa para câmera","Polaroid","Filtro ND","Cartão SD 128GB","Iluminador de ring light","Backdrop de tecido"],
-        ["Arte"] = ["Quadro abstrato","Ilustração digital","Kit de pincéis","Aquarela emoldurada","Poster de arte","Tela em branco","Escultura em gesso","Serigrafia limitada","Caneta nanquim set","Kit de tintas acrílicas"],
-        ["Madeira"] = ["Mesa de centro","Tábua de corte","Estante flutuante","Banco rústico","Cabideiro de parede","Bowls de madeira","Prancha de corte","Relógio de tronco","Caixa organizadora","Mesa de jantar"],
-        ["Alimentação"] = ["Granola artesanal","Mel orgânico","Kit de temperos","Pão integral","Bombom de cacau","Geleia de pimenta","Kombucha","Biscoito amanteigado","Doce de leite vegano","Chá artesanal"],
-        ["Jardinagem"] = ["Muda de suculenta","Kit horta vertical","Plantas medicinais","Cactos variados","Vasos de cimento","Sementes orgânicas","Orquídea","Bonsai","Trepadeira","Kit vasinho decorativo"],
-        ["Tecnologia"] = ["Teclado mecânico","Raspberry Pi","Monitor 24 polegadas","Headphone Bluetooth","Hub USB-C","Arduino + sensores","Mouse gamer","Webcam HD","SSD 512GB","Power bank 20000mAh"],
-        ["Bem-estar"] = ["Tapete de yoga","Kit de incensos","Cristal de quartzo","Difusor de aromas","Óleos essenciais","Bloco de yoga","Rolo de massagem","Vela de meditação","Mala de cristais","Kit acupuntura auricular"]
+        ["Artesanato"] = [
+            new("Vaso de cerâmica artesanal", "Peça única feita à mão com argila vermelha natural, queima em forno tradicional a 1200°C. Textura orgânica com acabamento fosco. Cada vaso tem tonalidade própria — nenhum é igual ao outro. Ideal para plantas ou decoração minimalista. Altura: 18cm.", 65, 120),
+            new("Bolsa de crochê colorida", "Bolsa artesanal em crochê com fios de algodão reciclado de indústria têxtil. Alça reforçada, forro interno e bolso. Resiste a até 5kg. Cada peça leva 12 horas de trabalho manual. Sustentável e única.", 50, 90),
+            new("Kit velas aromáticas (3 unidades)", "Conjunto de 3 velas de cera de soja 100% natural, sem parafina. Essências de lavanda, eucalipto e baunilha. Pavio de algodão. Queima limpa por aproximadamente 25 horas cada. Embalagem em kraft reciclável.", 28, 55),
+            new("Mandala de macramê", "Mandala decorativa em macramê feita com cordão de algodão cru 4mm. Trabalho artesanal com nós tradicionais. Pronta para pendurar. Diâmetro: 45cm. Leva a energia de artesanato manual para qualquer ambiente.", 55, 95),
+            new("Sabonete artesanal herbal (kit 4)", "Quatro barras de sabonete natural feito pelo método frio. Ervas: alecrim, lavanda, camomila e hortelã. Sem corantes artificiais, sem sulfatos. Hidratante com óleo de coco e manteiga de karité. 100g cada.", 18, 35),
+            new("Colar de sementes da Amazônia", "Colar artesanal com sementes de açaí, jenipapo e tucum. Fio de algodão encerado. Peça que conecta com a floresta e valoriza o trabalho de comunidades extrativistas. Comprimento ajustável.", 25, 50),
+            new("Porta-joias de madeira decorado", "Caixa organizadora em madeira maciça de pinus reflorestado. Interior forrado com tecido de algodão. Trabalho de entalhe manual. Compartimentos para anéis, brincos e colares. 20x15x8cm.", 35, 70),
+        ],
+        ["Fotografia"] = [
+            new("Câmera analógica 35mm", "Câmera vintage dos anos 90 em excelente estado de conservação. Lente 50mm f/2.0 incluída. Funcionando perfeitamente — testada com rolo. Ideal para quem quer começar com filme fotográfico. Acompanha alça.", 250, 450),
+            new("Print fotográfico A3 (paisagem)", "Impressão fine art em papel algodão acid-free 310g. Foto de paisagem da Serra Gaúcha ao amanhecer. Cores profundas, longevidade de 100+ anos. Edição limitada de 30 cópias, numerada e assinada.", 40, 80),
+            new("Tripé profissional de alumínio", "Tripé robusto com altura máxima de 170cm e carga até 8kg. Cabeça esférica com quick-release. Bolha de nível. Peso: 1.8kg. Perfeito para fotografia noturna e longa exposição. Pouco uso.", 80, 180),
+            new("Lente prime 50mm f/1.8", "Lente fixa 50mm com abertura f/1.8. Nítida, leve (160g) e ideal para retratos com desfoque cremoso. Compatível com mounts Canon/Nikon/Sony (especificar na compra). Estado impecável.", 120, 280),
+            new("Bolsa para câmera à prova d'água", "Mochila fotográfica resistente à água com divisórias modulares. Espaço para câmera + 3 lentes + laptop 15''. Alças ergonômicas. Material reciclado. Resistente a choques.", 70, 150),
+            new("Iluminador ring light 18''", "Ring light profissional 18 polegadas com ajuste de temperatura de cor (3200K-5500K). 3 modos de cor, controle remoto. Suporte de mesa e tripé inclusos. Alimentação USB. Ideal para content creators.", 45, 100),
+        ],
+        ["Arte"] = [
+            new("Quadro abstrato em acrílico 60x80", "Tela 100% algodão 60x80cm. Pintura acrílica original em tons quentes — terracota, mostarda e verde-musgo. Trabalho texturizado com espátula. Assinado pelo artista. Pronto para pendurar.", 150, 350),
+            new("Ilustração digital personalizada", "Retrato digital em estilo aquarela, entregue em arquivo PNG de alta resolução (300 DPI) para impressão. Turnaround de 5 dias úteis. Você envia a foto de referência. Direito de uso pessoal incluído.", 70, 150),
+            new("Kit 12 pincéis sintéticos premium", "Conjunto profissional de 12 pincéis com cerdas sintéticas (cruelty-free). Inclui chanfrados, lebres e detalhe. Cabos de madeira laqueada. Estojo de tecido incluso. Para acrílico, óleo e aquarela.", 30, 65),
+            new("Aquarela botânica emoldurada", "Pintura aquarela original de planta tropical (monstera). Papel cold-pressed 300g. Moldura de madeira natural inclusa. Dimensão final: 30x40cm. Peça única, não reproduzida.", 90, 200),
+            new("Poster de arte geométrica A2", "Poster de arte abstrata geométrica, impressão giclée em papel fosco 250g. Cores vibrantes em paleta terrosa. Tamanho A2 (42x59cm). Sem moldura. Arquivo original da artista.", 25, 50),
+        ],
+        ["Madeira"] = [
+            new("Mesa de centro em freijó", "Mesa artesanal em madeira maciça freijó. Tampo 120x60cm. Acabamento natural com óleo vegetal. Estrutura em cavaletes. Cada peça tem veios únicos. Fabricada sob encomenda, entrega em 15 dias.", 350, 600),
+            new("Tábua de corte rústica", "Tábua de servir em madeira maciça de ipê. 40x25x2cm. Acabamento com óleo mineral food-safe. Tratamento anti-bacteriano natural. Alça esculpida. Ideal para queijos, frios e apresentação.", 35, 75),
+            new("Estante de parede flutuante", "Estante minimalista em madeira reflorestada. 60x20cm. Fixação invisível com suportes inclusos. Suporta até 15kg. Acabamento natural mate. Kit com parafusos e buchas. Fácil instalação.", 45, 95),
+            new("Jogo de bowls de madeira (3)", "Três tigelas de madeira maciça em tamanhos graduais (10/14/18cm). Feitas em torno. Tratadas com óleo de coco food-safe. Cada conjunto tem veios únicos. Para servir saladas, frutas ou decoração.", 45, 90),
+            new("Banco rústico de tronco", "Banco feito de tronco maciço de eucalipto reflorestado. Lixado e envernizado naturalmente. Altura: 45cm. Diâmetro: 35cm. Cada peça é única na forma. Ideal para varandas e ambientes rústicos.", 80, 180),
+        ],
+        ["Alimentação"] = [
+            new("Granola artesanal vegana (1kg)", "Granola caseira sem açúcar refinado. Aveia, castanha-do-pará, coco, cacau 70%, melado de cana. Assada em forno lenha. Sem conservantes. Pacote de 1kg. Rende aproximadamente 20 porções.", 22, 38),
+            new("Mel orgânico puro (500g)", "Mel de florada silvestre, colhido de forma sustentável em apiário familiar. Não pasteurizado — mantém enzimas e propólis naturais. Pote de vidro 500g. Cristaliza naturalmente (sinal de pureza).", 25, 45),
+            new("Kit 6 temperos orgânicos", "Seis potes de temperos cultivados sem agrotóxicos: orégano, alecrim, manjericão, cúrcuma, pimenta-do-reino e páprica defumada. Colhidos e secos artesanalmente. Potes de 50g cada.", 28, 55),
+            new("Bombom de chocolate 70% (kit 12)", "Doze bombons de chocolate amargo 70% cacau, sem leite. Recheios variados: maracujá, cupuaçu e castanha. Feito com cacau de origem única (Bahia). Embalagem compostável.", 28, 48),
+            new("Geleia artesanal de pimenta", "Geleia caseira de pimenta biquinho com açúcar demerara. Doce no início, levemente picante no final. Pote 200g. Perfeita com queijos e carnes. Sem corantes ou conservantes.", 15, 28),
+            new("Kombucha orgânico (1L)", "Kombucha fermentado naturalmente com chá verde e frutas vermelhas. Efervescente, levemente ácido. Rico em probióticos. Garrafa de vidro 1L. Manter refrigerado. Lote artesanal pequeno.", 18, 32),
+        ],
+        ["Jardinagem"] = [
+            new("Muda de suculenta Echeveria rara", "Muda de Echeveria em vaso decorativo de cerâmica. Espécie rara com tonalidade rosada nas pontas. Fácil cuidado — rega 1x por semana. Adapta-se a ambientes internos com luz indireta.", 18, 35),
+            new("Kit horta vertical (3 níveis)", "Estrutura completa para horta vertical com 3 vasos de fibra de coco. Suporte de aço galvanizado. Inclui substruto e sementes de cheiro-verde. Montagem simples. Ideal para apartamentos.", 70, 120),
+            new("Plantas medicinais (kit 4)", "Quatro mudas de plantas medicinais: camomila, capim-cidreira, hortelã e alecrim. Vasos biodegradáveis. Cada muda vem com instruções de cultivo e uso medicinal. Kit perfeito para chás caseiros.", 25, 45),
+            new("Kit 3 cactos variados", "Três mini cactos em vasos de cerâmica artesanal. Espécies diferentes, ideais para decoração de mesa e parapeitos. Quase não precisam de água. Resistentes e charmosos.", 22, 40),
+            new("Sementes orgânicas (8 variedades)", "Pacote com 8 variedades de sementes para horta: alface, rúcula, tomate cereja, cebolinha, coentro, cenoura, beterraba e pimentão. Sementes crioulas não transgênicas. Rendimento alto.", 12, 25),
+        ],
+        ["Tecnologia"] = [
+            new("Teclado mecânico switch brown", "Teclado mecânico ABNT2 com switches brown (tactile). Keycaps PBT. USB-C removível. Structure: alumínio. Perfeito para programação e escrita. Estado impecável, 6 meses de uso.", 150, 280),
+            new("Raspberry Pi 4 (4GB) + case", "Placa single-board Raspberry Pi 4 modelo B com 4GB RAM. Acompanha case oficial preto, fonte USB-C 15W e heatsinks. Funcionando. Ideal para projetos DIY, retro gaming ou servidor doméstico.", 200, 350),
+            new("Monitor IPS 24'' Full HD", "Monitor 24 polegadas IPS 1080p. 75Hz, 5ms, entradas HDMI e DisplayPort. Ajuste de inclinação. Cor calibrada. Perfeito para home office. Estado excelente, sem pixels mortos.", 250, 400),
+            new("Headphone Bluetooth ANC", "Fone sem fio com cancelamento ativo de ruído. 40h de bateria. Bluetooth 5.2. Driver 40mm. Som equilibrado. Dobrável. Acompanha case. Recondicionado e testado pela fabricante.", 120, 220),
+            new("Arduino Uno R3 + kit 15 sensores", "Kit completo para projetos eletrônicos: placa Arduino Uno R3 compatível, protoboard, jumpers e 15 sensores (temperatura, luz, distância, movimento, etc.). Manual de projetos incluso.", 80, 150),
+            new("Hub USB-C 7 em 1", "Hub com HDMI 4K@30Hz, 3x USB 3.0, leitor de cartão SD/microSD, USB-C PD 100W. Body em alumínio. Compacto e portátil. Compatível com Mac, Windows e Linux.", 60, 110),
+        ],
+        ["Bem-estar"] = [
+            new("Tapete de yoga ecológico 6mm", "Tapete de yoga em TPE (material ecológico, sem PVC). 6mm de espessura. Antiderrapante dupla face. Leve (900g). Cor terrosa. Resistente e fácil de limpar. Com alça de transporte.", 45, 85),
+            new("Kit 5 óleos essenciais puros", "Cinco óleos essenciais 100% puros: lavanda, eucalipto, hortelã-pimenta, tea tree e alecrim. Frascos âmbar 10ml com gotejador. Certificados. Para difusor, massagem ou aromaterapia.", 38, 70),
+            new("Difusor de aromas ultrassônico", "Difusor com 300ml de capacidade. Luz LED ajustável em 7 cores. Timer 1h/3h/6h. Desliga automático sem água. Funciona como umidificador. Design minimalista em madeira e branco.", 45, 85),
+            new("Cristal de quartzo rosa polido", "Pedra natural de quartzo rosa polida, aproximadamente 400g. Cada cristal é único. Usado em meditação e decoração. Vem com saquinho de algodão. Origem: Minas Gerais.", 18, 40),
+            new("Kit 10 incensos naturais", "Dez varetas de incenso artesanal sem carvão. Ervas: sálvia branca, palo santo, lavanda e cedro. Feito à mão. Queuda de 30 min cada. Sem fragrâncias sintéticas. Embalagem kraft.", 15, 30),
+        ],
     };
 
-    private static readonly Dictionary<string, string[]> ServiceTemplates = new()
+    private static readonly Dictionary<string, (string Name, string Desc, int MinPrice, int MaxHours)[]> ServiceData = new()
     {
-        ["Design"] = ["Criação de identidade visual","Design de stickers","Diagramação de e-book","Capa de livro","Logo minimalista","Design de cardápio","Banners para redes sociais","Wireframe de app"],
-        ["Programação"] = ["Consultoria de desenvolvimento","Desenvolvimento de API","Configuração WordPress","Correção de bugs","Bot para Discord","Automação de planilhas","Integração de pagamento","Deploy de aplicação"],
-        ["Marketing"] = ["Estratégia de redes sociais","Copywriting para landing","Gestão de tráfego pago","Roteiro para vídeo","E-mail marketing","Auditoria de SEO","Plano de conteúdo","Consultoria de marca"],
-        ["Escrita"] = ["Revisão de texto","Redação de artigos","Tradução EN-PT","Roteiro para podcast","Descrição de produtos","E-book ghostwriter","Legenda para Instagram","Edação de TCC"],
-        ["Consultoria"] = ["Consultoria nutricional","Avaliação de jardim","Design de interiores","Consultoria financeira","Mentoria de carreira","Avaliação de gadgets","Consultoria de imagem","Planejamento estratégico"],
-        ["Aulas"] = ["Aula de violão","Aula de cerâmica","Aula de yoga","Curso de fotografia","Aula de desenho","Workshop de jardinagem","Aula de pão artesanal","Aula de idiomas"],
-        ["Fotografia"] = ["Ensaio fotográfico","Edição de fotos","Edição de vídeo","Fotografia de produto","Making of de evento","Restauro de fotos antigas","Composite digital","Cover de perfil"],
-        ["Outros"] = ["Composição de jingle","Produção de beat","Mixagem de áudio","Aulas de canto","Roteiro musical","Locução comercial","Produção de clipe","Sound design"]
+        ["Design"] = [
+            ("Criação de identidade visual completa", "Desenvolvimento de identidade visual completa: logotipo, paleta de cores, tipografia e manual de marca. Entrego 3 propostas iniciais, rounds de revisão inclusos. Arquivos finais em AI, EPS, PNG e SVG. Pronto para uso digital e impresso.", 300, 12),
+            ("Design de stickers personalizados", "Criação de 5 stickers digitais no estilo que preferir. Entrego em PNG transparente em alta resolução. Ideal para WhatsApp, Telegram ou impressão. Briefing rápido, entrega em 48h.", 40, 3),
+            ("Capa de livro ou e-book", "Design de capa profissional para publicação digital ou impressa. Inclui conceito, tipografia e tratamento de imagem. Entrego 2 propostas com revisões. Arquivo final em PDF e JPG 300DPI.", 80, 5),
+        ],
+        ["Programação"] = [
+            ("Consultoria de arquitetura de software (1h)", "Uma hora de mentoria técnica em arquitetura de software, boas práticas e code review. Atendimento via Google Meet. Ideal para times que estão escalando ou empreendedores com dúvidas técnicas. Gravação inclusa.", 60, 1),
+            ("Desenvolvimento de API REST", "Criação de API REST em .NET ou Node.js com documentação Swagger, autenticação JWT e testes. Definimos escopo juntos. Código limpo, documentado e com CI/CD básico configurado.", 400, 20),
+            ("Configuração de site WordPress", "Instalação e configuração completa de WordPress: tema, plugins essenciais, SEO básico, velocidade e segurança. Até 5 páginas. Treinamento para gestão de conteúdo incluso.", 120, 5),
+        ],
+        ["Marketing"] = [
+            ("Estratégia de redes sociais (mensal)", "Plano de conteúdo mensal para Instagram com calendário, copy pronto para posts e sugestões de imagens. Inclui análise de concorrentes e definição de hashtags. Foco em engajamento orgânico.", 200, 8),
+            ("Copywriting para landing page", "Textos persuasivos e otimizados para conversão na sua landing page. Headline, subheadline, benefícios, CTA e prova social. Pesquisa de público-alvo inclusa. Entrega em 3 dias.", 120, 5),
+            ("Roteiro para vídeo institucional", "Roteiro completo para vídeo promocional ou institucional de até 3 minutos. Estrutura narrativa, direção de arte sugerida e marcações de tempo. Entrego 2 versões para escolha.", 80, 4),
+        ],
+        ["Escrita"] = [
+            ("Revisão de texto profissional", "Revisão ortográfica, gramatical e de estilo para artigos, e-books e trabalhos acadêmicos. Até 5.000 palavras. Entrego com track changes e comentários. Desconto para volume.", 35, 3),
+            ("Redação de artigo SEO (1500 palavras)", "Artigo otimizado para SEO com pesquisa de palavras-chave. Até 1.500 palavras, formatação pronta para publicar. Inclui meta description e sugestão de título. Conteúdo original, sem IA.", 70, 5),
+            ("Tradução inglês-português", "Tradução profissional inglês-português para artigos, documentos e materiais de marketing. Até 1.000 palavras. Preservo tom e contexto cultural. Entrega em 48h.", 45, 3),
+        ],
+        ["Consultoria"] = [
+            ("Consultoria nutricional vegana", "Plano alimentar personalizado vegano com acompanhamento de 30 dias. Inclui avaliação inicial, plano de refeições e 2 consultas de retorno. Online ou presencial em São Paulo.", 180, 3),
+            ("Design de interiores sustentável", "Consultoria de design de interiores com foco em materiais sustentáveis e reaproveitamento. Inclui mood board, paleta e sugestão de mobiliário. Para um ambiente de até 30m².", 250, 6),
+            ("Mentoria de carreira em tecnologia", "Uma hora de mentoria para transição de carreira ou crescimento na área de tecnologia. Review de LinkedIn, preparação para entrevistas e plano de desenvolvimento. Online.", 80, 1),
+        ],
+        ["Aulas"] = [
+            ("Aula de violão popular (1h)", "Aula individual de violão para iniciantes e intermediários. MPB, samba e pop. Aprendizado por cifra e escuta. Online ou presencial em São Paulo. Material de apoio incluso.", 40, 1),
+            ("Aula de cerâmica para iniciantes", "Workshop prático de 3 horas aprendendo técnicas básicas de modelagem em argila. Cada aluno leva para casa 2 peças. Atelier equipado. Grupos de até 4 pessoas. Presencial.", 90, 3),
+            ("Aula de yoga ao vivo (1h)", "Sessão de yoga de 1 hora adaptada ao seu nível. Inclui respiração (pranayama), posturas (asanas) e meditação guiada. Online via Meet. Sequência personalizada para suas necessidades.", 45, 1),
+        ],
+        ["Fotografia"] = [
+            ("Ensaio fotográfico externo", "Ensaio de 2 horas em local natural (parque ou praia). 15 fotos editadas em alta resolução entregues em 7 dias. Direção de pose inclusa. Indicação de maquiagem e figurante se necessário. Presencial.", 250, 3),
+            ("Edição de fotos (pacote 20)", "Tratamento profissional de 20 fotos: ajuste de cor, contraste, retirada de imperfeições e color grading. Entrego em JPG e TIFF. Turnaround de 3 dias úteis. Para portfólio ou e-commerce.", 60, 4),
+            ("Fotografia de produto (10 itens)", "Fotografia profissional de 10 produtos para e-commerce. Fundo branco ou lifestyle. 3 ângulos por produto. Edição inclusa. Entrega em 5 dias. Estúdio próprio com iluminação profissional.", 150, 5),
+        ],
+        ["Outros"] = [
+            ("Composição de jingle publicitário", "Criação de jingle de até 30 segundos para sua marca. Inclui melodia, arranjo simples e locução opcional. Entrego em MP3 e WAV. Direitos de uso comercial inclusos.", 280, 10),
+            ("Produção de beat instrumental", "Beat original instrumental personalizado no estilo que preferir (trap, lo-fi, eletrônico). Arquivo multitrack (stems) incluso. Direitos de uso para 1 música. 2 rounds de revisão.", 100, 5),
+            ("Mixagem e masterização de áudio", "Mixagem e masterização profissional de 1 faixa (até 5 minutos). Entrego em WAV 24bit/48kHz pronto para streaming. Plugin suite profissional. Inclui 2 revisões.", 120, 6),
+        ],
     };
 
-    private static readonly string[] ProductAdjectives = ["premium","artesanal","exclusivo","sustentável","vintage","natural","orgânico","handmade","edición limitada","reforçado"];
-    private static readonly string[] ServiceAdjectives = ["personalizado","profissional","completo","expresso","premium","intensivo","individual","em grupo"];
     private static readonly string?[] Locations = ["Remoto","Online","Presencial - São Paulo","Presencial - Rio de Janeiro","Híbrido", null];
 
     // ===================== SEED METHODS =====================
@@ -528,33 +614,30 @@ public class SeedService
         if (users.Count == 0) return 0;
         var userList = users.Values.ToList();
         var communityList = communities.Values.ToList();
-        var categories = ProductTemplates.Keys.ToList();
+        var categories = ProductData.Keys.ToList();
         var created = 0;
 
         for (var i = 0; i < count; i++)
         {
             var category = Pick(categories);
-            var baseName = Pick(ProductTemplates[category]);
-            var adjective = _rng.NextDouble() > 0.4 ? $" {Pick(ProductAdjectives)}" : "";
-            var title = $"{baseName}{adjective}";
+            var seed = Pick(ProductData[category].ToList());
             var seller = Pick(userList);
             var community = _rng.NextDouble() > 0.4 && communityList.Count > 0 ? Pick(communityList) : null;
-            var seed = UniqueId();
             var condition = _rng.NextDouble() > 0.7 ? (_rng.NextDouble() > 0.5 ? ProductCondition.Used : ProductCondition.Refurbished) : ProductCondition.New;
 
             var product = new Product
             {
                 SellerId = seller.Id,
-                Title = title,
-                Description = $"{title}. Produto da categoria {category}. " + Pick(Bios),
+                Title = seed.Name,
+                Description = seed.Desc,
                 Category = category,
-                PriceInEquivale = new Money(_rng.Next(15, 500)),
+                PriceInEquivale = new Money(_rng.Next(seed.MinPrice, seed.MaxPrice + 1)),
                 ShippingCost = _rng.Next(0, 30),
                 Images = [GetProductImage(category)],
                 Status = ItemStatus.Active,
                 Condition = condition,
                 CommunityId = community?.Id,
-                Tags = TagGenerator.Generate(title, category, null),
+                Tags = TagGenerator.Generate(seed.Name, category, seed.Desc),
                 CreatedAt = DateTime.UtcNow.AddDays(-_rng.Next(1, 60)),
                 UpdatedAt = DateTime.UtcNow.AddDays(-_rng.Next(0, 30)),
             };
@@ -569,32 +652,29 @@ public class SeedService
         if (users.Count == 0) return 0;
         var userList = users.Values.ToList();
         var communityList = communities.Values.ToList();
-        var categories = ServiceTemplates.Keys.ToList();
+        var categories = ServiceData.Keys.ToList();
         var created = 0;
 
         for (var i = 0; i < count; i++)
         {
             var category = Pick(categories);
-            var baseName = Pick(ServiceTemplates[category]);
-            var adjective = _rng.NextDouble() > 0.5 ? $" {Pick(ServiceAdjectives)}" : "";
-            var title = $"{baseName}{adjective}";
+            var seed = Pick(ServiceData[category].ToList());
             var provider = Pick(userList);
             var community = _rng.NextDouble() > 0.5 && communityList.Count > 0 ? Pick(communityList) : null;
-            var hours = _rng.Next(1, 15);
 
             var service = new Service
             {
                 ProviderId = provider.Id,
-                Title = title,
-                Description = $"Serviço de {title}. Atendimento {Pick(ServiceAdjectives)}. " + Pick(Bios),
+                Title = seed.Name,
+                Description = seed.Desc,
                 Category = category,
-                PriceInEquivale = new Money(_rng.Next(30, 600)),
+                PriceInEquivale = new Money(_rng.Next(seed.MinPrice, seed.MinPrice + 200)),
                 Images = [GetServiceImage(category)],
-                Duration = TimeSpan.FromHours(hours),
+                Duration = TimeSpan.FromHours(_rng.Next(1, seed.MaxHours + 1)),
                 Location = Pick(Locations),
                 Status = ItemStatus.Active,
                 CommunityId = community?.Id,
-                Tags = TagGenerator.Generate(title, category, null),
+                Tags = TagGenerator.Generate(seed.Name, category, seed.Desc),
                 CreatedAt = DateTime.UtcNow.AddDays(-_rng.Next(1, 50)),
                 UpdatedAt = DateTime.UtcNow.AddDays(-_rng.Next(0, 25)),
             };
