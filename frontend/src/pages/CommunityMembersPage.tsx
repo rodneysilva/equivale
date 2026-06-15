@@ -1,36 +1,47 @@
 import { type Component, createSignal, onMount, For, Show } from 'solid-js';
 import { useParams, useNavigate } from '@solidjs/router';
-import { ArrowLeft, Users, Shield, ExternalLink } from 'lucide-solid';
+import { ArrowLeft, Users, Shield, ExternalLink, Package, Zap } from 'lucide-solid';
 import Card from '../components/ui/Card';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { communitiesService, type CommunityMember } from '../services/communities.service';
 import { usersService } from '../services/users.service';
+import { api } from '../services/api';
 import { getSocialLinkIcon, getSocialLinkLabel } from '../data/avatars';
 import type { User } from '../types';
+
+interface UserStats { products: number; services: number; communities: number; }
 
 const CommunityMembersPage: Component = () => {
   const params = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [members, setMembers] = createSignal<CommunityMember[]>([]);
   const [profiles, setProfiles] = createSignal<Record<string, User>>({});
+  const [stats, setStats] = createSignal<Record<string, UserStats>>({});
   const [loading, setLoading] = createSignal(true);
 
   onMount(async () => {
     try {
       const allMembers = await communitiesService.getMembers(params.id);
       setMembers(allMembers);
-      // Load full profiles for each member
-      const profileEntries = await Promise.all(
-        allMembers.map(async m => {
+
+      const [profileEntries, statsEntries] = await Promise.all([
+        Promise.all(allMembers.map(async m => {
           try { return [m.id, await usersService.getById(m.id)] as const; }
           catch { return [m.id, null] as const; }
-        })
-      );
-      const profileMap: Record<string, User> = {};
-      for (const [id, user] of profileEntries) {
-        if (user) profileMap[id] = user;
-      }
-      setProfiles(profileMap);
+        })),
+        Promise.all(allMembers.map(async m => {
+          try { return [m.id, await api.get<UserStats>(`/search/user-stats/${m.id}`)] as const; }
+          catch { return [m.id, null] as const; }
+        })),
+      ]);
+
+      const pm: Record<string, User> = {};
+      for (const [id, u] of profileEntries) { if (u) pm[id] = u; }
+      setProfiles(pm);
+
+      const sm: Record<string, UserStats> = {};
+      for (const [id, s] of statsEntries) { if (s) sm[id] = s; }
+      setStats(sm);
     } catch { /* ignore */ }
     finally { setLoading(false); }
   });
@@ -52,11 +63,12 @@ const CommunityMembersPage: Component = () => {
           <For each={members()}>
             {(member) => {
               const profile = () => profiles()[member.id];
+              const s = () => stats()[member.id];
               return (
-                <Card class="p-4">
+                <Card hover class="p-4 cursor-pointer" onClick={() => navigate(`/users/${member.id}`)}>
                   <div class="flex items-start gap-4">
                     {/* Avatar */}
-                    <button onClick={() => navigate(`/users/${member.id}`)} class="shrink-0 cursor-pointer">
+                    <div class="shrink-0">
                       <div class="eq-avatar w-14 h-14 overflow-hidden">
                         {member.avatarUrl ? (
                           <img src={member.avatarUrl} alt={member.name} class="w-full h-full object-cover" loading="lazy" />
@@ -64,34 +76,41 @@ const CommunityMembersPage: Component = () => {
                           <span class="text-lg font-bold">{member.name[0]?.toUpperCase()}</span>
                         )}
                       </div>
-                    </button>
+                    </div>
 
                     {/* Info */}
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center gap-2 flex-wrap">
-                        <button onClick={() => navigate(`/users/${member.id}`)} class="font-semibold hover:underline" style={{ color: 'var(--color-text)' }}>
-                          {member.name}
-                        </button>
-                        {member.isOwner && (
-                          <span class="eq-badge eq-badge-primary"><Shield size={10} class="mr-1" /> Criador</span>
-                        )}
-                        {member.isModerator && !member.isOwner && (
-                          <span class="eq-badge eq-badge-info">Moderador</span>
-                        )}
+                        <span class="font-semibold hover:underline" style={{ color: 'var(--color-text)' }}>{member.name}</span>
+                        {member.isOwner && <span class="eq-badge eq-badge-primary"><Shield size={10} class="mr-1" /> Criador</span>}
+                        {member.isModerator && !member.isOwner && <span class="eq-badge eq-badge-info">Moderador</span>}
                       </div>
 
-                      {/* Bio */}
                       <Show when={profile()?.bio || member.bio}>
                         <p class="text-sm mt-1 leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
                           {profile()?.bio || member.bio}
                         </p>
                       </Show>
 
-                      {/* Member since */}
                       <Show when={profile()?.createdAt}>
                         <p class="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
                           Membro desde {formatDate(profile()!.createdAt)}
                         </p>
+                      </Show>
+
+                      {/* Stats */}
+                      <Show when={s()}>
+                        <div class="flex items-center gap-4 mt-2">
+                          <span class="flex items-center gap-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                            <Package size={12} /> {s()!.products} produtos
+                          </span>
+                          <span class="flex items-center gap-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                            <Zap size={12} /> {s()!.services} serviços
+                          </span>
+                          <span class="flex items-center gap-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                            <Users size={12} /> {s()!.communities} comunidades
+                          </span>
+                        </div>
                       </Show>
 
                       {/* Social links */}
@@ -103,6 +122,7 @@ const CommunityMembersPage: Component = () => {
                                 href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
                                 class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded eq-badge eq-badge-info cursor-pointer hover:opacity-80"
                               >
                                 <span>{getSocialLinkIcon(link.type)}</span>
@@ -114,14 +134,6 @@ const CommunityMembersPage: Component = () => {
                         </div>
                       </Show>
                     </div>
-
-                    {/* Wallet (only for own profile or show nothing) */}
-                    <Show when={profile()}>
-                      <div class="text-right shrink-0">
-                        <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>Saldo</p>
-                        <p class="text-sm font-semibold eq-accent">{profile()!.walletBalance} EQL</p>
-                      </div>
-                    </Show>
                   </div>
                 </Card>
               );

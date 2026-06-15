@@ -46,6 +46,11 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Cursor pointer em todos os elementos clicaveis */
+  a, button, [role="button"], .eq-card-hover, .cursor-pointer {
+    cursor: pointer;
+  }
+
   .dark body, .dark {
     color-scheme: dark;
   }

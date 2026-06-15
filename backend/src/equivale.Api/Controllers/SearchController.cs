@@ -11,11 +11,18 @@ public class SearchController : ControllerBase
 {
     private readonly SearchRepository _searchRepository;
     private readonly ICommunityRepository _communityRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IProductRepository _productRepository;
+    private readonly IServiceRepository _serviceRepository;
 
-    public SearchController(SearchRepository searchRepository, ICommunityRepository communityRepository)
+    public SearchController(SearchRepository searchRepository, ICommunityRepository communityRepository,
+        IUserRepository userRepository, IProductRepository productRepository, IServiceRepository serviceRepository)
     {
         _searchRepository = searchRepository;
         _communityRepository = communityRepository;
+        _userRepository = userRepository;
+        _productRepository = productRepository;
+        _serviceRepository = serviceRepository;
     }
 
     [HttpGet("products")]
@@ -40,10 +47,6 @@ public class SearchController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Busca unificada por substring (regex) — produtos, serviços e comunidades.
-    /// GET /api/search/all?q=cer&limit=5
-    /// </summary>
     [HttpGet("all")]
     public async Task<ActionResult<UnifiedSearchResult>> SearchAll(
         [FromQuery] string q, [FromQuery] int limit = 5,
@@ -53,7 +56,6 @@ public class SearchController : ControllerBase
             return Ok(new UnifiedSearchResult());
 
         var term = q.Trim();
-
         var productsTask = _searchRepository.SearchProductsRegexAsync(term, limit, cancellationToken);
         var servicesTask = _searchRepository.SearchServicesRegexAsync(term, limit, cancellationToken);
         var communitiesTask = _communityRepository.GetAllAsync(cancellationToken);
@@ -97,12 +99,29 @@ public class SearchController : ControllerBase
         var tgs = await _searchRepository.GetServiceTagCountsAsync(category, tags, cancellationToken);
         return Ok(new FacetResult(cats, tgs));
     }
+
+    /// <summary>
+    /// Estatísticas públicas de um usuário (sem saldo).
+    /// GET /api/search/user-stats/:userId
+    /// </summary>
+    [HttpGet("user-stats/{userId}")]
+    public async Task<ActionResult<UserStatsDto>> GetUserStats(string userId, CancellationToken cancellationToken = default)
+    {
+        var productsTask = _productRepository.GetPagedFilteredAsync(1, 1, sellerId: userId, cancellationToken: cancellationToken);
+        var servicesTask = _serviceRepository.GetPagedFilteredAsync(1, 1, providerId: userId, cancellationToken: cancellationToken);
+        var communitiesTask = _communityRepository.GetAllAsync(cancellationToken);
+
+        await Task.WhenAll(productsTask, servicesTask, communitiesTask);
+
+        var productCount = productsTask.Result.Total;
+        var serviceCount = servicesTask.Result.Total;
+        var communityCount = communitiesTask.Result.Count(c => c.Members.Contains(userId) || c.CreatorId == userId);
+
+        return Ok(new UserStatsDto(productCount, serviceCount, communityCount));
+    }
 }
 
-public record UnifiedSearchResult(
-    List<SearchItem> Products,
-    List<SearchItem> Services,
-    List<CommunitySearchItem> Communities)
+public record UnifiedSearchResult(List<SearchItem> Products, List<SearchItem> Services, List<CommunitySearchItem> Communities)
 {
     public UnifiedSearchResult() : this(new(), new(), new()) { }
 }
@@ -110,3 +129,4 @@ public record UnifiedSearchResult(
 public record SearchItem(string Id, string Title, string Description, string? ImageUrl, decimal Price, string Type, string Category, string? AuthorName);
 public record CommunitySearchItem(string Id, string Name, string Description, string? ImageUrl, int MembersCount);
 public record FacetResult(Dictionary<string, int> Categories, Dictionary<string, int> Tags);
+public record UserStatsDto(int Products, int Services, int Communities);
