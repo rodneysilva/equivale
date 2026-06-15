@@ -1,5 +1,5 @@
 import { type Component, createSignal, createEffect, on, onMount, For, Show } from 'solid-js';
-import { useNavigate } from '@solidjs/router';
+import { useNavigate, useSearchParams } from '@solidjs/router';
 import { Plus, X } from 'lucide-solid';
 import { servicesService } from '../services/services.service';
 import { searchService, type FacetResult } from '../services/search.service';
@@ -13,6 +13,7 @@ import type { Service } from '../types';
 
 const ServicesPage: Component = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [services, setServices] = createSignal<Service[]>([]);
   const [loading, setLoading] = createSignal(true);
   const [search, setSearch] = createSignal('');
@@ -21,11 +22,12 @@ const ServicesPage: Component = () => {
   const [page, setPage] = createSignal(1);
   const [totalPages, setTotalPages] = createSignal(1);
   const [facets, setFacets] = createSignal<FacetResult>({ categories: {}, tags: {} });
+  const communityId = (searchParams.communityId as string) || undefined;
 
   const loadServices = async () => {
     setLoading(true);
     try {
-      const res = await servicesService.getAll(page(), 12, category() || undefined, search() || undefined, tags().length > 0 ? tags() : undefined);
+      const res = await servicesService.getAll(page(), 12, category() || undefined, search() || undefined, tags().length > 0 ? tags() : undefined, undefined, communityId);
       setServices(res.data);
       setTotalPages(res.totalPages);
     } catch (e) {

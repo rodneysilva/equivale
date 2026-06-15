@@ -22,11 +22,12 @@ const ProductsPage: Component = () => {
   const [page, setPage] = createSignal(1);
   const [totalPages, setTotalPages] = createSignal(1);
   const [facets, setFacets] = createSignal<FacetResult>({ categories: {}, tags: {} });
+  const communityId = (searchParams.communityId as string) || undefined;
 
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const res = await productsService.getAll(page(), 12, category() || undefined, search() || undefined, tags().length > 0 ? tags() : undefined);
+      const res = await productsService.getAll(page(), 12, category() || undefined, search() || undefined, tags().length > 0 ? tags() : undefined, undefined, communityId);
       setProducts(res.data);
       setTotalPages(res.totalPages);
     } catch (e) {

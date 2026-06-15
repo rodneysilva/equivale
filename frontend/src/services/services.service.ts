@@ -18,12 +18,13 @@ function toBackendCreate(data: CreateServiceDto, providerId?: string): BackendCr
 }
 
 export const servicesService = {
-  async getAll(page = 1, pageSize = 12, category?: string, search?: string, tags?: string[], providerId?: string): Promise<PaginatedResponse<Service>> {
+  async getAll(page = 1, pageSize = 12, category?: string, search?: string, tags?: string[], providerId?: string, communityId?: string): Promise<PaginatedResponse<Service>> {
     const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
     if (category) params.set('category', category);
     if (search) params.set('search', search);
     if (tags && tags.length > 0) tags.forEach(t => params.append('tags', t));
     if (providerId) params.set('providerId', providerId);
+    if (communityId) params.set('communityId', communityId);
     const raw = await api.get<BackendPagedResult<BackendServiceDto>>(`/services?${params}`);
     return mapPagedResult(raw, mapService);
   },

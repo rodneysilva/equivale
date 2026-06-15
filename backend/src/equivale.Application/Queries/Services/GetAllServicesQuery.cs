@@ -7,7 +7,7 @@ using equivale.Application.Services;
 
 namespace equivale.Application.Queries.Services;
 
-public record GetAllServicesQuery(PaginationParams Pagination, string? SearchTerm = null, string? Category = null, List<string>? Tags = null, string? ProviderId = null) : IRequest<PagedResult<ServiceDto>>;
+public record GetAllServicesQuery(PaginationParams Pagination, string? SearchTerm = null, string? Category = null, List<string>? Tags = null, string? ProviderId = null, string? CommunityId = null) : IRequest<PagedResult<ServiceDto>>;
 
 public class GetAllServicesQueryHandler : IRequestHandler<GetAllServicesQuery, PagedResult<ServiceDto>>
 {
@@ -25,7 +25,7 @@ public class GetAllServicesQueryHandler : IRequestHandler<GetAllServicesQuery, P
     public async Task<PagedResult<ServiceDto>> Handle(GetAllServicesQuery request, CancellationToken cancellationToken)
     {
         var (items, total) = await _serviceRepository.GetPagedFilteredAsync(
-            request.Pagination.Page, request.Pagination.PageSize, request.Category, request.SearchTerm, request.Tags, request.ProviderId, cancellationToken);
+            request.Pagination.Page, request.Pagination.PageSize, request.Category, request.SearchTerm, request.Tags, request.ProviderId, request.CommunityId, cancellationToken);
 
         var dtos = items.Select(_mapper.Map<ServiceDto>).ToList();
         await _enricher.EnrichServicesAsync(dtos, cancellationToken);

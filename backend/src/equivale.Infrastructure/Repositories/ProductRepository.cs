@@ -36,16 +36,17 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
     }
 
     public async Task<(IReadOnlyList<Product> Items, int Total)> GetPagedFilteredAsync(
-        int page, int pageSize, string? category = null, string? searchTerm = null, List<string>? tags = null, string? sellerId = null, CancellationToken cancellationToken = default)
+        int page, int pageSize, string? category = null, string? searchTerm = null, List<string>? tags = null, string? sellerId = null, string? communityId = null, CancellationToken cancellationToken = default)
     {
-        var filter = BuildFilter(category, searchTerm, tags, sellerId);
+        var filter = BuildFilter(category, searchTerm, tags, sellerId, communityId);
         var skip = (page - 1) * pageSize;
         var total = (int)await _products.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
-        var items = await _products.Find(filter).Skip(skip).Limit(pageSize).ToListAsync(cancellationToken);
+        var sort = Builders<Product>.Sort.Descending(p => p.CreatedAt);
+        var items = await _products.Find(filter).Sort(sort).Skip(skip).Limit(pageSize).ToListAsync(cancellationToken);
         return (items.AsReadOnly(), total);
     }
 
-    private static FilterDefinition<Product> BuildFilter(string? category, string? searchTerm, List<string>? tags, string? sellerId)
+    private static FilterDefinition<Product> BuildFilter(string? category, string? searchTerm, List<string>? tags, string? sellerId, string? communityId)
     {
         var filters = new List<FilterDefinition<Product>>();
 
@@ -60,6 +61,9 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
 
         if (!string.IsNullOrWhiteSpace(sellerId))
             filters.Add(Builders<Product>.Filter.Eq(p => p.SellerId, sellerId));
+
+        if (!string.IsNullOrWhiteSpace(communityId))
+            filters.Add(Builders<Product>.Filter.Eq(p => p.CommunityId, communityId));
 
         return filters.Count == 0 ? Builders<Product>.Filter.Empty : Builders<Product>.Filter.And(filters);
     }

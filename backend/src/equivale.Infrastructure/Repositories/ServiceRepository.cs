@@ -36,16 +36,17 @@ public class ServiceRepository : BaseRepository<Service>, IServiceRepository
     }
 
     public async Task<(IReadOnlyList<Service> Items, int Total)> GetPagedFilteredAsync(
-        int page, int pageSize, string? category = null, string? searchTerm = null, List<string>? tags = null, string? providerId = null, CancellationToken cancellationToken = default)
+        int page, int pageSize, string? category = null, string? searchTerm = null, List<string>? tags = null, string? providerId = null, string? communityId = null, CancellationToken cancellationToken = default)
     {
-        var filter = BuildFilter(category, searchTerm, tags, providerId);
+        var filter = BuildFilter(category, searchTerm, tags, providerId, communityId);
         var skip = (page - 1) * pageSize;
         var total = (int)await _services.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
-        var items = await _services.Find(filter).Skip(skip).Limit(pageSize).ToListAsync(cancellationToken);
+        var sort = Builders<Service>.Sort.Descending(s => s.CreatedAt);
+        var items = await _services.Find(filter).Sort(sort).Skip(skip).Limit(pageSize).ToListAsync(cancellationToken);
         return (items.AsReadOnly(), total);
     }
 
-    private static FilterDefinition<Service> BuildFilter(string? category, string? searchTerm, List<string>? tags, string? providerId)
+    private static FilterDefinition<Service> BuildFilter(string? category, string? searchTerm, List<string>? tags, string? providerId, string? communityId)
     {
         var filters = new List<FilterDefinition<Service>>();
 
@@ -61,21 +62,8 @@ public class ServiceRepository : BaseRepository<Service>, IServiceRepository
         if (!string.IsNullOrWhiteSpace(providerId))
             filters.Add(Builders<Service>.Filter.Eq(s => s.ProviderId, providerId));
 
-        return filters.Count == 0 ? Builders<Service>.Filter.Empty : Builders<Service>.Filter.And(filters);
-    }
-
-    private static FilterDefinition<Service> BuildFilter(string? category, string? searchTerm, string? tag)
-    {
-        var filters = new List<FilterDefinition<Service>>();
-
-        if (!string.IsNullOrWhiteSpace(category))
-            filters.Add(Builders<Service>.Filter.Eq(s => s.Category, category));
-
-        if (!string.IsNullOrWhiteSpace(searchTerm))
-            filters.Add(Builders<Service>.Filter.Text(searchTerm));
-
-        if (!string.IsNullOrWhiteSpace(tag))
-            filters.Add(Builders<Service>.Filter.AnyEq(s => s.Tags, tag));
+        if (!string.IsNullOrWhiteSpace(communityId))
+            filters.Add(Builders<Service>.Filter.Eq(s => s.CommunityId, communityId));
 
         return filters.Count == 0 ? Builders<Service>.Filter.Empty : Builders<Service>.Filter.And(filters);
     }
