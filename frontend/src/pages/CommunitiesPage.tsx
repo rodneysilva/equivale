@@ -73,7 +73,7 @@ const CommunitiesPage: Component = () => {
   };
 
   return (
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div class="flex items-center justify-between mb-8">
         <div>
           <h1 class="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Comunidades</h1>

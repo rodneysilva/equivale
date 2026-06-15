@@ -45,7 +45,7 @@ const UserProfilePage: Component = () => {
   });
 
   return (
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <button onClick={() => navigate(-1)} class="flex items-center gap-1.5 text-sm eq-link mb-6">
         <ArrowLeft size={14} /> Voltar
       </button>

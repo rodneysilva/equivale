@@ -28,6 +28,7 @@ import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
 import TransactionsPage from './pages/TransactionsPage';
 import DashboardPage from './pages/DashboardPage';
+import TransactionDetailPage from './pages/TransactionDetailPage';
 
 const App: Component = () => {
   return (
@@ -66,6 +67,7 @@ const App: Component = () => {
       <Route path="/admin/products" component={AdminProductsPage} />
       <Route path="/transactions" component={TransactionsPage} />
       <Route path="/dashboard" component={DashboardPage} />
+      <Route path="/transactions/:id" component={TransactionDetailPage} />
     </Router>
   );
 };

@@ -34,7 +34,7 @@ const Navbar: Component = () => {
               class="flex items-center gap-1.5 cursor-pointer shrink-0"
             >
               <img src="/favicon.svg" alt="eqüivale" class="w-7 h-7" />
-              <span class="text-lg font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>
+              <span class="text-lg font-bold tracking-tight eq-brand">
                 eqüivale
               </span>
             </button>
