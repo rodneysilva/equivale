@@ -384,7 +384,7 @@ public class SeedService
     {
         ["Design"] = [
             "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&h=800&fit=crop",
-            "https://images.unsplash.com/photo-1561070791-2526d30994b8?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=800&h=800&fit=crop",
             "https://images.unsplash.com/photo-1609921212029-bb5a28e60960?w=800&h=800&fit=crop",
         ],
         ["Programação"] = [

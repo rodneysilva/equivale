@@ -50,7 +50,12 @@ const TransactionDetailPage: Component = () => {
 
   const action = async (fn: () => Promise<Transaction>) => {
     setActionLoading(true);
-    try { setTx(await fn()); setError(''); } catch (err: any) { setError(err.message); }
+    try {
+      setTx(await fn());
+      setError('');
+      // Refresh profile to update wallet balance in navbar
+      if (auth.refreshProfile) await auth.refreshProfile();
+    } catch (err: any) { setError(err.message); }
     finally { setActionLoading(false); }
   };
 
@@ -59,8 +64,8 @@ const TransactionDetailPage: Component = () => {
     try {
       await reviewsService.create(params.id, rating(), comment() || undefined);
       setReviewed(true);
-      // Reload to see Finished status
       setTx(await transactionsService.getById(params.id));
+      if (auth.refreshProfile) await auth.refreshProfile();
     } catch (err: any) { setError(err.message); }
     finally { setActionLoading(false); }
   };
