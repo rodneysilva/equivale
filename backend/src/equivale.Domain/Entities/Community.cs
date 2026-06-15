@@ -13,6 +13,10 @@ public class Community
     public string Type { get; set; } = "open";
     public string ProductVisibility { get; set; } = "public";
     public string? InviteCode { get; set; }
+    /// <summary>Senha de uso único para entrar (null = desativada). Após uso, vira null.</summary>
+    public string? OneTimePassword { get; set; }
+    /// <summary>"open" = aprovação automática, "password" = senha única, "approval" = solicitação+aprovação</summary>
+    public string JoinMode { get; set; } = "open";
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

@@ -43,6 +43,7 @@ export interface Transaction {
   totalPrice: number;
   status: 'OrderPlaced' | 'OrderConfirmed' | 'Shipped' | 'Delivered' | 'Finished' | 'Cancelled';
   trackingInfo?: string;
+  deliveryAddress?: string;
   orderPlacedAt?: string;
   orderConfirmedAt?: string;
   shippedAt?: string;

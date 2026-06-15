@@ -16,6 +16,7 @@ export interface BackendTransactionDto {
   totalPrice: number;
   status: string;
   trackingInfo?: string | null;
+  deliveryAddress?: string | null;
   orderPlacedAt?: string | null;
   orderConfirmedAt?: string | null;
   shippedAt?: string | null;
@@ -42,6 +43,7 @@ function mapTransaction(d: BackendTransactionDto): Transaction {
     totalPrice: d.totalPrice,
     status: d.status as Transaction['status'],
     trackingInfo: d.trackingInfo ?? undefined,
+    deliveryAddress: d.deliveryAddress ?? undefined,
     orderPlacedAt: d.orderPlacedAt ?? undefined,
     orderConfirmedAt: d.orderConfirmedAt ?? undefined,
     shippedAt: d.shippedAt ?? undefined,
@@ -52,8 +54,8 @@ function mapTransaction(d: BackendTransactionDto): Transaction {
 }
 
 export const transactionsService = {
-  async create(itemId: string, itemType: 'Product' | 'Service', quantity = 1): Promise<Transaction> {
-    const raw = await api.post<BackendTransactionDto>('/transactions', { itemId, itemType, quantity });
+  async create(itemId: string, itemType: 'Product' | 'Service', quantity = 1, deliveryAddress?: string): Promise<Transaction> {
+    const raw = await api.post<BackendTransactionDto>('/transactions', { itemId, itemType, quantity, deliveryAddress });
     return mapTransaction(raw);
   },
 

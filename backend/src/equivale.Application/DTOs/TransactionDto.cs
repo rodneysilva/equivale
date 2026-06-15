@@ -15,6 +15,7 @@ public record TransactionDto(
     decimal TotalPrice,
     string Status,
     string? TrackingInfo,
+    string? DeliveryAddress,
     DateTime? OrderPlacedAt,
     DateTime? OrderConfirmedAt,
     DateTime? ShippedAt,
@@ -25,4 +26,5 @@ public record TransactionDto(
 public record CreateTransactionDto(
     string ItemId,
     string ItemType,
-    int Quantity = 1);
+    int Quantity = 1,
+    string? DeliveryAddress = null);

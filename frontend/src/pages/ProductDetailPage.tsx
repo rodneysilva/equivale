@@ -20,6 +20,8 @@ const ProductDetailPage: Component = () => {
   const [error, setError] = createSignal('');
   const [buying, setBuying] = createSignal(false);
   const [quantity, setQuantity] = createSignal(1);
+  const [showCheckout, setShowCheckout] = createSignal(false);
+  const [deliveryAddress, setDeliveryAddress] = createSignal('');
 
   createEffect(() => { loadProduct(); });
 
@@ -32,15 +34,27 @@ const ProductDetailPage: Component = () => {
 
   const handleBuy = async () => {
     if (!auth.isAuthenticated()) { navigate('/login'); return; }
+    if (!deliveryAddress().trim()) { setError('Informe o endereço de entrega'); return; }
     setBuying(true);
     setError('');
     try {
-      await transactionsService.create(params.id, 'Product', quantity());
+      await transactionsService.create(params.id, 'Product', quantity(), deliveryAddress().trim());
       if (auth.refreshProfile) await auth.refreshProfile();
+      setShowCheckout(false);
       navigate('/transactions');
     } catch (err: any) { setError(err.message || 'Erro ao comprar'); }
     finally { setBuying(false); }
   };
+
+  const openCheckout = () => {
+    if (!auth.isAuthenticated()) { navigate('/login'); return; }
+    setError('');
+    setShowCheckout(true);
+  };
+
+  const itemTotal = () => (product()?.price ?? 0) * quantity();
+  const shippingTotal = () => product()?.shippingCost ?? 0;
+  const grandTotal = () => itemTotal() + shippingTotal();
 
   const isOwnProduct = () => auth.currentUser()?.id === product()?.sellerId;
   const formatDate = (d: string) => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -105,19 +119,9 @@ const ProductDetailPage: Component = () => {
             {/* Buy section */}
             <Show when={!isOwnProduct()}>
               <Show when={product()!.stock === undefined || product()!.stock! > 0}>
-                <div class="flex items-center gap-3">
-                  <Show when={(product()!.stock ?? 1) > 1}>
-                    <div class="flex items-center gap-2">
-                      <button onClick={() => setQuantity(q => Math.max(1, q - 1))} class="eq-btn-outline eq-btn-sm w-8 h-8 rounded">-</button>
-                      <span class="text-sm font-medium w-6 text-center" style={{ color: 'var(--color-text)' }}>{quantity()}</span>
-                      <button onClick={() => setQuantity(q => Math.min(product()!.stock ?? 99, q + 1))} class="eq-btn-outline eq-btn-sm w-8 h-8 rounded">+</button>
-                    </div>
-                  </Show>
-                  <Button size="lg" class="flex-1" onClick={handleBuy} disabled={buying()}>
-                    {buying() ? <LoadingSpinner size="w-4 h-4" class="!justify-start" /> : <><ShoppingCart size={16} class="mr-2" /> Comprar{quantity() > 1 ? ` (${quantity()})` : ''}</>}
-                  </Button>
-                </div>
-                <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>Total: <strong class="eq-accent">{product()!.price * quantity()} EQL</strong></p>
+                <Button size="lg" class="w-full" onClick={openCheckout}>
+                  <ShoppingCart size={16} class="mr-2" /> Comprar
+                </Button>
               </Show>
             </Show>
             <Show when={isOwnProduct()}>
@@ -129,6 +133,53 @@ const ProductDetailPage: Component = () => {
           </div>
         </div>
       ) : null}
+
+      {/* Checkout modal */}
+      <Show when={showCheckout() && product()}>
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowCheckout(false)}>
+          <div class="eq-card p-6 max-w-md w-full" style={{ 'box-shadow': 'var(--shadow-md)' }} onClick={(e) => e.stopPropagation()}>
+            <h2 class="text-lg font-bold mb-4" style={{ color: 'var(--color-text)' }}>Finalizar compra</h2>
+
+            {/* Resumo */}
+            <div class="space-y-2 mb-4">
+              <div class="flex justify-between text-sm"><span style={{ color: 'var(--color-text-muted)' }}>Produto</span><span style={{ color: 'var(--color-text)' }}>{product()!.title}</span></div>
+              <div class="flex justify-between items-center text-sm">
+                <span style={{ color: 'var(--color-text-muted)' }}>Quantidade</span>
+                <div class="flex items-center gap-2">
+                  <button onClick={() => setQuantity(q => Math.max(1, q - 1))} class="eq-btn-outline eq-btn-sm w-7 h-7 rounded text-sm">-</button>
+                  <span class="text-sm font-medium w-6 text-center" style={{ color: 'var(--color-text)' }}>{quantity()}</span>
+                  <button onClick={() => setQuantity(q => Math.min(product()!.stock ?? 99, q + 1))} class="eq-btn-outline eq-btn-sm w-7 h-7 rounded text-sm">+</button>
+                </div>
+              </div>
+              <div class="flex justify-between text-sm"><span style={{ color: 'var(--color-text-muted)' }}>Preço unitário</span><span style={{ color: 'var(--color-text)' }}>{product()!.price} EQL</span></div>
+              <div class="flex justify-between text-sm"><span style={{ color: 'var(--color-text-muted)' }}>Subtotal</span><span style={{ color: 'var(--color-text)' }}>{itemTotal()} EQL</span></div>
+              <Show when={shippingTotal() > 0}>
+                <div class="flex justify-between text-sm"><span style={{ color: 'var(--color-text-muted)' }}>Frete</span><span style={{ color: 'var(--color-text)' }}>{shippingTotal()} EQL</span></div>
+              </Show>
+              <div class="flex justify-between font-bold pt-2" style={{ 'border-top': '1px solid var(--color-border)' }}>
+                <span style={{ color: 'var(--color-text)' }}>Total</span>
+                <span class="eq-accent text-lg">{grandTotal()} EQL</span>
+              </div>
+            </div>
+
+            {/* Endereço */}
+            <div class="mb-4">
+              <label class="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>Endereço de entrega</label>
+              <textarea value={deliveryAddress()} onInput={(e) => setDeliveryAddress(e.currentTarget.value)} rows={3} placeholder="Rua, número, bairro, cidade, CEP..." class="eq-input resize-none" />
+              <p class="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>Este endereço será compartilhado com o vendedor após a confirmação do pedido.</p>
+            </div>
+
+            {error() && <div class="p-2.5 rounded text-xs mb-3" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>{error()}</div>}
+
+            <div class="flex gap-2">
+              <Button variant="outline" class="flex-1" onClick={() => setShowCheckout(false)}>Cancelar</Button>
+              <Button class="flex-1" onClick={handleBuy} disabled={buying()}>
+                {buying() ? <LoadingSpinner size="w-4 h-4" class="!justify-start" /> : 'Confirmar compra'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Show>
     </div>
   );
 };

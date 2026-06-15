@@ -112,7 +112,8 @@ public class MappingProfile : Profile
             .ForCtorParam("UnitPrice", opt => opt.MapFrom(src => src.UnitPrice.Amount))
             .ForCtorParam("ShippingCost", opt => opt.MapFrom(src => src.ShippingCost))
             .ForCtorParam("TotalPrice", opt => opt.MapFrom(src => src.TotalPrice.Amount))
-            .ForCtorParam("TrackingInfo", opt => opt.MapFrom(src => src.TrackingInfo));
+            .ForCtorParam("TrackingInfo", opt => opt.MapFrom(src => src.TrackingInfo))
+            .ForCtorParam("DeliveryAddress", opt => opt.MapFrom(src => src.DeliveryAddress));
     }
 
     private static ProductCondition ParseCondition(string? value)

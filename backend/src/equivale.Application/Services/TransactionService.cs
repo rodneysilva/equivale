@@ -73,6 +73,7 @@ public class TransactionService : ITransactionService
             ItemId = dto.ItemId, ItemTitle = itemTitle,
             Quantity = dto.Quantity, UnitPrice = new Money(unitPrice), ShippingCost = shipping,
             TotalPrice = new Money(total),
+            DeliveryAddress = isProduct ? dto.DeliveryAddress : null,
             Status = TransactionStatus.OrderPlaced,
             OrderPlacedAt = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow,

@@ -19,6 +19,7 @@ public class Transaction
     public TransactionStatus Status { get; set; } = TransactionStatus.OrderPlaced;
 
     public string? TrackingInfo { get; set; }
+    public string? DeliveryAddress { get; set; }
     public DateTime? OrderPlacedAt { get; set; }
     public DateTime? OrderConfirmedAt { get; set; }
     public DateTime? ShippedAt { get; set; }
