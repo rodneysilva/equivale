@@ -176,64 +176,6 @@ const CommunityDetailPage: Component = () => {
             </div>
           </div>
 
-          {/* Info */}
-          <div class="flex flex-col sm:flex-row items-start gap-4 -mt-12 relative z-10 px-2 sm:px-0">
-            <div class="w-16 h-16 rounded eq-card flex items-center justify-center overflow-hidden shrink-0" style={{ border: '2px solid var(--color-surface)' }}>
-              {community()!.imageUrl ? (
-                <img src={community()!.imageUrl} alt={community()!.name} class="w-full h-full object-cover" />
-              ) : (
-                <span class="text-xl font-bold eq-brand">{community()!.name[0]}</span>
-              )}
-            </div>
-            <div class="flex-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <h1 class="text-xl font-bold" style={{ color: 'var(--color-text)' }}>{community()!.name}</h1>
-                <span class={`eq-badge ${community()!.type === 'private' ? 'eq-badge-warning' : 'eq-badge-primary'}`}>
-                  {community()!.type === 'private' ? (
-                    <><Lock size={10} class="mr-1" /> Privada</>
-                  ) : (
-                    <><Globe size={10} class="mr-1" /> Aberta</>
-                  )}
-                </span>
-                <span class="eq-badge eq-badge-info">
-                  {community()!.productVisibility === 'public' ? (
-                    <><Eye size={10} class="mr-1" /> Produtos públicos</>
-                  ) : (
-                    <><EyeOff size={10} class="mr-1" /> Produtos visíveis p/ membros</>
-                  )}
-                </span>
-              </div>
-              <p class="text-sm mt-1.5" style={{ color: 'var(--color-text-muted)' }}>{community()!.description}</p>
-              <div class="flex items-center gap-4 mt-2">
-                <span class="text-xs flex items-center gap-1" style={{ color: 'var(--color-text-muted)' }}>
-                  <Users size={12} /> {community()!.membersCount} membros
-                </span>
-              </div>
-            </div>
-            <div class="shrink-0 flex items-center gap-2">
-              {community()!.type === 'private' && !isMember() && (
-                <input
-                  type="text"
-                  value={inviteCodeInput()}
-                  onInput={(e) => setInviteCodeInput(e.currentTarget.value)}
-                  placeholder="Codigo de convite"
-                  class="eq-input text-xs w-32"
-                />
-              )}
-              {isMember() ? (
-                <Button variant="outline" size="sm" onClick={handleLeave} disabled={actionLoading()}>
-                  <UserMinus size={14} class="mr-1" />
-                  Sair
-                </Button>
-              ) : (
-                <Button size="sm" onClick={handleJoin} disabled={actionLoading()}>
-                  <UserPlus size={14} class="mr-1" />
-                  Participar
-                </Button>
-              )}
-            </div>
-          </div>
-
           {/* Moderadores */}
           {community()!.moderatorNames && community()!.moderatorNames!.length > 0 && (
             <Card class="p-4">

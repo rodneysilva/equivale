@@ -30,4 +30,17 @@ export const searchService = {
     const params = new URLSearchParams({ q, limit: String(limit) });
     return api.get<UnifiedSearchResult>(`/search/all?${params}`);
   },
+
+  async getProductFacets(): Promise<FacetResult> {
+    return api.get<FacetResult>('/search/product-facets');
+  },
+
+  async getServiceFacets(): Promise<FacetResult> {
+    return api.get<FacetResult>('/search/service-facets');
+  },
 };
+
+export interface FacetResult {
+  categories: Record<string, number>;
+  tags: Record<string, number>;
+}

@@ -2,13 +2,13 @@ import { type Component, For } from 'solid-js';
 import Card from '../ui/Card';
 
 interface TagFilterProps {
-  tags: string[];
+  tags: Record<string, number>;
   selected?: string;
   onSelect: (tag: string) => void;
 }
 
 const TagFilter: Component<TagFilterProps> = (props) => {
-  if (props.tags.length === 0) return null;
+  const entries = () => Object.entries(props.tags).sort((a, b) => b[1] - a[1]);
 
   return (
     <Card class="p-3">
@@ -16,18 +16,19 @@ const TagFilter: Component<TagFilterProps> = (props) => {
         Tags
       </h3>
       <div class="flex flex-wrap gap-1.5">
-        <For each={props.tags}>
-          {(tag) => (
+        <For each={entries()}>
+          {([tag, count]) => (
             <button
               onClick={() => props.onSelect(props.selected === tag ? '' : tag)}
-              class="text-xs px-2 py-1 rounded-full transition-colors"
+              class="text-xs px-2 py-1 rounded-full transition-colors flex items-center gap-1 cursor-pointer"
               style={
                 props.selected === tag
                   ? { background: 'var(--color-primary)', color: '#fff' }
                   : { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)' }
               }
             >
-              {tag}
+              #{tag}
+              <span style={{ opacity: 0.6 }}>{count}</span>
             </button>
           )}
         </For>

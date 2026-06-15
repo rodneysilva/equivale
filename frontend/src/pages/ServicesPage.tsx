@@ -1,7 +1,8 @@
-import { type Component, createSignal, onMount, createEffect } from 'solid-js';
+import { type Component, createSignal, createEffect, onMount, For, Show } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { Plus } from 'lucide-solid';
 import { servicesService } from '../services/services.service';
+import { searchService, type FacetResult } from '../services/search.service';
 import ServiceGrid from '../components/marketplace/ServiceGrid';
 import SearchBar from '../components/marketplace/SearchBar';
 import CategoryFilter from '../components/marketplace/CategoryFilter';
@@ -9,9 +10,6 @@ import TagFilter from '../components/marketplace/TagFilter';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import type { Service } from '../types';
-
-const categories = ['Design', 'Programação', 'Marketing', 'Escrita', 'Consultoria', 'Aulas', 'Fotografia', 'Outros'];
-const popularTags = ['design', 'programacao', 'marketing', 'escrita', 'aula', 'fotografia', 'musica', 'consultoria'];
 
 const ServicesPage: Component = () => {
   const navigate = useNavigate();
@@ -22,7 +20,7 @@ const ServicesPage: Component = () => {
   const [tag, setTag] = createSignal('');
   const [page, setPage] = createSignal(1);
   const [totalPages, setTotalPages] = createSignal(1);
-  let firstLoad = true;
+  const [facets, setFacets] = createSignal<FacetResult>({ categories: {}, tags: {} });
 
   const loadServices = async () => {
     setLoading(true);
@@ -38,16 +36,30 @@ const ServicesPage: Component = () => {
     }
   };
 
-  onMount(() => { loadServices(); });
-
-  createEffect(() => {
-    if (firstLoad) { firstLoad = false; return; }
+  onMount(async () => {
+    try {
+      setFacets(await searchService.getServiceFacets());
+    } catch { /* ignore */ }
     loadServices();
   });
 
-  const handleSearch = (value: string) => { setSearch(value); setPage(1); };
-  const handleCategory = (cat: string) => { setCategory(cat); setPage(1); };
-  const handleTag = (t: string) => { setTag(t); setPage(1); };
+  const reload = () => setPage(1);
+  const handleSearch = (v: string) => { setSearch(v); reload(); };
+  const handleCategory = (c: string) => { setCategory(c); reload(); };
+  const handleTag = (t: string) => { setTag(t); reload(); };
+
+  createEffect(() => {
+    category(); search(); tag(); page();
+    if (!loading()) loadServices();
+  });
+
+  const activeFilters = () => {
+    const f: string[] = [];
+    if (category()) f.push(`Categoria: ${category()}`);
+    if (tag()) f.push(`Tag: #${tag()}`);
+    if (search()) f.push(`Busca: "${search()}"`);
+    return f;
+  };
 
   return (
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -58,28 +70,39 @@ const ServicesPage: Component = () => {
         </div>
         <Button onClick={() => navigate('/services/new')}>
           <Plus size={16} class="mr-1.5" />
-          Oferecer serviço
+          Oferecer
         </Button>
       </div>
+
+      <Show when={activeFilters().length > 0}>
+        <div class="mb-4 flex flex-wrap items-center gap-2">
+          <span class="text-xs" style={{ color: 'var(--color-text-muted)' }}>Filtros ativos:</span>
+          <For each={activeFilters()}>
+            {(f) => <span class="eq-badge eq-badge-primary">{f}</span>}
+          </For>
+          <button onClick={() => { setCategory(''); setTag(''); setSearch(''); reload(); }} class="text-xs eq-link">Limpar</button>
+        </div>
+      </Show>
+
       <div class="flex flex-col lg:flex-row gap-6">
-        <div class="lg:w-56 shrink-0">
-          <div class="lg:sticky space-y-4" style={{ top: '7rem' }}>
+        <div class="lg:w-52 shrink-0">
+          <div class="lg:sticky space-y-3" style={{ top: '7rem' }}>
             <Card class="p-3">
-              <SearchBar value={search()} onInput={handleSearch} placeholder="Buscar serviços..." />
+              <SearchBar value={search()} onInput={handleSearch} placeholder="Buscar..." />
             </Card>
-            <CategoryFilter categories={categories} selected={category()} onSelect={handleCategory} />
-            <TagFilter tags={popularTags} selected={tag()} onSelect={handleTag} />
+            <CategoryFilter categories={facets().categories} selected={category()} onSelect={handleCategory} />
+            <TagFilter tags={facets().tags} selected={tag()} onSelect={handleTag} />
           </div>
         </div>
         <div class="flex-1 min-w-0">
           <ServiceGrid services={services()} isLoading={loading()} />
-          {totalPages() > 1 && (
+          <Show when={totalPages() > 1}>
             <div class="flex items-center justify-center gap-2 mt-8">
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page() <= 1} class="eq-btn eq-btn-outline eq-btn-sm">Anterior</button>
+              <button onClick={() => setPage(Math.max(1, page() - 1))} disabled={page() <= 1} class="eq-btn eq-btn-outline eq-btn-sm">Anterior</button>
               <span class="text-xs" style={{ color: 'var(--color-text-muted)' }}>{page()} de {totalPages()}</span>
-              <button onClick={() => setPage(p => Math.min(totalPages(), p + 1))} disabled={page() >= totalPages()} class="eq-btn eq-btn-outline eq-btn-sm">Próximo</button>
+              <button onClick={() => setPage(Math.min(totalPages(), page() + 1))} disabled={page() >= totalPages()} class="eq-btn eq-btn-outline eq-btn-sm">Próximo</button>
             </div>
-          )}
+          </Show>
         </div>
       </div>
     </div>

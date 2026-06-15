@@ -205,6 +205,10 @@ public class SeedService
         new("u8", "Gabriel Martins", "gabriel.martins@equivale.test", "Jardinheiro urbano e permacultor. Cultivo hortas verticais e plantas medicinais.", "https://i.pravatar.cc/300?img=60", 55),
         new("u9", "Fernanda Lima", "fernanda.lima@equivale.test", "Terapeuta holística e professora de yoga. Foco em bem-estar e mindfulness.", "https://i.pravatar.cc/300?img=32", 50),
         new("u10", "Thiago Souza", "thiago.souza@equivale.test", "Consultor de marketing digital e copywriter. Ajudo pequenos negócios a crescerem.", "https://i.pravatar.cc/300?img=15", 45),
+        new("u11", "Ana Paula Ribeiro", "ana.ribeiro@equivale.test", "Ilustradora e artista plástica. Especialista em aquarela e desenho botânico.", "https://i.pravatar.cc/300?img=25", 42),
+        new("u12", "Carlos Eduardo", "carlos.eduardo@equivale.test", "Chef confeiteiro artesanal. Faço bolos, pães e doces naturais sem glúten.", "https://i.pravatar.cc/300?img=53", 38),
+        new("u13", "Patricia Nunes", "patricia.nunes@equivale.test", "Arquiteta e designer de interiores focada em sustentabilidade e materiais naturais.", "https://i.pravatar.cc/300?img=48", 33),
+        new("u14", "Bruno Carvalho", "bruno.carvalho@equivale.test", "Eletricista e técnico de eletrônica. Reparo gadgets e construo projetos DIY.", "https://i.pravatar.cc/300?img=68", 28),
     };
 
     private static readonly List<CommunityData> Communities = new()
@@ -227,6 +231,12 @@ public class SeedService
         new("c_jardim", "Jardinagem & Permacultura", "Cultivadores urbanos, jardineiros e amantes de plantas verdes.",
             Img("com-jardim"), Cover("cover-jardim"),
             "u8", new[] { "u5", "u9" }, new[] { "u1" }, "open", 65),
+        new("c_madeira", "Madeira & Marcenaria", "Marceneiros e artesãos da madeira. Móveis sob medida, utensílios e restauração.",
+            Img("com-madeira"), Cover("cover-madeira"),
+            "u4", new[] { "u13", "u1" }, new[] { "u14" }, "open", 60),
+        new("c_saude", "Bem-estar & Saúde Natural", "Terapeutas, professores de yoga e entusiastas de medicina natural e holística.",
+            Img("com-saude"), Cover("cover-saude"),
+            "u9", new[] { "u5", "u13" }, new[] { "u8", "u11" }, "open", 58),
     };
 
     private static readonly List<ProductData> Products = new()
@@ -274,6 +284,47 @@ public class SeedService
         new("Tapete de yoga antiderrapante", "Tapete ecológico em TPE, 6mm de espessura. Super confortável.", "Bem-estar", 65, new List<string>{ Img("tapete-yoga") }, ProductCondition.New, "u9", null, 28),
         new("Kit incensos naturais (12un)", "Incensos artesanais de ervas, sem química. Cada um com aroma único.", "Bem-estar", 30, new List<string>{ Img("incensos") }, ProductCondition.New, "u9", null, 24),
         new("Cristal de quartzo rosa", "Pedra natural polida para meditação e decoração.", "Bem-estar", 25, new List<string>{ Img("cristal") }, ProductCondition.New, "u9", null, 19),
+
+        // Mais Artesanato
+        new("Colar de sementes handmade", "Colar artesanal feito com sementes de açaí e miçangas naturais.", "Artesanato", 32, new List<string>{ Img("colar-sementes") }, ProductCondition.New, "u1", "c_arte", 17),
+        new("Renda bordada à mão (toalha)", "Toalha de mesa em renda bordada à mão, padrão floral.", "Artesanato", 48, new List<string>{ Img("renda-toalha") }, ProductCondition.New, "u11", "c_arte", 15),
+        new("Sabonete artesanal herbal (kit 4)", "Sabonetes naturais de glicerina com ervas: alecrim, lavanda, camomila e hortelã.", "Artesanato", 24, new List<string>{ Img("sabonetes") }, ProductCondition.New, "u9", "c_saude", 14),
+
+        // Mais Fotografia
+        new("Lente 50mm f/1.8 usada", "Lente prime 50mm, ótima para retratos. Vidro sem riscos.", "Fotografia", 280, new List<string>{ Img("lente-50mm") }, ProductCondition.Used, "u3", "c_foto", 16),
+        new("Bolsa para câmera à prova d'água", "Mochila resistente à água com divisórias para equipamento fotográfico.", "Fotografia", 95, new List<string>{ Img("bolsa-camera") }, ProductCondition.New, "u3", null, 12),
+        new("Polaroid e filme instantâneo", "Câmera Polaroid com 2 cartuchos de filme colorido.", "Fotografia", 130, new List<string>{ Img("polaroid") }, ProductCondition.Used, "u3", "c_foto", 10),
+
+        // Mais Arte
+        new("Aquarela botânica emoldurada", "Pintura aquarela de planta tropical, moldura de madeira inclusa.", "Arte", 150, new List<string>{ Img("aquarela") }, ProductCondition.New, "u11", "c_arte", 16),
+        new("Poster arte abstrata A2", "Poster de arte abstrata geométrica, impressão de alta qualidade.", "Arte", 35, new List<string>{ Img("poster") }, ProductCondition.New, "u7", null, 13),
+        new("Tela em branco premium (kit 3)", "3 telas para pintura em algodão, tamanhos 30x40, 40x50 e 50x70.", "Arte", 28, new List<string>{ Img("telas-kit") }, ProductCondition.New, "u11", null, 11),
+
+        // Mais Madeira
+        new("Banco rústico de tronco", "Banco feito de tronco maciço, lixado e envernizado.", "Madeira", 180, new List<string>{ Img("banco-tronco") }, ProductCondition.New, "u4", "c_madeira", 16),
+        new("Cabideiro de parede orgânico", "Cabideiro em galho natural tratado, sustenta até 15kg.", "Madeira", 65, new List<string>{ Img("cabideiro") }, ProductCondition.New, "u4", "c_madeira", 14),
+        new("Jogo de bowls de madeira", "Conjunto de 3 tigelas de madeira maciça para servir.", "Madeira", 72, new List<string>{ Img("bowls-madeira") }, ProductCondition.New, "u4", "c_madeira", 12),
+        new("Prancha de corte premium", "Tábua de corte grande em madeira de bambu com acabamento natural.", "Madeira", 38, new List<string>{ Img("prancha-corte") }, ProductCondition.New, "u13", null, 10),
+
+        // Mais Alimentação
+        new("Bombom de chocolate amargo (kit 12)", "Bombons artesanais 70% cacau, sem leite. Embalagem可持续.", "Alimentação", 32, new List<string>{ Img("bombons") }, ProductCondition.New, "u12", "c_vegano", 15),
+        new("Geleia artesanal de pimenta", "Geleia caseira de pimenta biquinho, doce e levemente picante.", "Alimentação", 18, new List<string>{ Img("geleia") }, ProductCondition.New, "u5", "c_vegano", 13),
+        new("Kombucha orgânico (1L)", "Kombucha fermentado naturalmente, sabor frutas vermelhas.", "Alimentação", 22, new List<string>{ Img("kombucha") }, ProductCondition.New, "u12", null, 10),
+
+        // Mais Jardinagem
+        new("Cactos variados (mini coleção)", "3 mini cactos diferentes em vasos de cerâmica.", "Jardinagem", 35, new List<string>{ Img("cactos") }, ProductCondition.New, "u8", "c_jardim", 16),
+        new("Vasinho de cimento decorativo (kit 3)", "3 vasos modernos de cimento queimado para suculentas.", "Jardinagem", 42, new List<string>{ Img("vasos-cimento") }, ProductCondition.New, "u13", "c_jardim", 13),
+        new("Sementes de hortaliças orgânicas", "Pacote com 8 variedades de sementes para horta caseira.", "Jardinagem", 15, new List<string>{ Img("sementes") }, ProductCondition.New, "u8", "c_jardim", 10),
+
+        // Mais Tecnologia
+        new("Headphone Bluetooth recondicionado", "Fone sem fio com cancelamento de ruído, restaurado e testado.", "Tecnologia", 180, new List<string>{ Img("headphone") }, ProductCondition.Refurbished, "u14", "c_dev", 15),
+        new("Hub USB-C 7 em 1", "Hub com HDMI 4K, USB 3.0, leitor de cartão e carregamento.", "Tecnologia", 90, new List<string>{ Img("hub-usb") }, ProductCondition.New, "u14", "c_dev", 12),
+        new("Arduino Uno + kit sensores", "Kit completo para projetos eletrônicos com 15 sensores inclusos.", "Tecnologia", 120, new List<string>{ Img("arduino") }, ProductCondition.New, "u14", "c_dev", 10),
+
+        // Mais Bem-estar
+        new("Difusor de aromas ultrassônico", "Difusor de óleos essenciais com luz LED e timer.", "Bem-estar", 55, new List<string>{ Img("difusor") }, ProductCondition.New, "u9", "c_saude", 16),
+        new("Óleos essenciais puros (kit 5)", "Lavanda, eucalipto, hortelã, tea tree e alecrim. 10ml cada.", "Bem-estar", 48, new List<string>{ Img("oleos-essenciais") }, ProductCondition.New, "u9", "c_saude", 14),
+        new("Bloco de yoga cortiça", "Bloco ecológico de cortiça natural para apoio em posturas de yoga.", "Bem-estar", 35, new List<string>{ Img("bloco-yoga") }, ProductCondition.New, "u9", "c_saude", 11),
     };
 
     private static readonly List<ServiceData> Services = new()
@@ -314,5 +365,31 @@ public class SeedService
         // Outros
         new("Composição de jingle publicitário", "Criação de jingle de até 30 segundos para sua marca.", "Outros", 350, TimeSpan.FromHours(12), "Remoto", "u6", "c_musica", 31),
         new("Produção de beat instrumental", "Beat original personalizado no estilo que preferir.", "Outros", 120, TimeSpan.FromHours(5), "Remoto", "u6", "c_musica", 24),
+
+        // Mais Design
+        new("Capa de livro ou e-book", "Design de capa profissional para publicação digital ou impressa.", "Design", 90, TimeSpan.FromHours(5), "Remoto", "u7", null, 16),
+        new("Logo minimalista em 24h", "Criação de logotipo minimalista com 3 propostas e revisões.", "Design", 110, TimeSpan.FromHours(4), "Remoto", "u7", "c_dev", 13),
+
+        // Mais Programação
+        new("Correção de bugs e refatoração", "Análise e correção de bugs em seu projeto existente. Por hora.", "Programação", 60, TimeSpan.FromHours(1), "Remoto", "u2", null, 14),
+        new("Bot para Discord ou Telegram", "Desenvolvimento de bot personalizado com integração de APIs.", "Programação", 250, TimeSpan.FromHours(8), "Remoto", "u14", "c_dev", 12),
+
+        // Mais Aulas
+        new("Aula particular de desenho", "Aula de desenho e observação para iniciantes, técnicas a lápis e nanquim.", "Aulas", 55, TimeSpan.FromHours(2), "Online", "u11", "c_arte", 15),
+        new("Workshop de jardinagem urbana", "Workshop de 4h sobre como montar sua horta em apartamento.", "Aulas", 70, TimeSpan.FromHours(4), "Presencial - São Paulo", "u8", "c_jardim", 13),
+        new("Aula de pão artesanal vegano", "Aula prática de fermentação natural e panificação sem glúten.", "Aulas", 65, TimeSpan.FromHours(3), "Online", "u12", "c_vegano", 11),
+
+        // Mais Consultoria
+        new("Consultoria de design de interiores", "Planejamento de espaço residencial com sugestão de materiais sustentáveis.", "Consultoria", 350, TimeSpan.FromHours(6), "Online ou Presencial", "u13", null, 14),
+        new("Avaliação de gadgets para reparo", "Diagnóstico e orçamento para reparo de equipamentos eletrônicos.", "Consultoria", 30, TimeSpan.FromHours(1), "Remoto", "u14", "c_dev", 10),
+
+        // Mais Marketing
+        new("Roteiro para vídeo institucional", "Roteiro completo para vídeo promocional ou institucional de até 3 min.", "Marketing", 120, TimeSpan.FromHours(4), "Remoto", "u10", null, 12),
+
+        // Mais Escrita
+        new("Tradução EN-PT (por página)", "Tradução profissional inglês-português para artigos e documentos.", "Escrita", 35, TimeSpan.FromHours(2), "Remoto", "u10", null, 10),
+
+        // Mais Fotografia
+        new("Edição de vídeo curto (Reels/TikTok)", "Edição de vídeo curto de até 60s com cortes, legendas e trilha.", "Fotografia", 40, TimeSpan.FromHours(2), "Remoto", "u3", "c_foto", 12),
     };
 }
