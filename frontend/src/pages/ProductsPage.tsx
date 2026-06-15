@@ -1,4 +1,4 @@
-import { type Component, createSignal, createEffect } from 'solid-js';
+import { type Component, createSignal, onMount, createEffect } from 'solid-js';
 import { useNavigate, useSearchParams } from '@solidjs/router';
 import { Plus } from 'lucide-solid';
 import { productsService } from '../services/products.service';
@@ -23,8 +23,7 @@ const ProductsPage: Component = () => {
   const [tag, setTag] = createSignal('');
   const [page, setPage] = createSignal(1);
   const [totalPages, setTotalPages] = createSignal(1);
-
-  createEffect(() => { loadProducts(); });
+  let firstLoad = true;
 
   const loadProducts = async () => {
     setLoading(true);
@@ -32,16 +31,27 @@ const ProductsPage: Component = () => {
       const res = await productsService.getAll(page(), 12, category() || undefined, search() || undefined, tag() || undefined);
       setProducts(res.data);
       setTotalPages(res.totalPages);
-    } catch { setProducts([]); }
-    finally { setLoading(false); }
+    } catch (e) {
+      console.error('Erro ao carregar produtos:', e);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  onMount(() => { loadProducts(); });
+
+  createEffect(() => {
+    if (firstLoad) { firstLoad = false; return; }
+    loadProducts();
+  });
 
   const handleSearch = (value: string) => { setSearch(value); setPage(1); };
   const handleCategory = (cat: string) => { setCategory(cat); setPage(1); };
   const handleTag = (t: string) => { setTag(t); setPage(1); };
 
   return (
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div class="mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 class="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Produtos</h1>
@@ -54,7 +64,7 @@ const ProductsPage: Component = () => {
       </div>
       <div class="flex flex-col lg:flex-row gap-6">
         <div class="lg:w-56 shrink-0">
-          <div class="lg:sticky lg:top-20 space-y-4">
+          <div class="lg:sticky space-y-4" style={{ top: '7rem' }}>
             <Card class="p-3">
               <SearchBar value={search()} onInput={handleSearch} placeholder="Buscar produtos..." />
             </Card>
@@ -62,7 +72,7 @@ const ProductsPage: Component = () => {
             <TagFilter tags={popularTags} selected={tag()} onSelect={handleTag} />
           </div>
         </div>
-        <div class="flex-1">
+        <div class="flex-1 min-w-0">
           <ProductGrid products={products()} isLoading={loading()} />
           {totalPages() > 1 && (
             <div class="flex items-center justify-center gap-2 mt-8">

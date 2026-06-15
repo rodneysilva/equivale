@@ -1,8 +1,9 @@
 import { createSignal, type Component } from 'solid-js';
 import { useNavigate, useLocation } from '@solidjs/router';
-import { Menu, X, Wallet, User, LogOut, Shield, ChevronDown, Search } from 'lucide-solid';
+import { Menu, X, Wallet, User, LogOut, Shield, ChevronDown } from 'lucide-solid';
 import { useAuth } from '../../store/auth';
 import ThemeToggle from '../ui/ThemeToggle';
+import SearchBar from './SearchBar';
 
 const navLinks = [
   { path: '/communities', label: 'Comunidades' },
@@ -13,20 +14,12 @@ const navLinks = [
 const Navbar: Component = () => {
   const [mobileOpen, setMobileOpen] = createSignal(false);
   const [dropdownOpen, setDropdownOpen] = createSignal(false);
-  const [searchTerm, setSearchTerm] = createSignal('');
   const auth = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleNav = (path: string) => {
     navigate(path);
-    setMobileOpen(false);
-  };
-
-  const handleSearch = (e: Event) => {
-    e.preventDefault();
-    const term = searchTerm().trim();
-    navigate(term ? `/products?search=${encodeURIComponent(term)}` : '/products');
     setMobileOpen(false);
   };
 
@@ -43,21 +36,10 @@ const Navbar: Component = () => {
               equivale
             </button>
 
-            {/* Search bar */}
-            <form onSubmit={handleSearch} class="flex-1 max-w-2xl hidden sm:block">
-              <div class="relative">
-                <input
-                  type="text"
-                  value={searchTerm()}
-                  onInput={(e) => setSearchTerm(e.currentTarget.value)}
-                  placeholder="Buscar produtos, serviços, comunidades..."
-                  class="eq-input pr-10 h-10"
-                />
-                <button type="submit" class="absolute right-0 top-0 bottom-0 px-3 flex items-center eq-btn-ghost" style={{ borderLeft: '1px solid var(--color-border)' }}>
-                  <Search size={18} />
-                </button>
-              </div>
-            </form>
+            {/* Search bar with autocomplete */}
+            <div class="flex-1 hidden sm:block">
+              <SearchBar />
+            </div>
 
             <div class="flex items-center gap-1.5 shrink-0">
               <ThemeToggle />
@@ -153,14 +135,9 @@ const Navbar: Component = () => {
         <div class="fixed inset-0 z-40 md:hidden">
           <div class="absolute inset-0 bg-black/30" onClick={() => setMobileOpen(false)} />
           <div class="absolute top-[6.5rem] left-0 right-0 eq-nav p-3 space-y-0.5">
-            <form onSubmit={handleSearch} class="mb-3 sm:hidden">
-              <div class="relative">
-                <input type="text" value={searchTerm()} onInput={(e) => setSearchTerm(e.currentTarget.value)} placeholder="Buscar..." class="eq-input pr-10" />
-                <button type="submit" class="absolute right-0 top-0 bottom-0 px-3 flex items-center eq-btn-ghost">
-                  <Search size={18} />
-                </button>
-              </div>
-            </form>
+            <div class="mb-3 sm:hidden">
+              <SearchBar />
+            </div>
             {navLinks.map(link => (
               <button
                 onClick={() => handleNav(link.path)}

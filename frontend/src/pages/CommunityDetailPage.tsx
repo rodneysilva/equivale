@@ -108,11 +108,72 @@ const CommunityDetailPage: Component = () => {
         </Card>
       ) : community() ? (
         <div class="space-y-6">
-          {/* Cover */}
-          <div class="relative h-36 sm:h-48 rounded overflow-hidden" style={{ background: 'var(--color-surface-alt)' }}>
+          {/* Cover banner with gradient overlay + name overlay */}
+          <div class="relative h-44 sm:h-56 rounded-lg overflow-hidden" style={{ background: 'var(--color-surface-alt)' }}>
             {community()!.coverUrl && (
-              <img src={community()!.coverUrl} alt="" class="w-full h-full object-cover" />
+              <img src={community()!.coverUrl} alt="" class="w-full h-full object-cover" loading="lazy" />
             )}
+            <div class="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.15) 50%, transparent 100%)' }} />
+            <div class="absolute bottom-4 left-4 right-4 flex items-end gap-3">
+              <div class="w-16 h-16 rounded-lg flex items-center justify-center overflow-hidden shrink-0" style={{ border: '3px solid var(--color-surface)' }}>
+                {community()!.imageUrl ? (
+                  <img src={community()!.imageUrl} alt={community()!.name} class="w-full h-full object-cover" loading="lazy" />
+                ) : (
+                  <span class="text-2xl font-bold text-white" style={{ background: 'var(--color-primary)', width: '100%', height: '100%', display: 'flex', 'align-items': 'center', 'justify-content': 'center' }}>{community()!.name[0]}</span>
+                )}
+              </div>
+              <div class="flex-1 min-w-0 pb-1">
+                <h1 class="text-xl font-bold text-white drop-shadow-lg truncate">{community()!.name}</h1>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class={`eq-badge ${community()!.type === 'private' ? 'eq-badge-warning' : 'eq-badge-primary'}`}>
+                    {community()!.type === 'private' ? (<><Lock size={10} class="mr-1" /> Privada</>) : (<><Globe size={10} class="mr-1" /> Aberta</>)}
+                  </span>
+                  <span class="eq-badge" style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}>
+                    <Users size={10} class="mr-1" /> {community()!.membersCount}
+                  </span>
+                </div>
+              </div>
+              <div class="shrink-0 pb-1 hidden sm:block">
+                {community()!.type === 'private' && !isMember() && (
+                  <input type="text" value={inviteCodeInput()} onInput={(e) => setInviteCodeInput(e.currentTarget.value)} placeholder="Código" class="eq-input text-xs w-32" />
+                )}
+                {isMember() ? (
+                  <Button variant="outline" size="sm" onClick={handleLeave} disabled={actionLoading()}>
+                    <UserMinus size={14} class="mr-1" /> Sair
+                  </Button>
+                ) : (
+                  <Button size="sm" onClick={handleJoin} disabled={actionLoading()}>
+                    <UserPlus size={14} class="mr-1" /> Participar
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile join button */}
+          <div class="sm:hidden flex items-center gap-2">
+            {community()!.type === 'private' && !isMember() && (
+              <input type="text" value={inviteCodeInput()} onInput={(e) => setInviteCodeInput(e.currentTarget.value)} placeholder="Código de convite" class="eq-input text-xs flex-1" />
+            )}
+            {isMember() ? (
+              <Button variant="outline" size="sm" onClick={handleLeave} disabled={actionLoading()} class="flex-1">
+                <UserMinus size={14} class="mr-1" /> Sair da comunidade
+              </Button>
+            ) : (
+              <Button size="sm" onClick={handleJoin} disabled={actionLoading()} class="flex-1">
+                <UserPlus size={14} class="mr-1" /> Participar
+              </Button>
+            )}
+          </div>
+
+          {/* Description */}
+          <div>
+            <p class="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>{community()!.description}</p>
+            <div class="flex items-center gap-3 mt-3">
+              <span class="eq-badge eq-badge-info">
+                {community()!.productVisibility === 'public' ? (<><Eye size={10} class="mr-1" /> Produtos públicos</>) : (<><EyeOff size={10} class="mr-1" /> Membros apenas</>)}
+              </span>
+            </div>
           </div>
 
           {/* Info */}
