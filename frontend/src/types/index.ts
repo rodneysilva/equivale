@@ -28,6 +28,37 @@ export interface UserCommunity {
   isModerator: boolean;
 }
 
+// Transaction types
+export interface Transaction {
+  id: string;
+  buyerId: string;
+  buyerName?: string;
+  sellerId: string;
+  sellerName?: string;
+  itemType: 'Product' | 'Service';
+  itemId: string;
+  itemTitle: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  status: 'Pending' | 'ConfirmedByBuyer' | 'ConfirmedBySeller' | 'Completed' | 'Cancelled';
+  buyerConfirmedAt?: string;
+  sellerConfirmedAt?: string;
+  completedAt?: string;
+  createdAt: string;
+}
+
+export interface Review {
+  id: string;
+  rating: number;
+  comment?: string;
+  itemType: string;
+  createdAt: string;
+  reviewerId: string;
+  reviewerName?: string;
+  reviewerAvatarUrl?: string;
+}
+
 export interface RegisterDto {
   username: string;
   email: string;
@@ -58,6 +89,7 @@ export interface Product {
   sellerName?: string;
   sellerAvatar?: string;
   condition: 'new' | 'used' | 'refurbished';
+  stock?: number;
   status: 'available' | 'sold' | 'pending_moderation';
   communityId?: string;
   communityName?: string;

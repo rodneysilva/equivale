@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using equivale.Application.DTOs;
-using equivale.Application.Interfaces.Services;
+using equivale.Domain.Entities;
+using equivale.Domain.Interfaces;
 
 namespace equivale.Api.Controllers;
 
@@ -9,33 +9,88 @@ namespace equivale.Api.Controllers;
 [Route("api/[controller]")]
 public class ReviewsController : ControllerBase
 {
-    private readonly IReviewService _reviewService;
+    private readonly IBaseRepository<Review> _reviewRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly ITransactionRepository _transactionRepository;
 
-    public ReviewsController(IReviewService reviewService)
+    public ReviewsController(
+        IBaseRepository<Review> reviewRepository,
+        IUserRepository userRepository,
+        ITransactionRepository transactionRepository)
     {
-        _reviewService = reviewService;
+        _reviewRepository = reviewRepository;
+        _userRepository = userRepository;
+        _transactionRepository = transactionRepository;
+    }
+
+    [HttpGet("user/{userId}")]
+    public async Task<ActionResult<List<ReviewWithUserDto>>> GetByUser(string userId, CancellationToken ct)
+    {
+        var allReviews = await _reviewRepository.GetAllAsync(ct);
+        var userReviews = allReviews.Where(r => r.TargetUserId == userId).ToList();
+
+        var reviewerIds = userReviews.Select(r => r.ReviewerId).Distinct();
+        var users = await _userRepository.GetByIdsAsync(reviewerIds, ct);
+        var userMap = users.ToDictionary(u => u.Id);
+
+        var result = userReviews.Select(r => new ReviewWithUserDto(
+            r.Id, r.Rating, r.Comment, r.ItemType, r.CreatedAt,
+            r.ReviewerId,
+            userMap.TryGetValue(r.ReviewerId, out var u) ? u.Name : null,
+            userMap.TryGetValue(r.ReviewerId, out var u2) ? u2.AvatarUrl : null
+        )).ToList();
+
+        return Ok(result);
     }
 
     [HttpPost]
     [Authorize]
-    public async Task<ActionResult<ReviewDto>> Create([FromBody] CreateReviewDto dto, CancellationToken cancellationToken)
+    public async Task<ActionResult<Review>> Create([FromBody] CreateReviewRequest req, CancellationToken ct)
     {
-        var review = await _reviewService.CreateAsync(dto, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id = review.Id }, review);
-    }
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
 
-    [HttpGet("item/{itemId}")]
-    public async Task<ActionResult<IReadOnlyList<ReviewDto>>> GetByItem(string itemId, CancellationToken cancellationToken)
-    {
-        var reviews = await _reviewService.GetByItemAsync(itemId, cancellationToken);
-        return Ok(reviews);
-    }
+        // Verify transaction exists and is completed
+        if (!string.IsNullOrEmpty(req.TransactionId))
+        {
+            var transaction = await _transactionRepository.GetByIdAsync(req.TransactionId, ct);
+            if (transaction is null || transaction.Status != Domain.Enums.TransactionStatus.Completed)
+                return BadRequest(new { error = "Transaction must be completed before reviewing." });
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<ReviewDto>> GetById(string id, CancellationToken cancellationToken)
-    {
-        var review = await _reviewService.GetByIdAsync(id, cancellationToken);
-        if (review is null) return NotFound();
-        return Ok(review);
+            if (transaction.BuyerId != userId && transaction.SellerId != userId)
+                return Forbid();
+
+            // Target is the other party
+            var targetId = transaction.BuyerId == userId ? transaction.SellerId : transaction.BuyerId;
+
+            // Check for existing review
+            var existing = await _reviewRepository.GetAllAsync(ct);
+            if (existing.Any(r => r.TransactionId == req.TransactionId && r.ReviewerId == userId))
+                return BadRequest(new { error = "You already reviewed this transaction." });
+
+            var review = new Review
+            {
+                ReviewerId = userId,
+                TargetUserId = targetId,
+                TransactionId = req.TransactionId,
+                ItemId = transaction.ItemId,
+                ItemType = transaction.ItemType.ToString(),
+                Rating = req.Rating,
+                Comment = req.Comment,
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            await _reviewRepository.AddAsync(review, ct);
+            return Ok(review);
+        }
+
+        return BadRequest(new { error = "TransactionId is required." });
     }
 }
+
+public record CreateReviewRequest(string TransactionId, int Rating, string? Comment);
+public record ReviewWithUserDto(
+    string Id, int Rating, string? Comment, string ItemType, DateTime CreatedAt,
+    string ReviewerId, string? ReviewerName, string? ReviewerAvatarUrl);

@@ -1,5 +1,7 @@
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using equivale.Domain.Enums;
 using equivale.Domain.Interfaces;
 
 namespace equivale.Api.Controllers;
@@ -11,65 +13,96 @@ public class AdminController : ControllerBase
 {
     private readonly IUserRepository _userRepository;
     private readonly IProductRepository _productRepository;
+    private readonly IServiceRepository _serviceRepository;
+    private readonly ICommunityRepository _communityRepository;
+    private readonly ITransactionRepository _transactionRepository;
 
-    public AdminController(IUserRepository userRepository, IProductRepository productRepository)
+    public AdminController(
+        IUserRepository userRepository,
+        IProductRepository productRepository,
+        IServiceRepository serviceRepository,
+        ICommunityRepository communityRepository,
+        ITransactionRepository transactionRepository)
     {
         _userRepository = userRepository;
         _productRepository = productRepository;
+        _serviceRepository = serviceRepository;
+        _communityRepository = communityRepository;
+        _transactionRepository = transactionRepository;
     }
 
-    [HttpGet("users/pending")]
-    public async Task<IActionResult> GetPendingUsers(CancellationToken cancellationToken)
+    [HttpGet("stats")]
+    public async Task<ActionResult<AdminStatsDto>> GetStats(CancellationToken ct)
     {
-        // Return all users for admin review - filter on client if needed
-        var users = await _userRepository.GetAllAsync(cancellationToken);
-        return Ok(users);
+        var users = await _userRepository.GetAllAsync(ct);
+        var products = await _productRepository.GetAllAsync(ct);
+        var services = await _serviceRepository.GetAllAsync(ct);
+        var communities = await _communityRepository.GetAllAsync(ct);
+        var transactions = await _transactionRepository.GetAllAsync(ct);
+
+        return Ok(new AdminStatsDto(
+            Users: users.Count,
+            Products: products.Count,
+            Services: services.Count,
+            Communities: communities.Count,
+            Transactions: transactions.Count,
+            CompletedTransactions: transactions.Count(t => t.Status == Domain.Enums.TransactionStatus.Completed)
+        ));
     }
 
-    [HttpPut("products/{id}/approve")]
-    public async Task<IActionResult> ApproveProduct(string id, CancellationToken cancellationToken)
+    [HttpPut("users/{id}/role")]
+    public async Task<IActionResult> UpdateUserRole(string id, [FromQuery] string role, CancellationToken ct)
     {
-        var product = await _productRepository.GetByIdAsync(id, cancellationToken);
-        if (product is null) return NotFound();
+        var user = await _userRepository.GetByIdAsync(id, ct);
+        if (user is null) return NotFound();
 
-        product.Status = Domain.Enums.ItemStatus.Active;
-        product.UpdatedAt = DateTime.UtcNow;
-        await _productRepository.UpdateAsync(product, cancellationToken);
-        return NoContent();
-    }
-
-    [HttpPut("products/{id}/reject")]
-    public async Task<IActionResult> RejectProduct(string id, CancellationToken cancellationToken)
-    {
-        var product = await _productRepository.GetByIdAsync(id, cancellationToken);
-        if (product is null) return NotFound();
-
-        product.Status = Domain.Enums.ItemStatus.Rejected;
-        product.UpdatedAt = DateTime.UtcNow;
-        await _productRepository.UpdateAsync(product, cancellationToken);
-        return NoContent();
+        if (Enum.TryParse<UserRole>(role, true, out var newRole))
+        {
+            user.Role = newRole;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _userRepository.UpdateAsync(user, ct);
+            return Ok(new { message = $"User role updated to {newRole}" });
+        }
+        return BadRequest(new { error = "Invalid role" });
     }
 
     [HttpPut("users/{id}/ban")]
-    public async Task<IActionResult> BanUser(string id, CancellationToken cancellationToken)
+    public async Task<IActionResult> BanUser(string id, CancellationToken ct)
     {
-        var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+        var user = await _userRepository.GetByIdAsync(id, ct);
         if (user is null) return NotFound();
-
-        // Ban logic - set role or a ban flag; for simplicity, we just note it
+        user.Role = UserRole.Banned;
         user.UpdatedAt = DateTime.UtcNow;
-        await _userRepository.UpdateAsync(user, cancellationToken);
+        await _userRepository.UpdateAsync(user, ct);
         return NoContent();
     }
 
-    [HttpPut("users/{id}/unban")]
-    public async Task<IActionResult> UnbanUser(string id, CancellationToken cancellationToken)
+    [HttpDelete("products/{id}")]
+    public async Task<IActionResult> DeleteProduct(string id, CancellationToken ct)
     {
-        var user = await _userRepository.GetByIdAsync(id, cancellationToken);
-        if (user is null) return NotFound();
+        await _productRepository.DeleteAsync(id, ct);
+        return NoContent();
+    }
 
-        user.UpdatedAt = DateTime.UtcNow;
-        await _userRepository.UpdateAsync(user, cancellationToken);
+    [HttpDelete("services/{id}")]
+    public async Task<IActionResult> DeleteService(string id, CancellationToken ct)
+    {
+        await _serviceRepository.DeleteAsync(id, ct);
+        return NoContent();
+    }
+
+    [HttpDelete("communities/{id}")]
+    public async Task<IActionResult> DeleteCommunity(string id, CancellationToken ct)
+    {
+        await _communityRepository.DeleteAsync(id, ct);
         return NoContent();
     }
 }
+
+public record AdminStatsDto(
+    int Users,
+    int Products,
+    int Services,
+    int Communities,
+    int Transactions,
+    int CompletedTransactions);

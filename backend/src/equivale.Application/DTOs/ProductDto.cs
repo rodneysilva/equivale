@@ -14,6 +14,7 @@ public record ProductDto(
     List<string> Images,
     string Status,
     string Condition,
+    int Stock,
     string? CommunityId,
     string? CommunityName,
     List<string> Tags,

@@ -5,5 +5,6 @@ public enum ItemStatus
     Active,
     Inactive,
     PendingModeration,
-    Rejected
+    Rejected,
+    Sold
 }

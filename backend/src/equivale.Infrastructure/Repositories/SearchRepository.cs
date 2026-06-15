@@ -127,6 +127,7 @@ public class SearchRepository
         PriceInEquivale: (decimal)p.PriceInEquivale,
         Images: p.Images, Status: p.Status.ToString(),
         Condition: p.Condition.ToString(),
+        Stock: p.Stock,
         CommunityId: p.CommunityId, CommunityName: null,
         Tags: p.Tags,
         CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt);

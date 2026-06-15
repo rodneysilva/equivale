@@ -23,6 +23,10 @@ import UsersListPage from './pages/UsersListPage';
 import CommunityProductsPage from './pages/CommunityProductsPage';
 import CommunityServicesPage from './pages/CommunityServicesPage';
 import CommunityMembersPage from './pages/CommunityMembersPage';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminProductsPage from './pages/admin/AdminProductsPage';
+import TransactionsPage from './pages/TransactionsPage';
 
 const App: Component = () => {
   return (
@@ -56,6 +60,10 @@ const App: Component = () => {
       <Route path="/search" component={SearchPage} />
       <Route path="/users" component={UsersListPage} />
       <Route path="/users/:id" component={UserProfilePage} />
+      <Route path="/admin" component={AdminDashboardPage} />
+      <Route path="/admin/users" component={AdminUsersPage} />
+      <Route path="/admin/products" component={AdminProductsPage} />
+      <Route path="/transactions" component={TransactionsPage} />
     </Router>
   );
 };

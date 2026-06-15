@@ -44,11 +44,27 @@ public class SeedService
     public async Task<SeedResult> RunAsync(SeedOptions opts, CancellationToken ct = default)
     {
         _passwordHash = _passwordHasher.Hash(SeedPassword);
+
+        // Promote known admin user
+        await PromoteAdminAsync(ct);
+
         var users = await SeedUsersAsync(opts.Users, ct);
         var communities = await SeedCommunitiesAsync(opts.Communities, users, ct);
         var products = await SeedProductsAsync(opts.Products, users, communities, ct);
         var services = await SeedServicesAsync(opts.Services, users, communities, ct);
         return new SeedResult(users.Count, communities.Count, products, services);
+    }
+
+    private async Task PromoteAdminAsync(CancellationToken ct)
+    {
+        var adminEmail = new Email("rodneydocarmo@gmail.com");
+        var existing = await _userRepository.GetByEmailAsync(adminEmail, ct);
+        if (existing is not null && existing.Role != UserRole.Admin)
+        {
+            existing.Role = UserRole.Admin;
+            existing.UpdatedAt = DateTime.UtcNow;
+            await _userRepository.UpdateAsync(existing, ct);
+        }
     }
 
     // ===================== WORD BANKS =====================

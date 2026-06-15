@@ -61,6 +61,15 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<equivale.Application.Services.DtoEnricher>();
 builder.Services.AddScoped<equivale.Application.Services.SeedService>();
+builder.Services.AddScoped<equivale.Application.Services.TransactionService>();
+
+// Domain repositories
+builder.Services.AddScoped<equivale.Domain.Interfaces.ITransactionRepository, equivale.Infrastructure.Repositories.TransactionRepository>();
+builder.Services.AddScoped(typeof(equivale.Domain.Interfaces.IBaseRepository<equivale.Domain.Entities.Review>), sp =>
+{
+    var ctx = sp.GetRequiredService<equivale.Infrastructure.Persistence.MongoDbContext>();
+    return new equivale.Infrastructure.Repositories.BaseRepository<equivale.Domain.Entities.Review>(ctx);
+});
 
 // In-memory cache for DTO enrichment
 builder.Services.AddMemoryCache();

@@ -32,6 +32,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.PriceInEquivale, opt => opt.MapFrom(src => src.PriceInEquivale.Amount))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
             .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => src.Condition.ToString()))
+            .ForMember(dest => dest.Stock, opt => opt.MapFrom(src => src.Stock))
             .ForMember(dest => dest.SellerName, opt => opt.Ignore())
             .ForMember(dest => dest.SellerAvatarUrl, opt => opt.Ignore())
             .ForMember(dest => dest.CommunityName, opt => opt.Ignore())
@@ -86,20 +87,22 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
         // UpdateCommunityDto is mapped manually in the command handler
 
-        // Transaction mappings
-        CreateMap<Transaction, TransactionDto>()
-            .ForMember(dest => dest.Amount, opt => opt.MapFrom(src => src.Amount.Amount))
-            .ForMember(dest => dest.TransactionType, opt => opt.MapFrom(src => src.TransactionType.ToString()));
-        CreateMap<CreateTransactionDto, Transaction>()
-            .ForMember(dest => dest.Amount, opt => opt.MapFrom(src => new Money(src.Amount)))
-            .ForMember(dest => dest.Id, opt => opt.Ignore())
-            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
-
         // Review mappings
         CreateMap<Review, ReviewDto>();
         CreateMap<CreateReviewDto, Review>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
+
+        // Transaction mappings
+        CreateMap<Transaction, TransactionDto>()
+            .ForMember(dest => dest.ItemType, opt => opt.MapFrom(src => src.ItemType.ToString()))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice.Amount))
+            .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.TotalPrice.Amount))
+            .ForMember(dest => dest.BuyerName, opt => opt.Ignore())
+            .ForMember(dest => dest.SellerName, opt => opt.Ignore())
+            .ForCtorParam("BuyerName", opt => opt.MapFrom(_ => (string?)null))
+            .ForCtorParam("SellerName", opt => opt.MapFrom(_ => (string?)null));
     }
 
     private static ProductCondition ParseCondition(string? value)

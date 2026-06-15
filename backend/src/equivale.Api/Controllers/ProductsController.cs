@@ -14,14 +14,12 @@ public class ProductsController : ControllerBase
 {
     private readonly IProductService _productService;
     private readonly IProductRepository _productRepository;
-    private readonly ITransactionService _transactionService;
     private readonly IMediator _mediator;
 
-    public ProductsController(IProductService productService, IProductRepository productRepository, ITransactionService transactionService, IMediator mediator)
+    public ProductsController(IProductService productService, IProductRepository productRepository, IMediator mediator)
     {
         _productService = productService;
         _productRepository = productRepository;
-        _transactionService = transactionService;
         _mediator = mediator;
     }
 
@@ -82,30 +80,5 @@ public class ProductsController : ControllerBase
     {
         var products = await _productRepository.GetByCategoryAsync(category, cancellationToken);
         return Ok(products);
-    }
-
-    [HttpPost("{id}/buy")]
-    [Authorize]
-    public async Task<ActionResult<TransactionDto>> Buy(string id, CancellationToken cancellationToken)
-    {
-        var product = await _productService.GetByIdAsync(id, cancellationToken);
-        if (product is null) return NotFound();
-
-        var buyerId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-            ?? throw new UnauthorizedAccessException("Invalid token");
-
-        if (buyerId == product.SellerId)
-            return BadRequest("Cannot buy your own product");
-
-        var transaction = await _transactionService.CreateAsync(new CreateTransactionDto(
-            FromUserId: buyerId,
-            ToUserId: product.SellerId,
-            Amount: product.PriceInEquivale,
-            Description: $"Purchase: {product.Title}",
-            TransactionType: "Purchase",
-            RelatedItemId: id), cancellationToken);
-
-        return Ok(transaction);
     }
 }

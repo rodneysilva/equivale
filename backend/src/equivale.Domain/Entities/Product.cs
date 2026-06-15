@@ -14,6 +14,7 @@ public class Product
     public List<string> Images { get; set; } = [];
     public ItemStatus Status { get; set; } = ItemStatus.Active;
     public ProductCondition Condition { get; set; } = ProductCondition.New;
+    public int Stock { get; set; } = 1;
     public string? CommunityId { get; set; }
     public List<string> Tags { get; set; } = [];
     public DateTime CreatedAt { get; set; }
