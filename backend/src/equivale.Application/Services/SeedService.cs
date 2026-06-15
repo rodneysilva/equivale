@@ -84,11 +84,30 @@ public class SeedService
     {
         var adminEmail = new Email("rodneydocarmo@gmail.com");
         var existing = await _userRepository.GetByEmailAsync(adminEmail, ct);
-        if (existing is not null && existing.Role != UserRole.Admin)
+        if (existing is not null)
         {
-            existing.Role = UserRole.Admin;
-            existing.UpdatedAt = DateTime.UtcNow;
-            await _userRepository.UpdateAsync(existing, ct);
+            if (existing.Role != UserRole.Admin)
+            {
+                existing.Role = UserRole.Admin;
+                existing.UpdatedAt = DateTime.UtcNow;
+                await _userRepository.UpdateAsync(existing, ct);
+            }
+        }
+        else
+        {
+            // Create admin user if doesn't exist (after reset)
+            var admin = new User
+            {
+                Name = "Rodney",
+                Email = adminEmail,
+                PasswordHash = _passwordHasher.Hash("123Mudar!"),
+                Bio = "Administrador da plataforma equivale.",
+                Role = UserRole.Admin,
+                CreatedAt = DateTime.UtcNow.AddDays(-100),
+                UpdatedAt = DateTime.UtcNow.AddDays(-100),
+            };
+            admin.Credit(10000);
+            await _userRepository.AddAsync(admin, ct);
         }
     }
 
