@@ -48,7 +48,7 @@ const SearchBar: Component = () => {
     const q = term().trim();
     setShowDropdown(false);
     clearTimeout(debounceTimer);
-    navigate(q ? `/products?search=${encodeURIComponent(q)}` : '/products');
+    navigate(q ? `/search?q=${encodeURIComponent(q)}` : '/products');
   };
 
   const hasResults = () => {

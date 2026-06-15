@@ -31,6 +31,11 @@ export const searchService = {
     return api.get<UnifiedSearchResult>(`/search/all?${params}`);
   },
 
+  async searchFull(q: string): Promise<UnifiedSearchResult> {
+    const params = new URLSearchParams({ q, limit: '50' });
+    return api.get<UnifiedSearchResult>(`/search/all?${params}`);
+  },
+
   async getProductFacets(): Promise<FacetResult> {
     return api.get<FacetResult>('/search/product-facets');
   },

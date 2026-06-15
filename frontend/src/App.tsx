@@ -17,6 +17,7 @@ import AdminPage from './pages/AdminPage';
 import CreateProductPage from './pages/CreateProductPage';
 import CreateServicePage from './pages/CreateServicePage';
 import CreateCommunityPage from './pages/CreateCommunityPage';
+import SearchPage from './pages/SearchPage';
 
 const App: Component = () => {
   return (
@@ -44,6 +45,7 @@ const App: Component = () => {
       <Route path="/products/new" component={CreateProductPage} />
       <Route path="/services/new" component={CreateServicePage} />
       <Route path="/communities/new" component={CreateCommunityPage} />
+      <Route path="/search" component={SearchPage} />
     </Router>
   );
 };
