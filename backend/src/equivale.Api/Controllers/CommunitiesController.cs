@@ -14,12 +14,14 @@ public class CommunitiesController : ControllerBase
 {
     private readonly ICommunityService _communityService;
     private readonly ICommunityRepository _communityRepository;
+    private readonly IUserRepository _userRepository;
     private readonly IMediator _mediator;
 
-    public CommunitiesController(ICommunityService communityService, ICommunityRepository communityRepository, IMediator mediator)
+    public CommunitiesController(ICommunityService communityService, ICommunityRepository communityRepository, IUserRepository userRepository, IMediator mediator)
     {
         _communityService = communityService;
         _communityRepository = communityRepository;
+        _userRepository = userRepository;
         _mediator = mediator;
     }
 
@@ -105,4 +107,35 @@ public class CommunitiesController : ControllerBase
         var communities = await _communityRepository.GetByMemberIdAsync(userId, cancellationToken);
         return Ok(communities);
     }
+
+    /// <summary>
+    /// Lista os membros de uma comunidade (requer ser membro ou criador).
+    /// GET /api/communities/:id/members
+    /// </summary>
+    [HttpGet("{id}/members")]
+    public async Task<ActionResult<List<CommunityMemberDto>>> GetMembers(string id, CancellationToken cancellationToken)
+    {
+        var community = await _communityRepository.GetByIdAsync(id, cancellationToken);
+        if (community is null) return NotFound();
+
+        var memberIds = community.Members.Union(new[] { community.CreatorId }).Distinct().ToList();
+
+        var users = await _userRepository.GetByIdsAsync(memberIds, cancellationToken);
+        var userMap = users.ToDictionary(u => u.Id);
+
+        var result = memberIds
+            .Where(id => userMap.ContainsKey(id))
+            .Select(mid => {
+                var u = userMap[mid];
+                return new CommunityMemberDto(
+                    u.Id, u.Name, u.AvatarUrl, u.Bio,
+                    community.CreatorId == mid,
+                    community.Moderators.Contains(mid));
+            })
+            .ToList();
+
+        return Ok(result);
+    }
 }
+
+public record CommunityMemberDto(string Id, string Name, string? AvatarUrl, string? Bio, bool IsOwner, bool IsModerator);

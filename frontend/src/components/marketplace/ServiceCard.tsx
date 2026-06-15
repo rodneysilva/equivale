@@ -26,13 +26,15 @@ const ServiceCard: Component<ServiceCardProps> = (props) => {
           <span class="eq-badge eq-badge-primary">{props.service.category}</span>
         </div>
       </div>
-      <div class="p-2.5">
-        <h3 class="font-medium text-xs leading-snug line-clamp-2" style={{ color: 'var(--color-text)', 'min-height': '2rem' }}>{props.service.title}</h3>
-        <p class="text-xs mt-1 line-clamp-2 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{props.service.description}</p>
-        <div class="flex items-baseline gap-1 mt-1.5">
-          <span class="text-base font-bold eq-accent">{props.service.price}</span>
-          <span class="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>EQL</span>
+      <div class="p-1.5">
+        <h3 class="font-medium text-[0.65rem] leading-tight line-clamp-2" style={{ color: 'var(--color-text)', 'min-height': '1.6rem' }}>{props.service.title}</h3>
+        <div class="flex items-baseline gap-0.5 mt-1">
+          <span class="text-sm font-bold eq-accent">{props.service.price}</span>
+          <span class="text-[0.6rem]" style={{ color: 'var(--color-text-muted)' }}>EQL</span>
         </div>
+        {props.service.providerName && (
+          <p class="text-[0.6rem] truncate mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{props.service.providerName}</p>
+        )}
         {(props.service.duration || props.service.location) && (
           <div class="flex items-center gap-3 mt-2 text-xs" style={{ color: 'var(--color-text-muted)' }}>
             {props.service.duration && (

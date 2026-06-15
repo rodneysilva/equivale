@@ -31,17 +31,14 @@ const ProductCard: Component<ProductCardProps> = (props) => {
           </Badge>
         </div>
       </div>
-      <div class="p-2.5">
-        <h3 class="font-medium text-xs leading-snug line-clamp-2" style={{ color: 'var(--color-text)', 'min-height': '2rem' }}>{props.product.title}</h3>
-        <div class="flex items-baseline gap-1 mt-1.5">
-          <span class="text-base font-bold eq-accent">{props.product.price}</span>
-          <span class="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>EQL</span>
+      <div class="p-1.5">
+        <h3 class="font-medium text-[0.65rem] leading-tight line-clamp-2" style={{ color: 'var(--color-text)', 'min-height': '1.6rem' }}>{props.product.title}</h3>
+        <div class="flex items-baseline gap-0.5 mt-1">
+          <span class="text-sm font-bold eq-accent">{props.product.price}</span>
+          <span class="text-[0.6rem]" style={{ color: 'var(--color-text-muted)' }}>EQL</span>
         </div>
         {props.product.sellerName && (
-          <div class="flex items-center gap-1 mt-1.5">
-            <Avatar name={props.product.sellerName} size="sm" />
-            <span class="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>{props.product.sellerName}</span>
-          </div>
+          <p class="text-[0.6rem] truncate mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{props.product.sellerName}</p>
         )}
         {props.product.communityName && (
           <div class="flex items-center gap-1 mt-2">

@@ -1,16 +1,14 @@
 import { type Component, createSignal, createEffect, For } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { ArrowRight, Users as UsersIcon } from 'lucide-solid';
+import { ArrowRight } from 'lucide-solid';
 import CommunityCard from '../components/community/CommunityCard';
-import UserCard from '../components/community/UserCard';
 import ProductGrid from '../components/marketplace/ProductGrid';
 import ServiceGrid from '../components/marketplace/ServiceGrid';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { productsService } from '../services/products.service';
 import { servicesService } from '../services/services.service';
 import { communitiesService } from '../services/communities.service';
-import { usersService } from '../services/users.service';
-import type { Product, Service, Community, User } from '../types';
+import type { Product, Service, Community } from '../types';
 
 const HomePage: Component = () => {
   const navigate = useNavigate();
@@ -18,23 +16,20 @@ const HomePage: Component = () => {
   const [products, setProducts] = createSignal<Product[]>([]);
   const [services, setServices] = createSignal<Service[]>([]);
   const [communities, setCommunities] = createSignal<Community[]>([]);
-  const [users, setUsers] = createSignal<User[]>([]);
   const [loading, setLoading] = createSignal(true);
 
   createEffect(() => { loadFeatured(); });
 
   const loadFeatured = async () => {
     try {
-      const [productsRes, servicesRes, communitiesRes, usersRes] = await Promise.all([
+      const [productsRes, servicesRes, communitiesRes] = await Promise.all([
         productsService.getAll(1, 8),
         servicesService.getAll(1, 8),
         communitiesService.getAll(1, 6),
-        usersService.getAll(1, 8),
       ]);
       setProducts(productsRes.data);
       setServices(servicesRes.data);
       setCommunities(communitiesRes.data);
-      setUsers(usersRes.data);
     } catch { /* silently fail */ }
     finally { setLoading(false); }
   };
@@ -73,16 +68,6 @@ const HomePage: Component = () => {
       <section>
         {sectionHeader('Serviços recentes', 'Talentos disponíveis', '/services')}
         {loading() ? <LoadingSpinner class="py-8" /> : <ServiceGrid services={services()} />}
-      </section>
-
-      {/* Membros */}
-      <section>
-        {sectionHeader('Membros da comunidade', 'Pessoas para conectar', '/users')}
-        {loading() ? <LoadingSpinner class="py-8" /> : (
-          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-            <For each={users()}>{(u) => <UserCard user={u} />}</For>
-          </div>
-        )}
       </section>
     </div>
   );

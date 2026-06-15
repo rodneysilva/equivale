@@ -5,6 +5,15 @@ import {
 } from './mappers';
 import type { Community, CreateCommunityDto, PaginatedResponse } from '../types';
 
+export interface CommunityMember {
+  id: string;
+  name: string;
+  avatarUrl?: string;
+  bio?: string;
+  isOwner: boolean;
+  isModerator: boolean;
+}
+
 export const communitiesService = {
   async getAll(page = 1, pageSize = 12): Promise<PaginatedResponse<Community>> {
     const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
@@ -67,5 +76,9 @@ export const communitiesService = {
   async getByMember(userId: string): Promise<Community[]> {
     const raw = await api.get<BackendCommunityDto[]>(`/communities/member/${userId}`);
     return raw.map(mapCommunity);
+  },
+
+  async getMembers(id: string): Promise<CommunityMember[]> {
+    return api.get<CommunityMember[]>(`/communities/${id}/members`);
   },
 };

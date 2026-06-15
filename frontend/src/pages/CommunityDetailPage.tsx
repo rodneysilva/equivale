@@ -1,11 +1,11 @@
-import { type Component, createSignal, createEffect } from 'solid-js';
+import { type Component, createSignal, createEffect, For, Show } from 'solid-js';
 import { useParams, useNavigate } from '@solidjs/router';
 import { ArrowLeft, Users, Lock, Globe, Eye, EyeOff, Shield, Package, UserPlus, UserMinus, Copy } from 'lucide-solid';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import ProductGrid from '../components/marketplace/ProductGrid';
-import { communitiesService } from '../services/communities.service';
+import { communitiesService, type CommunityMember } from '../services/communities.service';
 import { productsService } from '../services/products.service';
 import { useAuth } from '../store/auth';
 import type { Community, Product } from '../types';
@@ -17,6 +17,7 @@ const CommunityDetailPage: Component = () => {
 
   const [community, setCommunity] = createSignal<Community | null>(null);
   const [products, setProducts] = createSignal<Product[]>([]);
+  const [members, setMembers] = createSignal<CommunityMember[]>([]);
   const [loading, setLoading] = createSignal(true);
   const [error, setError] = createSignal('');
   const [isMember, setIsMember] = createSignal(false);
@@ -33,17 +34,37 @@ const CommunityDetailPage: Component = () => {
     try {
       const data = await communitiesService.getById(params.id);
       setCommunity(data);
+
+      // Check if current user is already a member
+      const userId = auth.currentUser()?.id;
+      if (userId && (data.ownerId === userId || data.moderators?.includes(userId))) {
+        setIsMember(true);
+      }
+
       // Load products if visibility allows
-      if (data.productVisibility === 'public') {
+      if (data.productVisibility === 'public' || isMember()) {
         try {
-          const res = await productsService.getAll(1, 8);
+          const res = await productsService.getAll(1, 50);
           setProducts(res.data.filter(p => p.communityId === data.id));
+        } catch { /* ignore */ }
+      }
+
+      // Load members if user is a member
+      if (isMember()) {
+        try {
+          setMembers(await communitiesService.getMembers(data.id));
         } catch { /* ignore */ }
       }
     } catch {
       setError('Comunidade não encontrada');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const reloadMembers = async () => {
+    if (community()) {
+      try { setMembers(await communitiesService.getMembers(community()!.id)); } catch { /* ignore */ }
     }
   };
 
@@ -59,6 +80,12 @@ const CommunityDetailPage: Component = () => {
       await communitiesService.join(params.id, code);
       setIsMember(true);
       setCommunity(prev => prev ? { ...prev, membersCount: prev.membersCount + 1 } : null);
+      // Load members and products now that user is a member
+      await reloadMembers();
+      if (community()?.productVisibility === 'members') {
+        const res = await productsService.getAll(1, 50);
+        setProducts(res.data.filter(p => p.communityId === community()!.id));
+      }
     } catch (err: any) {
       setError(err.message || 'Erro ao entrar');
     } finally {
@@ -71,7 +98,12 @@ const CommunityDetailPage: Component = () => {
     try {
       await communitiesService.leave(params.id);
       setIsMember(false);
+      setMembers([]);
       setCommunity(prev => prev ? { ...prev, membersCount: Math.max(0, prev.membersCount - 1) } : null);
+      // Clear private products
+      if (community()?.productVisibility === 'members') {
+        setProducts([]);
+      }
     } catch (err: any) {
       setError(err.message || 'Erro ao sair');
     } finally {
@@ -215,6 +247,35 @@ const CommunityDetailPage: Component = () => {
               {error()}
             </div>
           )}
+
+          {/* Membros (so visivel para membros) */}
+          <Show when={isMember() && members().length > 0}>
+            <section>
+              <h2 class="flex items-center gap-2 text-base font-bold mb-3" style={{ color: 'var(--color-text)' }}>
+                <Users size={16} class="eq-brand" /> Membros ({members().length})
+              </h2>
+              <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+                <For each={members()}>
+                  {(member) => (
+                    <Card hover class="p-2.5 cursor-pointer text-center" onClick={() => navigate(`/users/${member.id}`)}>
+                      <div class="eq-avatar w-10 h-10 mx-auto mb-1.5 overflow-hidden">
+                        {member.avatarUrl ? (
+                          <img src={member.avatarUrl} alt={member.name} class="w-full h-full object-cover" loading="lazy" />
+                        ) : (
+                          <span class="text-sm font-bold">{member.name[0]?.toUpperCase()}</span>
+                        )}
+                      </div>
+                      <p class="text-xs font-medium truncate" style={{ color: 'var(--color-text)' }}>{member.name}</p>
+                      <div class="flex items-center justify-center gap-1 mt-0.5">
+                        {member.isOwner && <span class="eq-badge eq-badge-primary" style={{ 'font-size': '0.625rem' }}>Criador</span>}
+                        {member.isModerator && !member.isOwner && <span class="eq-badge eq-badge-info" style={{ 'font-size': '0.625rem' }}>Mod</span>}
+                      </div>
+                    </Card>
+                  )}
+                </For>
+              </div>
+            </section>
+          </Show>
 
           {/* Produtos da comunidade */}
           <div>
