@@ -22,12 +22,13 @@ const ProductsPage: Component = () => {
   const [page, setPage] = createSignal(1);
   const [totalPages, setTotalPages] = createSignal(1);
   const [facets, setFacets] = createSignal<FacetResult>({ categories: {}, tags: {} });
+  const [sortBy, setSortBy] = createSignal('recent');
   const communityId = (searchParams.communityId as string) || undefined;
 
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const res = await productsService.getAll(page(), 12, category() || undefined, search() || undefined, tags().length > 0 ? tags() : undefined, undefined, communityId);
+      const res = await productsService.getAll(page(), 24, category() || undefined, search() || undefined, tags().length > 0 ? tags() : undefined, undefined, communityId, sortBy());
       setProducts(res.data);
       setTotalPages(res.totalPages);
     } catch (e) {
@@ -50,7 +51,7 @@ const ProductsPage: Component = () => {
   });
 
   // Reload products when filters change
-  createEffect(on(() => [category(), search(), tags().join(','), page()], () => { loadProducts(); }, { defer: true }));
+  createEffect(on(() => [category(), search(), tags().join(','), page(), sortBy()], () => { loadProducts(); }, { defer: true }));
 
   // Reload facets when category or tags change
   createEffect(on(() => [category(), tags().join(',')], () => { loadFacets(); }, { defer: true }));
@@ -103,12 +104,21 @@ const ProductsPage: Component = () => {
           </div>
         </div>
         <div class="flex-1 min-w-0">
+          {/* Sort bar */}
+          <div class="flex items-center justify-end gap-2 mb-4">
+            <span class="text-xs" style={{ color: 'var(--color-text-muted)' }}>Ordenar:</span>
+            <select value={sortBy()} onChange={(e) => { setSortBy(e.currentTarget.value); setPage(1); }} class="eq-input text-xs py-1 w-auto">
+              <option value="recent">Mais recentes</option>
+              <option value="price_asc">Menor preço</option>
+              <option value="price_desc">Maior preço</option>
+            </select>
+          </div>
           <ProductGrid products={products()} isLoading={loading()} />
           <Show when={totalPages() > 1}>
             <div class="flex items-center justify-center gap-2 mt-8">
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page() <= 1} class="eq-btn eq-btn-outline eq-btn-sm">Anterior</button>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page() <= 1} class="eq-btn-outline eq-btn-sm px-3 py-1.5 rounded text-sm">Anterior</button>
               <span class="text-xs" style={{ color: 'var(--color-text-muted)' }}>{page()} de {totalPages()}</span>
-              <button onClick={() => setPage(p => Math.min(totalPages(), p + 1))} disabled={page() >= totalPages()} class="eq-btn eq-btn-outline eq-btn-sm">Próximo</button>
+              <button onClick={() => setPage(p => Math.min(totalPages(), p + 1))} disabled={page() >= totalPages()} class="eq-btn-outline eq-btn-sm px-3 py-1.5 rounded text-sm">Próximo</button>
             </div>
           </Show>
         </div>

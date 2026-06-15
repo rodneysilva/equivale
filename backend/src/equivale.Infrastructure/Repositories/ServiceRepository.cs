@@ -36,12 +36,17 @@ public class ServiceRepository : BaseRepository<Service>, IServiceRepository
     }
 
     public async Task<(IReadOnlyList<Service> Items, int Total)> GetPagedFilteredAsync(
-        int page, int pageSize, string? category = null, string? searchTerm = null, List<string>? tags = null, string? providerId = null, string? communityId = null, CancellationToken cancellationToken = default)
+        int page, int pageSize, string? category = null, string? searchTerm = null, List<string>? tags = null, string? providerId = null, string? communityId = null, string? sortBy = "recent", CancellationToken cancellationToken = default)
     {
         var filter = BuildFilter(category, searchTerm, tags, providerId, communityId);
         var skip = (page - 1) * pageSize;
         var total = (int)await _services.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
-        var sort = Builders<Service>.Sort.Descending(s => s.CreatedAt);
+        var sort = sortBy switch
+        {
+            "price_asc" => Builders<Service>.Sort.Ascending(s => s.PriceInEquivale.Amount),
+            "price_desc" => Builders<Service>.Sort.Descending(s => s.PriceInEquivale.Amount),
+            _ => Builders<Service>.Sort.Descending(s => s.CreatedAt),
+        };
         var items = await _services.Find(filter).Sort(sort).Skip(skip).Limit(pageSize).ToListAsync(cancellationToken);
         return (items.AsReadOnly(), total);
     }

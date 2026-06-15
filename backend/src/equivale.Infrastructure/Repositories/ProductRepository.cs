@@ -36,12 +36,17 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
     }
 
     public async Task<(IReadOnlyList<Product> Items, int Total)> GetPagedFilteredAsync(
-        int page, int pageSize, string? category = null, string? searchTerm = null, List<string>? tags = null, string? sellerId = null, string? communityId = null, CancellationToken cancellationToken = default)
+        int page, int pageSize, string? category = null, string? searchTerm = null, List<string>? tags = null, string? sellerId = null, string? communityId = null, string? sortBy = "recent", CancellationToken cancellationToken = default)
     {
         var filter = BuildFilter(category, searchTerm, tags, sellerId, communityId);
         var skip = (page - 1) * pageSize;
         var total = (int)await _products.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
-        var sort = Builders<Product>.Sort.Descending(p => p.CreatedAt);
+        var sort = sortBy switch
+        {
+            "price_asc" => Builders<Product>.Sort.Ascending(p => p.PriceInEquivale.Amount),
+            "price_desc" => Builders<Product>.Sort.Descending(p => p.PriceInEquivale.Amount),
+            _ => Builders<Product>.Sort.Descending(p => p.CreatedAt),
+        };
         var items = await _products.Find(filter).Sort(sort).Skip(skip).Limit(pageSize).ToListAsync(cancellationToken);
         return (items.AsReadOnly(), total);
     }
