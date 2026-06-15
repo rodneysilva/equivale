@@ -43,11 +43,14 @@ const LoginPage: Component = () => {
           </div>
           <div class="relative">
             <Lock size={16} class="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-muted)' }} />
-            <input type={showPassword() ? 'text' : 'password'} value={password()} onInput={(e) => setPassword(e.currentTarget.value)} placeholder="Sua senha" required class="eq-input pl-9 pr-9" />
+            <input type={showPassword() ? 'text' : 'password'} value={password()} onInput={(e) => setPassword(e.currentTarget.value)} placeholder="Senha" required class="eq-input pl-9 pr-9" />
             <button type="button" onClick={() => setShowPassword(!showPassword())} class="absolute right-3 top-1/2 -translate-y-1/2 eq-btn-ghost p-0">
               {showPassword() ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
+          <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+            Requisitos: 8+ caracteres, maiúscula, minúscula, número
+          </p>
           <Button type="submit" class="w-full" disabled={loading()}>
             {loading() ? <LoadingSpinner size="w-4 h-4" class="!justify-start" /> : (
               <>Entrar <ArrowRight size={14} class="ml-2" /></>

@@ -23,7 +23,10 @@ const RegisterPage: Component = () => {
     e.preventDefault();
     setError('');
     if (password() !== confirmPassword()) { setError('As senhas não coincidem'); return; }
-    if (password().length < 6) { setError('A senha deve ter pelo menos 6 caracteres'); return; }
+    if (password().length < 8) { setError('A senha deve ter pelo menos 8 caracteres'); return; }
+    if (!/[A-Z]/.test(password())) { setError('A senha deve conter pelo menos uma letra maiúscula'); return; }
+    if (!/[a-z]/.test(password())) { setError('A senha deve conter pelo menos uma letra minúscula'); return; }
+    if (!/[0-9]/.test(password())) { setError('A senha deve conter pelo menos um número'); return; }
     setLoading(true);
     try {
       await auth.register({ fullName: fullName(), email: email(), password: password(), username: email().split('@')[0] });
@@ -53,7 +56,7 @@ const RegisterPage: Component = () => {
           </div>
           <div class="relative">
             <Lock size={16} class="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-muted)' }} />
-            <input type={showPassword() ? 'text' : 'password'} value={password()} onInput={(e) => setPassword(e.currentTarget.value)} placeholder="Senha" required class="eq-input pl-9 pr-9" />
+            <input type={showPassword() ? 'text' : 'password'} value={password()} onInput={(e) => setPassword(e.currentTarget.value)} placeholder="Senha (min. 8 caracteres, maiúscula, minúscula, número)" required class="eq-input pl-9 pr-9" />
             <button type="button" onClick={() => setShowPassword(!showPassword())} class="absolute right-3 top-1/2 -translate-y-1/2 eq-btn-ghost p-0">
               {showPassword() ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
