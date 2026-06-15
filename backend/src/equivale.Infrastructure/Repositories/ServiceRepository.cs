@@ -12,6 +12,13 @@ public class ServiceRepository : BaseRepository<Service>, IServiceRepository
     public ServiceRepository(MongoDbContext context) : base(context)
     {
         _services = context.Services;
+
+        var textKey = new IndexKeysDefinitionBuilder<Service>()
+            .Text(s => s.Title)
+            .Text(s => s.Description)
+            .Text(s => s.Category);
+        _services.Indexes.CreateOne(
+            new CreateIndexModel<Service>(textKey, new CreateIndexOptions { Background = true }));
     }
 
     public async Task<IReadOnlyList<Service>> GetByProviderIdAsync(string providerId, CancellationToken cancellationToken = default)
@@ -26,5 +33,28 @@ public class ServiceRepository : BaseRepository<Service>, IServiceRepository
         var filter = Builders<Service>.Filter.Eq(s => s.Category, category);
         var results = await _services.Find(filter).ToListAsync(cancellationToken);
         return results.AsReadOnly();
+    }
+
+    public async Task<(IReadOnlyList<Service> Items, int Total)> GetPagedFilteredAsync(
+        int page, int pageSize, string? category = null, string? searchTerm = null, CancellationToken cancellationToken = default)
+    {
+        var filter = BuildFilter(category, searchTerm);
+        var skip = (page - 1) * pageSize;
+        var total = (int)await _services.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
+        var items = await _services.Find(filter).Skip(skip).Limit(pageSize).ToListAsync(cancellationToken);
+        return (items.AsReadOnly(), total);
+    }
+
+    private static FilterDefinition<Service> BuildFilter(string? category, string? searchTerm)
+    {
+        var filters = new List<FilterDefinition<Service>>();
+
+        if (!string.IsNullOrWhiteSpace(category))
+            filters.Add(Builders<Service>.Filter.Eq(s => s.Category, category));
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+            filters.Add(Builders<Service>.Filter.Text(searchTerm));
+
+        return filters.Count == 0 ? Builders<Service>.Filter.Empty : Builders<Service>.Filter.And(filters);
     }
 }
