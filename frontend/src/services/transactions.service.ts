@@ -12,12 +12,12 @@ export interface BackendTransactionDto {
   itemTitle: string;
   quantity: number;
   unitPrice: number;
+  shippingCost: number;
   totalPrice: number;
   status: string;
   trackingInfo?: string | null;
   orderPlacedAt?: string | null;
   orderConfirmedAt?: string | null;
-  paymentReleasedAt?: string | null;
   shippedAt?: string | null;
   deliveredAt?: string | null;
   finishedAt?: string | null;
@@ -38,12 +38,12 @@ function mapTransaction(d: BackendTransactionDto): Transaction {
     itemTitle: d.itemTitle,
     quantity: d.quantity,
     unitPrice: d.unitPrice,
+    shippingCost: d.shippingCost ?? 0,
     totalPrice: d.totalPrice,
     status: d.status as Transaction['status'],
     trackingInfo: d.trackingInfo ?? undefined,
     orderPlacedAt: d.orderPlacedAt ?? undefined,
     orderConfirmedAt: d.orderConfirmedAt ?? undefined,
-    paymentReleasedAt: d.paymentReleasedAt ?? undefined,
     shippedAt: d.shippedAt ?? undefined,
     deliveredAt: d.deliveredAt ?? undefined,
     finishedAt: d.finishedAt ?? undefined,
@@ -86,11 +86,6 @@ export const transactionsService = {
 
   async sellerConfirmOrder(id: string): Promise<Transaction> {
     const raw = await api.put<BackendTransactionDto>(`/transactions/${id}/confirm-order`);
-    return mapTransaction(raw);
-  },
-
-  async buyerReleasePayment(id: string): Promise<Transaction> {
-    const raw = await api.put<BackendTransactionDto>(`/transactions/${id}/release-payment`);
     return mapTransaction(raw);
   },
 

@@ -41,14 +41,14 @@ export interface Transaction {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
-  status: 'OrderPlaced' | 'OrderConfirmed' | 'PaymentReleased' | 'Shipped' | 'Delivered' | 'Finished' | 'Cancelled';
+  status: 'OrderPlaced' | 'OrderConfirmed' | 'Shipped' | 'Delivered' | 'Finished' | 'Cancelled';
   trackingInfo?: string;
   orderPlacedAt?: string;
   orderConfirmedAt?: string;
-  paymentReleasedAt?: string;
   shippedAt?: string;
   deliveredAt?: string;
   finishedAt?: string;
+  shippingCost?: number;
   createdAt: string;
 }
 
@@ -94,6 +94,7 @@ export interface Product {
   sellerAvatar?: string;
   condition: 'new' | 'used' | 'refurbished';
   stock?: number;
+  shippingCost?: number;
   status: 'available' | 'sold' | 'pending_moderation';
   communityId?: string;
   communityName?: string;

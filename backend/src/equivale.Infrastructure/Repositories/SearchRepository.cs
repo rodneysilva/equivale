@@ -125,6 +125,7 @@ public class SearchRepository
         Id: p.Id, SellerId: p.SellerId, SellerName: null, SellerAvatarUrl: null, Title: p.Title,
         Description: p.Description, Category: p.Category,
         PriceInEquivale: (decimal)p.PriceInEquivale,
+        ShippingCost: p.ShippingCost,
         Images: p.Images, Status: p.Status.ToString(),
         Condition: p.Condition.ToString(),
         Stock: p.Stock,

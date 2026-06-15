@@ -1,5 +1,3 @@
-using equivale.Domain.Enums;
-
 namespace equivale.Application.DTOs;
 
 public record TransactionDto(
@@ -13,12 +11,12 @@ public record TransactionDto(
     string ItemTitle,
     int Quantity,
     decimal UnitPrice,
+    decimal ShippingCost,
     decimal TotalPrice,
     string Status,
     string? TrackingInfo,
     DateTime? OrderPlacedAt,
     DateTime? OrderConfirmedAt,
-    DateTime? PaymentReleasedAt,
     DateTime? ShippedAt,
     DateTime? DeliveredAt,
     DateTime? FinishedAt,

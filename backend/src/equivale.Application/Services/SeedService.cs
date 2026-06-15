@@ -122,7 +122,7 @@ public class SeedService
 
         var products = await _productRepository.GetAllAsync(ct);
         var services = await _serviceRepository.GetAllAsync(ct);
-        var statuses = new[] { TransactionStatus.OrderPlaced, TransactionStatus.OrderConfirmed, TransactionStatus.PaymentReleased, TransactionStatus.Shipped, TransactionStatus.Delivered, TransactionStatus.Finished, TransactionStatus.Cancelled };
+        var statuses = new[] { TransactionStatus.OrderPlaced, TransactionStatus.OrderConfirmed, TransactionStatus.Shipped, TransactionStatus.Delivered, TransactionStatus.Finished, TransactionStatus.Cancelled };
         var count = 0;
 
         foreach (var user in userList)
@@ -133,31 +133,31 @@ public class SeedService
                 var service = services.FirstOrDefault(s => s.ProviderId != user.Id);
                 var useProduct = _rng.NextDouble() > 0.5;
 
-                string sellerId, itemId, itemTitle; decimal price; TransactionItemType itemType;
+                string sellerId, itemId, itemTitle; decimal price, shipping; TransactionItemType itemType;
 
                 if (useProduct && product is not null)
-                { sellerId = product.SellerId; itemId = product.Id; itemTitle = product.Title; price = product.PriceInEquivale.Amount; itemType = TransactionItemType.Product; }
+                { sellerId = product.SellerId; itemId = product.Id; itemTitle = product.Title; price = product.PriceInEquivale.Amount; itemType = TransactionItemType.Product; shipping = product.ShippingCost; }
                 else if (service is not null)
-                { sellerId = service.ProviderId; itemId = service.Id; itemTitle = service.Title; price = service.PriceInEquivale.Amount; itemType = TransactionItemType.Service; }
+                { sellerId = service.ProviderId; itemId = service.Id; itemTitle = service.Title; price = service.PriceInEquivale.Amount; itemType = TransactionItemType.Service; shipping = 0; }
                 else continue;
 
                 var qty = _rng.Next(1, 3);
                 var daysAgo = _rng.Next(1, 30);
+                var total = price * qty + shipping;
                 var tx = new Transaction
                 {
                     BuyerId = user.Id, SellerId = sellerId, ItemType = itemType, ItemId = itemId, ItemTitle = itemTitle,
-                    Quantity = qty, UnitPrice = new Money(price), TotalPrice = new Money(price * qty),
+                    Quantity = qty, UnitPrice = new Money(price), ShippingCost = shipping, TotalPrice = new Money(total),
                     Status = status,
                     OrderPlacedAt = DateTime.UtcNow.AddDays(-daysAgo),
                     CreatedAt = DateTime.UtcNow.AddDays(-daysAgo), UpdatedAt = DateTime.UtcNow.AddDays(-daysAgo),
                 };
 
                 if (status >= TransactionStatus.OrderConfirmed) tx.OrderConfirmedAt = DateTime.UtcNow.AddDays(-daysAgo + 1);
-                if (status >= TransactionStatus.PaymentReleased) tx.PaymentReleasedAt = DateTime.UtcNow.AddDays(-daysAgo + 2);
-                if (status >= TransactionStatus.Shipped) { tx.ShippedAt = DateTime.UtcNow.AddDays(-daysAgo + 3); tx.TrackingInfo = $"Rastreio {_rng.Next(10000, 99999)}"; }
-                if (status >= TransactionStatus.Delivered) tx.DeliveredAt = DateTime.UtcNow.AddDays(-daysAgo + 4);
-                if (status == TransactionStatus.Finished) tx.FinishedAt = DateTime.UtcNow.AddDays(-daysAgo + 5);
-                if (status == TransactionStatus.Cancelled) { tx.CancelledAt = DateTime.UtcNow.AddDays(-daysAgo + 1); tx.OrderPlacedAt = DateTime.UtcNow.AddDays(-daysAgo); }
+                if (status >= TransactionStatus.Shipped) { tx.ShippedAt = DateTime.UtcNow.AddDays(-daysAgo + 2); tx.TrackingInfo = $"Rastreio {_rng.Next(10000, 99999)}"; }
+                if (status >= TransactionStatus.Delivered) tx.DeliveredAt = DateTime.UtcNow.AddDays(-daysAgo + 3);
+                if (status == TransactionStatus.Finished) tx.FinishedAt = DateTime.UtcNow.AddDays(-daysAgo + 4);
+                if (status == TransactionStatus.Cancelled) { tx.CancelledAt = DateTime.UtcNow.AddDays(-daysAgo + 1); }
 
                 await _transactionRepository.AddAsync(tx, ct);
                 count++;
@@ -168,17 +168,16 @@ public class SeedService
                 var tx2 = new Transaction
                 {
                     BuyerId = buyer.Id, SellerId = user.Id, ItemType = itemType, ItemId = itemId, ItemTitle = itemTitle,
-                    Quantity = 1, UnitPrice = new Money(price), TotalPrice = new Money(price),
+                    Quantity = 1, UnitPrice = new Money(price), ShippingCost = shipping, TotalPrice = new Money(price + shipping),
                     Status = status,
                     OrderPlacedAt = DateTime.UtcNow.AddDays(-daysAgo - 5),
                     CreatedAt = DateTime.UtcNow.AddDays(-daysAgo - 5), UpdatedAt = DateTime.UtcNow.AddDays(-daysAgo - 5),
                 };
                 if (status >= TransactionStatus.OrderConfirmed) tx2.OrderConfirmedAt = DateTime.UtcNow.AddDays(-daysAgo - 4);
-                if (status >= TransactionStatus.PaymentReleased) tx2.PaymentReleasedAt = DateTime.UtcNow.AddDays(-daysAgo - 3);
-                if (status >= TransactionStatus.Shipped) { tx2.ShippedAt = DateTime.UtcNow.AddDays(-daysAgo - 2); tx2.TrackingInfo = $"Rastreio {_rng.Next(10000, 99999)}"; }
-                if (status >= TransactionStatus.Delivered) tx2.DeliveredAt = DateTime.UtcNow.AddDays(-daysAgo - 1);
-                if (status == TransactionStatus.Finished) tx2.FinishedAt = DateTime.UtcNow.AddDays(-daysAgo);
-                if (status == TransactionStatus.Cancelled) { tx2.CancelledAt = DateTime.UtcNow.AddDays(-daysAgo - 4); tx2.OrderPlacedAt = DateTime.UtcNow.AddDays(-daysAgo - 5); }
+                if (status >= TransactionStatus.Shipped) { tx2.ShippedAt = DateTime.UtcNow.AddDays(-daysAgo - 3); tx2.TrackingInfo = $"Rastreio {_rng.Next(10000, 99999)}"; }
+                if (status >= TransactionStatus.Delivered) tx2.DeliveredAt = DateTime.UtcNow.AddDays(-daysAgo - 2);
+                if (status == TransactionStatus.Finished) tx2.FinishedAt = DateTime.UtcNow.AddDays(-daysAgo - 1);
+                if (status == TransactionStatus.Cancelled) { tx2.CancelledAt = DateTime.UtcNow.AddDays(-daysAgo - 4); }
 
                 await _transactionRepository.AddAsync(tx2, ct);
                 count++;
@@ -440,6 +439,7 @@ public class SeedService
                 Description = $"{title}. Produto da categoria {category}. " + Pick(Bios),
                 Category = category,
                 PriceInEquivale = new Money(_rng.Next(15, 500)),
+                ShippingCost = _rng.Next(0, 30),
                 Images = [Img($"prod-{seed}")],
                 Status = ItemStatus.Active,
                 Condition = condition,

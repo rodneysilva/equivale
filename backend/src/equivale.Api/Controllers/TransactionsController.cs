@@ -45,13 +45,6 @@ public class TransactionsController : ControllerBase
         catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
     }
 
-    [HttpPut("{id}/release-payment")]
-    public async Task<ActionResult<TransactionDto>> BuyerReleasePayment(string id, CancellationToken ct)
-    {
-        try { var t = await _svc.BuyerReleasePaymentAsync(id, GetUserId(), ct); return t is null ? NotFound() : Ok(t); }
-        catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
-    }
-
     [HttpPut("{id}/ship")]
     public async Task<ActionResult<TransactionDto>> SellerShip(string id, [FromBody] ShipRequest? req, CancellationToken ct)
     {

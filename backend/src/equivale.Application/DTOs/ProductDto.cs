@@ -11,6 +11,7 @@ public record ProductDto(
     string Description,
     string Category,
     decimal PriceInEquivale,
+    decimal ShippingCost,
     List<string> Images,
     string Status,
     string Condition,

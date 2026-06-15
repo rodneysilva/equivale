@@ -32,6 +32,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.PriceInEquivale, opt => opt.MapFrom(src => src.PriceInEquivale.Amount))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
             .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => src.Condition.ToString()))
+            .ForMember(dest => dest.ShippingCost, opt => opt.MapFrom(src => src.ShippingCost))
             .ForMember(dest => dest.Stock, opt => opt.MapFrom(src => src.Stock))
             .ForMember(dest => dest.SellerName, opt => opt.Ignore())
             .ForMember(dest => dest.SellerAvatarUrl, opt => opt.Ignore())
@@ -39,7 +40,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags))
             .ForCtorParam("SellerName", opt => opt.MapFrom(_ => (string?)null))
             .ForCtorParam("SellerAvatarUrl", opt => opt.MapFrom(_ => (string?)null))
-            .ForCtorParam("CommunityName", opt => opt.MapFrom(_ => (string?)null));
+            .ForCtorParam("CommunityName", opt => opt.MapFrom(_ => (string?)null))
+            .ForCtorParam("ShippingCost", opt => opt.MapFrom(src => src.ShippingCost));
         CreateMap<CreateProductDto, Product>()
             .ForMember(dest => dest.PriceInEquivale, opt => opt.MapFrom(src => new Money(src.PriceInEquivale)))
             .ForMember(dest => dest.Id, opt => opt.Ignore())
@@ -98,6 +100,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.ItemType, opt => opt.MapFrom(src => src.ItemType.ToString()))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
             .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice.Amount))
+            .ForMember(dest => dest.ShippingCost, opt => opt.MapFrom(src => src.ShippingCost))
             .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.TotalPrice.Amount))
             .ForMember(dest => dest.BuyerName, opt => opt.Ignore())
             .ForMember(dest => dest.SellerName, opt => opt.Ignore())
@@ -106,6 +109,7 @@ public class MappingProfile : Profile
             .ForCtorParam("ItemType", opt => opt.MapFrom(src => src.ItemType.ToString()))
             .ForCtorParam("Status", opt => opt.MapFrom(src => src.Status.ToString()))
             .ForCtorParam("UnitPrice", opt => opt.MapFrom(src => src.UnitPrice.Amount))
+            .ForCtorParam("ShippingCost", opt => opt.MapFrom(src => src.ShippingCost))
             .ForCtorParam("TotalPrice", opt => opt.MapFrom(src => src.TotalPrice.Amount))
             .ForCtorParam("TrackingInfo", opt => opt.MapFrom(src => src.TrackingInfo));
     }

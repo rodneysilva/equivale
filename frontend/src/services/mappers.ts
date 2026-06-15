@@ -45,6 +45,7 @@ export interface BackendProductDto {
   description: string;
   category: string;
   priceInEquivale: number;
+  shippingCost: number;
   images: string[];
   status: string;
   condition: string;
@@ -197,6 +198,7 @@ export function mapProduct(data: BackendProductDto): Product {
     title: data.title,
     description: data.description,
     price: data.priceInEquivale,
+    shippingCost: data.shippingCost ?? 0,
     category: data.category,
     imageUrl: data.images?.[0],
     images: data.images,
