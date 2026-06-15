@@ -34,7 +34,7 @@ const CommunityServicesPage: Component = () => {
 
   return (
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <button onClick={() => navigate(`/communities/${params.id}`)} class="flex items-center gap-1.5 text-sm eq-link mb-4">
+      <button onClick={() => navigate(-1)} class="flex items-center gap-1.5 text-sm eq-link mb-4">
         <ArrowLeft size={14} /> Voltar para a comunidade
       </button>
 
