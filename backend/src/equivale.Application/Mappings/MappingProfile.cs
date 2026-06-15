@@ -100,15 +100,16 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.OrderStatus, opt => opt.MapFrom(src => src.OrderStatus.ToString()))
             .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice.Amount))
             .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.TotalPrice.Amount))
-            .ForMember(dest => dest.CompletedAt, opt => opt.MapFrom(src => src.PaymentConfirmedAt))
             .ForMember(dest => dest.BuyerName, opt => opt.Ignore())
             .ForMember(dest => dest.SellerName, opt => opt.Ignore())
             .ForCtorParam("BuyerName", opt => opt.MapFrom(_ => (string?)null))
             .ForCtorParam("SellerName", opt => opt.MapFrom(_ => (string?)null))
+            .ForCtorParam("ItemType", opt => opt.MapFrom(src => src.ItemType.ToString()))
+            .ForCtorParam("Status", opt => opt.MapFrom(src => src.Status.ToString()))
             .ForCtorParam("OrderStatus", opt => opt.MapFrom(src => src.OrderStatus.ToString()))
-            .ForCtorParam("PaymentConfirmedAt", opt => opt.MapFrom(src => src.PaymentConfirmedAt))
-            .ForCtorParam("ShippedAt", opt => opt.MapFrom(src => src.ShippedAt))
-            .ForCtorParam("DeliveredAt", opt => opt.MapFrom(src => src.DeliveredAt));
+            .ForCtorParam("UnitPrice", opt => opt.MapFrom(src => src.UnitPrice.Amount))
+            .ForCtorParam("TotalPrice", opt => opt.MapFrom(src => src.TotalPrice.Amount))
+            .ForCtorParam("CompletedAt", opt => opt.MapFrom(src => src.PaymentConfirmedAt));
     }
 
     private static ProductCondition ParseCondition(string? value)
