@@ -21,7 +21,7 @@ import CreateCommunityPage from './pages/CreateCommunityPage';
 const App: Component = () => {
   return (
     <Router root={(props) => (
-      <div class="min-h-screen flex flex-col" style={{ background: 'var(--color-bg)', color: 'var(--color-text)' }}>
+      <div class="min-h-screen flex flex-col" style={{ background: 'var(--color-surface-alt)', color: 'var(--color-text)' }}>
         <Navbar />
         <main class="flex-1">
           {props.children}

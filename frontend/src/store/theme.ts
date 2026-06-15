@@ -1,4 +1,4 @@
-import { createSignal, createEffect } from 'solid-js';
+import { createSignal } from 'solid-js';
 
 function getInitialTheme(): boolean {
   if (typeof window === 'undefined') return false;
@@ -7,20 +7,19 @@ function getInitialTheme(): boolean {
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
-const [isDark, setIsDark] = createSignal(getInitialTheme());
-
-function toggleTheme(): void {
-  setIsDark(prev => !prev);
+function applyTheme(dark: boolean): void {
+  if (typeof document === 'undefined') return;
+  document.documentElement.classList.toggle('dark', dark);
+  localStorage.setItem('eql_theme', dark ? 'dark' : 'light');
 }
 
-createEffect(() => {
-  const dark = isDark();
-  if (dark) {
-    document.documentElement.classList.add('dark');
-  } else {
-    document.documentElement.classList.remove('dark');
-  }
-  localStorage.setItem('eql_theme', dark ? 'dark' : 'light');
-});
+const [isDark, setIsDark] = createSignal(getInitialTheme());
+applyTheme(isDark());
+
+function toggleTheme(): void {
+  const next = !isDark();
+  setIsDark(next);
+  applyTheme(next);
+}
 
 export { isDark, toggleTheme };

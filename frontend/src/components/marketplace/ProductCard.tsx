@@ -1,5 +1,6 @@
 import type { Component } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
+import { Users } from 'lucide-solid';
 import type { Product } from '../../types';
 import Card from '../ui/Card';
 import Avatar from '../ui/Avatar';
@@ -14,12 +15,12 @@ const ProductCard: Component<ProductCardProps> = (props) => {
 
   return (
     <Card hover class="overflow-hidden cursor-pointer" onClick={() => navigate(`/products/${props.product.id}`)}>
-      <div class="aspect-video relative" style={{ background: 'var(--color-surface-alt)' }}>
+      <div class="aspect-square relative" style={{ background: 'var(--color-surface-alt)' }}>
         {props.product.imageUrl ? (
-          <img src={props.product.imageUrl} alt={props.product.title} class="w-full h-full object-cover" />
+          <img src={props.product.imageUrl} alt={props.product.title} class="w-full h-full object-cover" loading="lazy" />
         ) : (
           <div class="w-full h-full flex items-center justify-center" style={{ color: 'var(--color-text-muted)' }}>
-            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
           </div>
@@ -31,21 +32,22 @@ const ProductCard: Component<ProductCardProps> = (props) => {
         </div>
       </div>
       <div class="p-3">
-        <h3 class="font-semibold text-sm truncate" style={{ color: 'var(--color-text)' }}>{props.product.title}</h3>
-        <p class="text-xs mt-1 line-clamp-2 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{props.product.description}</p>
-        <div class="flex items-center justify-between mt-3">
-          <span class="text-sm font-bold eq-accent">{props.product.price} EQL</span>
-          {props.product.sellerName && (
-            <div class="flex items-center gap-1.5">
-              <Avatar name={props.product.sellerName} size="sm" />
-              <span class="text-xs" style={{ color: 'var(--color-text-muted)' }}>{props.product.sellerName}</span>
-            </div>
-          )}
+        <h3 class="font-medium text-sm leading-snug line-clamp-2" style={{ color: 'var(--color-text)', 'min-height': '2.5rem' }}>{props.product.title}</h3>
+        <div class="flex items-baseline gap-1 mt-2">
+          <span class="text-lg font-bold eq-accent">{props.product.price}</span>
+          <span class="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>EQL</span>
         </div>
+        {props.product.sellerName && (
+          <div class="flex items-center gap-1.5 mt-2 pt-2 eq-divider">
+            <Avatar name={props.product.sellerName} size="sm" />
+            <span class="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>{props.product.sellerName}</span>
+          </div>
+        )}
         {props.product.communityName && (
-          <p class="text-xs mt-2 pt-2 eq-divider" style={{ color: 'var(--color-text-muted)' }}>
-            {props.product.communityName}
-          </p>
+          <div class="flex items-center gap-1 mt-2">
+            <Users size={11} style={{ color: 'var(--color-primary)' }} />
+            <span class="text-xs truncate" style={{ color: 'var(--color-primary)' }}>{props.product.communityName}</span>
+          </div>
         )}
       </div>
     </Card>

@@ -25,7 +25,7 @@ const HomePage: Component = () => {
   const loadFeatured = async () => {
     try {
       const [productsRes, servicesRes, communitiesRes] = await Promise.all([
-        productsService.getAll(1, 8),
+        productsService.getAll(1, 10),
         servicesService.getAll(1, 6),
         communitiesService.getAll(1, 6),
       ]);
@@ -39,22 +39,24 @@ const HomePage: Component = () => {
     }
   };
 
+  const sectionHeader = (title: string, subtitle: string, link: string) => (
+    <div class="flex items-end justify-between mb-5">
+      <div>
+        <h2 class="text-lg font-bold" style={{ color: 'var(--color-text)' }}>{title}</h2>
+        <p class="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{subtitle}</p>
+      </div>
+      <button onClick={() => navigate(link)} class="flex items-center gap-1 text-sm eq-link shrink-0">
+        Ver todos <ArrowRight size={14} />
+      </button>
+    </div>
+  );
+
   return (
-    <div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-10">
       {/* Comunidades */}
-      <section class="max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-12">
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h2 class="text-xl font-bold" style={{ color: 'var(--color-text)' }}>Comunidades</h2>
-            <p class="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Encontre seu grupo e comece a trocar</p>
-          </div>
-          <button onClick={() => navigate('/communities')} class="flex items-center gap-1 text-sm eq-link">
-            Ver todas <ArrowRight size={14} />
-          </button>
-        </div>
-        {loading() ? (
-          <LoadingSpinner class="py-12" />
-        ) : (
+      <section>
+        {sectionHeader('Comunidades em destaque', 'Encontre seu grupo', '/communities')}
+        {loading() ? <LoadingSpinner class="py-8" /> : (
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {communities().map(c => <CommunityCard community={c} />)}
           </div>
@@ -62,31 +64,15 @@ const HomePage: Component = () => {
       </section>
 
       {/* Produtos */}
-      <section class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h2 class="text-xl font-bold" style={{ color: 'var(--color-text)' }}>Produtos</h2>
-            <p class="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Itens disponíveis nas comunidades</p>
-          </div>
-          <button onClick={() => navigate('/products')} class="flex items-center gap-1 text-sm eq-link">
-            Ver todos <ArrowRight size={14} />
-          </button>
-        </div>
-        {loading() ? <LoadingSpinner class="py-12" /> : <ProductGrid products={products()} />}
+      <section>
+        {sectionHeader('Produtos', 'Itens disponíveis', '/products')}
+        {loading() ? <LoadingSpinner class="py-8" /> : <ProductGrid products={products()} />}
       </section>
 
       {/* Serviços */}
-      <section class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h2 class="text-xl font-bold" style={{ color: 'var(--color-text)' }}>Serviços</h2>
-            <p class="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Talentos disponíveis</p>
-          </div>
-          <button onClick={() => navigate('/services')} class="flex items-center gap-1 text-sm eq-link">
-            Ver todos <ArrowRight size={14} />
-          </button>
-        </div>
-        {loading() ? <LoadingSpinner class="py-12" /> : <ServiceGrid services={services()} />}
+      <section>
+        {sectionHeader('Serviços', 'Talentos disponíveis', '/services')}
+        {loading() ? <LoadingSpinner class="py-8" /> : <ServiceGrid services={services()} />}
       </section>
     </div>
   );

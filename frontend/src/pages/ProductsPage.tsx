@@ -1,5 +1,5 @@
 import { type Component, createSignal, createEffect } from 'solid-js';
-import { useNavigate } from '@solidjs/router';
+import { useNavigate, useSearchParams } from '@solidjs/router';
 import { Plus } from 'lucide-solid';
 import { productsService } from '../services/products.service';
 import ProductGrid from '../components/marketplace/ProductGrid';
@@ -15,9 +15,10 @@ const popularTags = ['artesanato', 'ceramica', 'madeira', 'vegano', 'tecnologia'
 
 const ProductsPage: Component = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [products, setProducts] = createSignal<Product[]>([]);
   const [loading, setLoading] = createSignal(true);
-  const [search, setSearch] = createSignal('');
+  const [search, setSearch] = createSignal((searchParams.search as string) || '');
   const [category, setCategory] = createSignal('');
   const [tag, setTag] = createSignal('');
   const [page, setPage] = createSignal(1);
