@@ -127,9 +127,9 @@ public class TransactionService : ITransactionService
         var t = await _repo.GetByIdAsync(id, ct);
         if (t is null || (t.BuyerId != userId && t.SellerId != userId)) return null;
 
-        // Estorna o calção de volta ao comprador
+        // Estorna o calção de volta ao comprador (se houver saldo bloqueado)
         var buyer = await _userRepo.GetByIdAsync(t.BuyerId, ct);
-        if (buyer is not null)
+        if (buyer is not null && buyer.BlockedBalance.Amount >= t.TotalPrice.Amount)
         {
             buyer.Unblock(t.TotalPrice.Amount);
             await _userRepo.UpdateAsync(buyer, ct);
@@ -149,8 +149,18 @@ public class TransactionService : ITransactionService
         var buyer = await _userRepo.GetByIdAsync(t.BuyerId, ct);
         var seller = await _userRepo.GetByIdAsync(t.SellerId, ct);
 
-        if (buyer is not null) { buyer.ReleaseBlocked(t.TotalPrice.Amount); await _userRepo.UpdateAsync(buyer, ct); }
-        if (seller is not null) { seller.Credit(t.TotalPrice.Amount); await _userRepo.UpdateAsync(seller, ct); }
+        if (buyer is not null)
+        {
+            // Só remove do bloqueado se houver saldo bloqueado (seed transactions podem não ter)
+            if (buyer.BlockedBalance.Amount >= t.TotalPrice.Amount)
+                buyer.ReleaseBlocked(t.TotalPrice.Amount);
+            await _userRepo.UpdateAsync(buyer, ct);
+        }
+        if (seller is not null)
+        {
+            seller.Credit(t.TotalPrice.Amount);
+            await _userRepo.UpdateAsync(seller, ct);
+        }
 
         // Decrementa estoque
         if (t.ItemType == TransactionItemType.Product)

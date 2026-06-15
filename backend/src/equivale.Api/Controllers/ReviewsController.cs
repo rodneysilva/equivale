@@ -94,7 +94,7 @@ public class ReviewsController : ControllerBase
             if (transaction.BuyerId == userId && transaction.Status == Domain.Enums.TransactionStatus.Delivered)
             {
                 try { await _transactionService.FinishTransactionAsync(req.TransactionId, ct); }
-                catch { /* ignore if already finished */ }
+                catch (Exception ex) { Console.Error.WriteLine($"FinishTransactionAsync error: {ex.Message}"); }
             }
 
             return Ok(review);
