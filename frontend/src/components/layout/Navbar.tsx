@@ -33,9 +33,9 @@ const Navbar: Component = () => {
               onClick={() => handleNav('/')}
               class="flex items-center gap-1.5 cursor-pointer shrink-0"
             >
-              <img src="/favicon.svg" alt="eqüidade" class="w-7 h-7" />
+              <img src="/favicon.svg" alt="eqüivale" class="w-7 h-7" />
               <span class="text-lg font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>
-                eqüidade
+                eqüivale
               </span>
             </button>
 
@@ -126,22 +126,15 @@ const Navbar: Component = () => {
                 {link.label}
               </button>
             ))}
-            {auth.isAuthenticated() && auth.currentUser()?.role === 'admin' && (
-              <button
-                onClick={() => handleNav('/admin')}
-                class="px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-                style={{ color: location.pathname.startsWith('/admin') ? 'var(--color-primary)' : '#dc2626' }}
-              >
-                <Shield size={13} /> Admin
+            {auth.isAuthenticated() && (
+              <button onClick={() => handleNav('/dashboard')} class="px-3 py-1.5 rounded text-sm font-medium transition-colors cursor-pointer" style={{ color: location.pathname.startsWith('/dashboard') ? 'var(--color-primary)' : 'var(--color-text-secondary)' }}>
+                Painel
               </button>
             )}
-            {auth.isAuthenticated() && (
-              <button
-                onClick={() => handleNav('/transactions')}
-                class="px-3 py-1.5 rounded text-sm font-medium transition-colors cursor-pointer"
-                style={{ color: location.pathname.startsWith('/transactions') ? 'var(--color-primary)' : 'var(--color-text-secondary)' }}
-              >
-                Transações
+            <div class="flex-1"></div>
+            {auth.isAuthenticated() && auth.currentUser()?.role === 'admin' && (
+              <button onClick={() => handleNav('/admin')} class="px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer" style={{ color: location.pathname.startsWith('/admin') ? 'var(--color-primary)' : '#dc2626' }}>
+                <Shield size={13} /> Admin
               </button>
             )}
           </div>
