@@ -47,6 +47,7 @@ public class SeedController : ControllerBase
             result.Communities,
             result.Products,
             result.Services,
+            result.Transactions,
             seedPassword = "Eql@2026"
         });
     }

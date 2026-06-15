@@ -22,6 +22,7 @@ public class SeedService
     private readonly IProductRepository _productRepository;
     private readonly IServiceRepository _serviceRepository;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly ITransactionRepository _transactionRepository;
 
     private static readonly string SeedPassword = "Eql@2026";
     private string _passwordHash = string.Empty;
@@ -32,13 +33,15 @@ public class SeedService
         ICommunityRepository communityRepository,
         IProductRepository productRepository,
         IServiceRepository serviceRepository,
-        IPasswordHasher passwordHasher)
+        IPasswordHasher passwordHasher,
+        ITransactionRepository transactionRepository)
     {
         _userRepository = userRepository;
         _communityRepository = communityRepository;
         _productRepository = productRepository;
         _serviceRepository = serviceRepository;
         _passwordHasher = passwordHasher;
+        _transactionRepository = transactionRepository;
     }
 
     public async Task<SeedResult> RunAsync(SeedOptions opts, CancellationToken ct = default)
@@ -52,7 +55,8 @@ public class SeedService
         var communities = await SeedCommunitiesAsync(opts.Communities, users, ct);
         var products = await SeedProductsAsync(opts.Products, users, communities, ct);
         var services = await SeedServicesAsync(opts.Services, users, communities, ct);
-        return new SeedResult(users.Count, communities.Count, products, services);
+        var transactions = await SeedTransactionsAsync(users, ct);
+        return new SeedResult(users.Count, communities.Count, products, services, transactions);
     }
 
     private async Task PromoteAdminAsync(CancellationToken ct)
@@ -65,6 +69,118 @@ public class SeedService
             existing.UpdatedAt = DateTime.UtcNow;
             await _userRepository.UpdateAsync(existing, ct);
         }
+    }
+
+    private async Task<int> SeedTransactionsAsync(Dictionary<string, User> users, CancellationToken ct)
+    {
+        var userList = users.Values.ToList();
+        if (userList.Count < 3) return 0;
+
+        var products = await _productRepository.GetAllAsync(ct);
+        var services = await _serviceRepository.GetAllAsync(ct);
+        var statuses = new[] { TransactionStatus.Pending, TransactionStatus.ConfirmedByBuyer, TransactionStatus.ConfirmedBySeller, TransactionStatus.Completed, TransactionStatus.Cancelled };
+        var count = 0;
+
+        // Create 5+ transactions per user across all statuses
+        foreach (var user in userList)
+        {
+            foreach (var status in statuses)
+            {
+                // Find an item this user didn't create
+                var product = products.FirstOrDefault(p => p.SellerId != user.Id);
+                var service = services.FirstOrDefault(s => s.ProviderId != user.Id);
+                var useProduct = _rng.NextDouble() > 0.5;
+
+                string sellerId;
+                string itemId;
+                string itemTitle;
+                decimal price;
+                TransactionItemType itemType;
+
+                if (useProduct && product is not null)
+                {
+                    sellerId = product.SellerId;
+                    itemId = product.Id;
+                    itemTitle = product.Title;
+                    price = product.PriceInEquivale.Amount;
+                    itemType = TransactionItemType.Product;
+                }
+                else if (service is not null)
+                {
+                    sellerId = service.ProviderId;
+                    itemId = service.Id;
+                    itemTitle = service.Title;
+                    price = service.PriceInEquivale.Amount;
+                    itemType = TransactionItemType.Service;
+                }
+                else continue;
+
+                var qty = _rng.Next(1, 3);
+                var daysAgo = _rng.Next(1, 30);
+
+                var transaction = new Transaction
+                {
+                    BuyerId = user.Id,
+                    SellerId = sellerId,
+                    ItemType = itemType,
+                    ItemId = itemId,
+                    ItemTitle = itemTitle,
+                    Quantity = qty,
+                    UnitPrice = new Money(price),
+                    TotalPrice = new Money(price * qty),
+                    Status = status,
+                    CreatedAt = DateTime.UtcNow.AddDays(-daysAgo),
+                    UpdatedAt = DateTime.UtcNow.AddDays(-daysAgo),
+                };
+
+                if (status is TransactionStatus.ConfirmedByBuyer or TransactionStatus.Completed)
+                    transaction.BuyerConfirmedAt = DateTime.UtcNow.AddDays(-daysAgo + 1);
+                if (status is TransactionStatus.ConfirmedBySeller or TransactionStatus.Completed)
+                    transaction.SellerConfirmedAt = DateTime.UtcNow.AddDays(-daysAgo + 1);
+                if (status == TransactionStatus.Completed)
+                    transaction.CompletedAt = DateTime.UtcNow.AddDays(-daysAgo + 2);
+                if (status == TransactionStatus.Cancelled)
+                    transaction.CancelledAt = DateTime.UtcNow.AddDays(-daysAgo + 1);
+
+                await _transactionRepository.AddAsync(transaction, ct);
+                count++;
+
+                // Also create a transaction where this user is the seller
+                var buyer = userList.FirstOrDefault(u => u.Id != user.Id && u.Id != sellerId);
+                if (buyer is null) continue;
+
+                var sellerTransaction = new Transaction
+                {
+                    BuyerId = buyer.Id,
+                    SellerId = user.Id,
+                    ItemType = itemType,
+                    ItemId = itemId,
+                    ItemTitle = itemTitle,
+                    Quantity = 1,
+                    UnitPrice = new Money(price),
+                    TotalPrice = new Money(price),
+                    Status = status,
+                    CreatedAt = DateTime.UtcNow.AddDays(-daysAgo - 5),
+                    UpdatedAt = DateTime.UtcNow.AddDays(-daysAgo - 5),
+                };
+
+                if (status is TransactionStatus.ConfirmedByBuyer or TransactionStatus.Completed)
+                    sellerTransaction.BuyerConfirmedAt = DateTime.UtcNow.AddDays(-daysAgo - 4);
+                if (status is TransactionStatus.ConfirmedBySeller or TransactionStatus.Completed)
+                    sellerTransaction.SellerConfirmedAt = DateTime.UtcNow.AddDays(-daysAgo - 4);
+                if (status == TransactionStatus.Completed)
+                    sellerTransaction.CompletedAt = DateTime.UtcNow.AddDays(-daysAgo - 3);
+                if (status == TransactionStatus.Cancelled)
+                    sellerTransaction.CancelledAt = DateTime.UtcNow.AddDays(-daysAgo - 4);
+
+                await _transactionRepository.AddAsync(sellerTransaction, ct);
+                count++;
+
+                if (count >= userList.Count * 10) break; // Cap at ~10 per user
+            }
+        }
+
+        return count;
     }
 
     // ===================== WORD BANKS =====================
@@ -312,5 +428,5 @@ public class SeedService
         return created;
     }
 
-    public record SeedResult(int Users, int Communities, int Products, int Services);
+    public record SeedResult(int Users, int Communities, int Products, int Services, int Transactions);
 }

@@ -1,6 +1,6 @@
 import { type Component, createSignal, onMount, For, Show } from 'solid-js';
 import { useParams, useNavigate } from '@solidjs/router';
-import { ArrowLeft, Package, Zap, Users as UsersIcon, ExternalLink } from 'lucide-solid';
+import { ArrowLeft, Package, Zap, Users as UsersIcon, ExternalLink, Star, TrendingUp } from 'lucide-solid';
 import Card from '../components/ui/Card';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import ProductGrid from '../components/marketplace/ProductGrid';
@@ -8,8 +8,9 @@ import ServiceGrid from '../components/marketplace/ServiceGrid';
 import { usersService } from '../services/users.service';
 import { productsService } from '../services/products.service';
 import { servicesService } from '../services/services.service';
+import { reviewsService } from '../services/transactions.service';
 import { getSocialLinkIcon, getSocialLinkLabel } from '../data/avatars';
-import type { User, Product, Service, UserCommunity } from '../types';
+import type { User, Product, Service, UserCommunity, Review } from '../types';
 
 const UserProfilePage: Component = () => {
   const params = useParams<{ id: string }>();
@@ -19,20 +20,23 @@ const UserProfilePage: Component = () => {
   const [products, setProducts] = createSignal<Product[]>([]);
   const [services, setServices] = createSignal<Service[]>([]);
   const [communities, setCommunities] = createSignal<UserCommunity[]>([]);
+  const [reviews, setReviews] = createSignal<Review[]>([]);
   const [loading, setLoading] = createSignal(true);
 
   onMount(async () => {
     try {
-      const [u, p, s, c] = await Promise.all([
+      const [u, p, s, c, r] = await Promise.all([
         usersService.getById(params.id),
         productsService.getAll(1, 100, undefined, undefined, undefined, params.id),
         servicesService.getAll(1, 100, undefined, undefined, undefined, params.id),
         usersService.getCommunities(params.id),
+        reviewsService.getByUser(params.id),
       ]);
       setUser(u);
       setProducts(p.data);
       setServices(s.data);
       setCommunities(c);
+      setReviews(r);
     } catch (e) {
       console.error('Erro ao carregar perfil:', e);
     } finally {
@@ -149,6 +153,39 @@ const UserProfilePage: Component = () => {
                 <Zap size={18} class="eq-brand" /> Serviços ({services().length})
               </h2>
               <ServiceGrid services={services()} />
+            </section>
+          </Show>
+
+          {/* Reviews */}
+          <Show when={reviews().length > 0}>
+            <section>
+              <h2 class="flex items-center gap-2 text-lg font-bold mb-3" style={{ color: 'var(--color-text)' }}>
+                <Star size={18} class="eq-brand" /> Avaliações ({reviews().length})
+              </h2>
+              <div class="space-y-2">
+                <For each={reviews().slice(0, 5)}>
+                  {(review) => (
+                    <Card class="p-3 flex items-start gap-3">
+                      <div class="eq-avatar w-9 h-9 overflow-hidden shrink-0">
+                        {review.reviewerAvatarUrl ? <img src={review.reviewerAvatarUrl} alt={review.reviewerName} class="w-full h-full object-cover" /> : <span class="text-xs font-bold">{review.reviewerName?.[0]?.toUpperCase() ?? '?'}</span>}
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                          <span class="text-sm font-medium" style={{ color: 'var(--color-text)' }}>{review.reviewerName ?? 'Anônimo'}</span>
+                          <div class="flex items-center gap-0.5">
+                            <For each={Array.from({ length: 5 })}>{(_, i) => (
+                              <Star size={10} style={{ color: i() < review.rating ? '#f59e0b' : 'var(--color-border)' }} fill={i() < review.rating ? '#f59e0b' : 'none'} />
+                            )}</For>
+                          </div>
+                        </div>
+                        <Show when={review.comment}>
+                          <p class="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>{review.comment}</p>
+                        </Show>
+                      </div>
+                    </Card>
+                  )}
+                </For>
+              </div>
             </section>
           </Show>
 

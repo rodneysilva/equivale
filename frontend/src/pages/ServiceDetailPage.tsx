@@ -1,4 +1,4 @@
-import { type Component, createSignal, createEffect, For } from 'solid-js';
+import { type Component, createSignal, createEffect, For, Show } from 'solid-js';
 import { useParams, useNavigate } from '@solidjs/router';
 import { Zap, ArrowLeft, Tag, Users } from 'lucide-solid';
 import Card from '../components/ui/Card';
@@ -7,6 +7,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import Avatar from '../components/ui/Avatar';
 import Badge from '../components/ui/Badge';
 import { servicesService } from '../services/services.service';
+import { transactionsService } from '../services/transactions.service';
 import { useAuth } from '../store/auth';
 import type { Service } from '../types';
 
@@ -31,10 +32,15 @@ const ServiceDetailPage: Component = () => {
   const handleHire = async () => {
     if (!auth.isAuthenticated()) { navigate('/login'); return; }
     setHiring(true);
-    try { await servicesService.hire(params.id); navigate('/wallet'); }
-    catch (err: any) { setError(err.message || 'Erro ao contratar'); }
+    setError('');
+    try {
+      await transactionsService.create(params.id, 'Service', 1);
+      navigate('/transactions');
+    } catch (err: any) { setError(err.message || 'Erro ao contratar'); }
     finally { setHiring(false); }
   };
+
+  const isOwnService = () => auth.currentUser()?.id === service()?.providerId;
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 
@@ -108,8 +114,8 @@ const ServiceDetailPage: Component = () => {
                   <span class="text-3xl font-bold eq-accent">{service()!.price}</span>
                   <span class="text-base font-medium" style={{ color: 'var(--color-text-muted)' }}>EQL</span>
                 </div>
-                <Button size="lg" class="w-full" onClick={handleHire} disabled={hiring() || service()!.status !== 'available'}>
-                  {hiring() ? <LoadingSpinner size="w-4 h-4" class="!justify-start" /> : (
+                <Button size="lg" class="w-full" onClick={handleHire} disabled={hiring() || isOwnService()}>
+                  {hiring() ? <LoadingSpinner size="w-4 h-4" class="!justify-start" /> : isOwnService() ? 'Seu serviço' : (
                     <><Zap size={16} class="mr-2" /> Contratar</>
                   )}
                 </Button>

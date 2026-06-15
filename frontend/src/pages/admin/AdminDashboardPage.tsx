@@ -13,13 +13,13 @@ const AdminDashboardPage: Component = () => {
   const [loading, setLoading] = createSignal(true);
 
   onMount(async () => {
-    if (!auth.isAuthenticated() || auth.currentUser()?.role !== 'admin') {
-      navigate('/');
-      return;
-    }
+    if (!auth.isAuthenticated()) { navigate('/login'); return; }
     try {
       setStats(await adminService.getStats());
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error('Erro ao carregar stats:', err);
+      navigate('/');
+    }
     finally { setLoading(false); }
   });
 
