@@ -3,10 +3,10 @@ import type { Component } from 'solid-js';
 const Footer: Component = () => {
   return (
     <footer class="eq-divider mt-16" style={{ background: 'var(--color-surface)' }}>
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div>
-            <h3 class="text-base font-bold eq-brand mb-2">equivale</h3>
+            <h3 class="text-base font-bold eq-brand mb-2">eqüivale</h3>
             <p class="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
               Economia colaborativa por meio de comunidades. Troque talentos e produtos com moeda virtual.
             </p>
@@ -38,7 +38,7 @@ const Footer: Component = () => {
         </div>
         <div class="mt-8 pt-4 eq-divider flex flex-col sm:flex-row items-center justify-between gap-2">
           <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-            © 2025 equivale. Todos os direitos reservados.
+            © 2025 eqüivale. Todos os direitos reservados.
           </p>
           <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>
             Feito no Brasil
