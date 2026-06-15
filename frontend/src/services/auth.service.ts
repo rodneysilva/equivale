@@ -13,22 +13,17 @@ export const authService = {
       password: data.password,
     };
     const raw = await api.post<BackendAuthResponse>('/auth/register', payload);
-    const response = mapAuthResponse(raw);
-    api.setToken(response.token);
-    return response;
+    return mapAuthResponse(raw);
   },
 
   async login(data: LoginDto): Promise<AuthResponse> {
     const payload: BackendLoginDto = { email: data.email, password: data.password };
     const raw = await api.post<BackendAuthResponse>('/auth/login', payload);
-    const response = mapAuthResponse(raw);
-    api.setToken(response.token);
-    return response;
+    return mapAuthResponse(raw);
   },
 
-  logout(): void {
-    api.clearToken();
-    window.location.href = '/';
+  async logout(): Promise<void> {
+    await api.post<void>('/auth/logout');
   },
 
   async getProfile(): Promise<User> {

@@ -5,7 +5,15 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [solidPlugin(), tailwindcss()],
-  server: { port: 3000 },
+  server: {
+    port: 3000,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5053',
+        changeOrigin: true,
+      },
+    },
+  },
   build: {
     target: 'esnext',
   },

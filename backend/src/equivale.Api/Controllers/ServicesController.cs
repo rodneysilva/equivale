@@ -84,7 +84,8 @@ public class ServicesController : ControllerBase
         var service = await _serviceService.GetByIdAsync(id, cancellationToken);
         if (service is null) return NotFound();
 
-        var clientId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+        var clientId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
             ?? throw new UnauthorizedAccessException("Invalid token");
 
         if (clientId == service.ProviderId)

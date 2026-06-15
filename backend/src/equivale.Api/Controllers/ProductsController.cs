@@ -91,7 +91,8 @@ public class ProductsController : ControllerBase
         var product = await _productService.GetByIdAsync(id, cancellationToken);
         if (product is null) return NotFound();
 
-        var buyerId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+        var buyerId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
             ?? throw new UnauthorizedAccessException("Invalid token");
 
         if (buyerId == product.SellerId)

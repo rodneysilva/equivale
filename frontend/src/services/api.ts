@@ -1,39 +1,21 @@
-const BASE_URL = 'http://localhost:5053/api';
-
-function getToken(): string | null {
-  return localStorage.getItem('eql_token');
-}
-
-function setToken(token: string): void {
-  localStorage.setItem('eql_token', token);
-}
-
-function clearToken(): void {
-  localStorage.removeItem('eql_token');
-}
+const BASE_URL = '/api';
 
 async function request<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
   };
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     ...options,
     headers,
+    credentials: 'include',
   });
 
   if (response.status === 401) {
-    clearToken();
-    window.location.href = '/login';
     throw new Error('Unauthorized');
   }
 
@@ -66,8 +48,4 @@ export const api = {
 
   del: <T>(endpoint: string) =>
     request<T>(endpoint, { method: 'DELETE' }),
-
-  setToken,
-  clearToken,
-  getToken,
 };

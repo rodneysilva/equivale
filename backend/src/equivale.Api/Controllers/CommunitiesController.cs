@@ -44,7 +44,8 @@ public class CommunitiesController : ControllerBase
     [Authorize]
     public async Task<ActionResult<CommunityDto>> Create([FromBody] CreateCommunityDto dto, CancellationToken cancellationToken)
     {
-        var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
             ?? throw new UnauthorizedAccessException("Invalid token");
         dto = dto with { CreatorId = userId };
         var community = await _communityService.CreateAsync(dto, cancellationToken);
@@ -64,7 +65,8 @@ public class CommunitiesController : ControllerBase
     [Authorize]
     public async Task<IActionResult> Join(string id, [FromQuery] string? inviteCode, CancellationToken cancellationToken)
     {
-        var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
             ?? throw new UnauthorizedAccessException("Invalid token");
         await _communityService.JoinAsync(id, userId, inviteCode, cancellationToken);
         return NoContent();
@@ -74,7 +76,8 @@ public class CommunitiesController : ControllerBase
     [Authorize]
     public async Task<IActionResult> Leave(string id, CancellationToken cancellationToken)
     {
-        var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
             ?? throw new UnauthorizedAccessException("Invalid token");
         await _communityService.LeaveAsync(id, userId, cancellationToken);
         return NoContent();

@@ -37,6 +37,7 @@ public class AuthController : ControllerBase
         {
             var result = await _authService.RegisterAsync(dto);
             var token = GenerateJwtToken(result);
+            SetAuthCookie(token);
             return Ok(result with { Token = token });
         }
         catch (InvalidOperationException ex)
@@ -52,6 +53,7 @@ public class AuthController : ControllerBase
         {
             var result = await _authService.LoginAsync(dto);
             var token = GenerateJwtToken(result);
+            SetAuthCookie(token);
             return Ok(result with { Token = token });
         }
         catch (UnauthorizedAccessException ex)
@@ -60,11 +62,19 @@ public class AuthController : ControllerBase
         }
     }
 
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        Response.Cookies.Delete("eql_token");
+        return NoContent();
+    }
+
     [HttpGet("profile")]
     [Authorize]
     public async Task<ActionResult<UserDto>> GetProfile(CancellationToken cancellationToken)
     {
-        var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
             ?? throw new UnauthorizedAccessException("Invalid token");
         var user = await _userService.GetByIdAsync(userId, cancellationToken);
         if (user is null) return NotFound();
@@ -75,11 +85,25 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<ActionResult<UserDto>> UpdateProfile([FromBody] UpdateUserDto dto, CancellationToken cancellationToken)
     {
-        var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
             ?? throw new UnauthorizedAccessException("Invalid token");
         var user = await _userService.UpdateAsync(userId, dto, cancellationToken);
         if (user is null) return NotFound();
         return Ok(user);
+    }
+
+    private void SetAuthCookie(string token)
+    {
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = false, // dev: HTTP; em produção (HTTPS) mudar para true
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes),
+            Path = "/"
+        };
+        Response.Cookies.Append("eql_token", token, cookieOptions);
     }
 
     private string GenerateJwtToken(AuthResponseDto user)

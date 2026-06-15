@@ -39,12 +39,7 @@ export function AuthProvider(props: { children: any }) {
   };
 
   createEffect(() => {
-    const token = localStorage.getItem('eql_token');
-    if (token) {
-      loadProfile();
-    } else {
-      setIsLoading(false);
-    }
+    loadProfile();
   });
 
   const login = async (data: LoginDto) => {
@@ -89,7 +84,7 @@ export function AuthProvider(props: { children: any }) {
   };
 
   const logout = () => {
-    authService.logout();
+    authService.logout().catch(() => {});
     setCurrentUser(null);
     setIsAuthenticated(false);
   };

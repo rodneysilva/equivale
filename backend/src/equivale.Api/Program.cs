@@ -1,5 +1,6 @@
 using System.Threading.RateLimiting;
 using System.Text;
+using System.IdentityModel.Tokens.Jwt;
 using equivale.Api.Configuration;
 using equivale.Api.Middleware;
 using equivale.Application.Interfaces.Services;
@@ -16,6 +17,9 @@ using MongoDB.Driver;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Disable JWT claim type mapping so "sub" stays as "sub" (not mapped to .NET long names)
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 // Serilog - Logging estruturado
 Log.Logger = new LoggerConfiguration()
@@ -93,6 +97,24 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings.Issuer,
         ValidAudience = jwtSettings.Audience,
         IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+
+    // Permite ler o token de um cookie HttpOnly (fallback quando não há header)
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var authHeader = context.Request.Headers.Authorization.ToString();
+            if (!string.IsNullOrWhiteSpace(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                context.Token = authHeader["Bearer ".Length..].Trim();
+            }
+            else if (context.Request.Cookies.TryGetValue("eql_token", out var cookieToken) && !string.IsNullOrWhiteSpace(cookieToken))
+            {
+                context.Token = cookieToken;
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
