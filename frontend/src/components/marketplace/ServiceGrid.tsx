@@ -13,8 +13,8 @@ const ServiceGrid: Component<ServiceGridProps> = (props) => {
     <Show
       when={!props.isLoading}
       fallback={
-        <div class="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-8 gap-2.5">
-          <For each={Array.from({ length: 8 })}>
+        <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+          <For each={Array.from({ length: 6 })}>
             {() => (
               <div class="eq-card overflow-hidden animate-pulse">
                 <div class="aspect-square" style={{ background: 'var(--color-border-light)' }} />
@@ -36,7 +36,7 @@ const ServiceGrid: Component<ServiceGridProps> = (props) => {
           </div>
         }
       >
-        <div class="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-8 gap-2.5">
+        <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
           <For each={props.services}>
             {(service) => <ServiceCard service={service} />}
           </For>

@@ -36,11 +36,11 @@ const CommunityCard: Component<CommunityCardProps> = (props) => {
               <span class="text-sm font-bold text-white" style={{ background: 'var(--color-primary)' }}>{props.community.name[0]}</span>
             )}
           </div>
-          <h3 class="font-bold text-sm text-white truncate drop-shadow">{props.community.name}</h3>
+          <h3 class="font-bold text-sm text-white truncate drop-shadow" title={props.community.name}>{props.community.name}</h3>
         </div>
       </div>
       <div class="p-3">
-        <p class="text-xs line-clamp-2 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+        <p class="text-xs line-clamp-2 leading-relaxed" title={props.community.description} style={{ color: 'var(--color-text-muted)' }}>
           {props.community.description}
         </p>
         <div class="flex items-center gap-1 mt-2">

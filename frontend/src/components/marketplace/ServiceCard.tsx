@@ -23,16 +23,16 @@ const ServiceCard: Component<ServiceCardProps> = (props) => {
           </div>
         )}
         {/* Category badge */}
-        <span class="absolute top-1.5 left-1.5 text-[0.6rem] font-medium px-1.5 py-0.5 rounded truncate max-w-[80%]" style={{ background: 'rgba(255,255,255,0.9)', color: 'var(--color-text-secondary)' }}>
+        <span class="absolute top-1.5 left-1.5 text-[0.6rem] font-medium px-1.5 py-0.5 rounded truncate max-w-[80%]" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)' }}>
           {props.service.category}
         </span>
       </div>
       {/* Info */}
       <div class="p-2">
-        <h3 class="text-[0.7rem] font-normal leading-snug line-clamp-2" style={{ color: 'var(--color-text)', 'min-height': '1.8rem' }}>{props.service.title}</h3>
+        <h3 class="text-xs font-normal leading-snug line-clamp-2" title={props.service.title} style={{ color: 'var(--color-text)', 'min-height': '2rem' }}>{props.service.title}</h3>
         <div class="flex items-baseline gap-0.5 mt-1">
           <span class="text-sm font-semibold eq-accent">{props.service.price}</span>
-          <span class="text-[0.6rem]" style={{ color: 'var(--color-text-muted)' }}>EQL</span>
+          <span class="text-[0.65rem]" style={{ color: 'var(--color-text-muted)' }}>EQL</span>
         </div>
       </div>
     </Card>

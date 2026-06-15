@@ -19,9 +19,9 @@ const UserCard: Component<UserCardProps> = (props) => {
           <span class="text-lg font-bold">{props.user.fullName?.[0]?.toUpperCase() ?? '?'}</span>
         )}
       </div>
-      <p class="text-xs font-medium truncate" style={{ color: 'var(--color-text)' }}>{props.user.fullName}</p>
+      <p class="text-xs font-medium truncate" title={props.user.fullName} style={{ color: 'var(--color-text)' }}>{props.user.fullName}</p>
       {props.user.bio && (
-        <p class="text-xs truncate mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{props.user.bio}</p>
+        <p class="text-xs truncate mt-0.5" title={props.user.bio} style={{ color: 'var(--color-text-muted)' }}>{props.user.bio}</p>
       )}
     </Card>
   );

@@ -23,8 +23,8 @@ const HomePage: Component = () => {
   const loadFeatured = async () => {
     try {
       const [productsRes, servicesRes, communitiesRes] = await Promise.all([
-        productsService.getAll(1, 8),
-        servicesService.getAll(1, 8),
+        productsService.getAll(1, 12),
+        servicesService.getAll(1, 12),
         communitiesService.getAll(1, 6),
       ]);
       setProducts(productsRes.data);
