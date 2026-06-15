@@ -61,7 +61,11 @@ public class SeedService
         // Promote known admin user
         await PromoteAdminAsync(ct);
 
+        // Get admin user to include in seed data
+        var adminUser = await _userRepository.GetByEmailAsync(new Email("rodneydocarmo@gmail.com"), ct);
+
         var users = await SeedUsersAsync(opts.Users, ct);
+        if (adminUser is not null) users["admin"] = adminUser;
         var communities = await SeedCommunitiesAsync(opts.Communities, users, ct);
         var products = await SeedProductsAsync(opts.Products, users, communities, ct);
         var services = await SeedServicesAsync(opts.Services, users, communities, ct);

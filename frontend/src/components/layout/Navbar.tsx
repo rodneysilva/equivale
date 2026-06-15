@@ -131,6 +131,11 @@ const Navbar: Component = () => {
                 Painel
               </button>
             )}
+            {auth.isAuthenticated() && (
+              <button onClick={() => handleNav('/wallet')} class="px-3 py-1.5 rounded text-sm font-medium transition-colors cursor-pointer" style={{ color: location.pathname.startsWith('/wallet') ? 'var(--color-primary)' : 'var(--color-text-secondary)' }}>
+                Carteira
+              </button>
+            )}
             <div class="flex-1"></div>
             {auth.isAuthenticated() && auth.currentUser()?.role === 'admin' && (
               <button onClick={() => handleNav('/admin')} class="px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer" style={{ color: location.pathname.startsWith('/admin') ? 'var(--color-primary)' : '#dc2626' }}>

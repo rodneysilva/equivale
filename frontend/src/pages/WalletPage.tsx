@@ -1,173 +1,113 @@
-import { type Component, createSignal, createEffect } from 'solid-js';
+import { type Component, createSignal, onMount, For, Show, createEffect } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { Wallet as WalletIcon, ArrowUpRight, ArrowDownLeft, RefreshCw } from 'lucide-solid';
+import { Wallet, ArrowDownLeft, ArrowUpRight, Clock, Package, Zap } from 'lucide-solid';
 import Card from '../components/ui/Card';
-import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { transactionsService } from '../services/transactions.service';
 import { useAuth } from '../store/auth';
 import type { Transaction } from '../types';
+
+const txLabel: Record<string, string> = { Pending: 'Pendente', ConfirmedByBuyer: 'Comprador confirmou', ConfirmedBySeller: 'Vendedor confirmou', Completed: 'Concluída', Cancelled: 'Cancelada' };
+const txColor: Record<string, string> = { Pending: 'eq-badge-warning', ConfirmedByBuyer: 'eq-badge-info', ConfirmedBySeller: 'eq-badge-info', Completed: 'eq-badge-success', Cancelled: 'eq-badge-error' };
 
 const WalletPage: Component = () => {
   const navigate = useNavigate();
   const auth = useAuth();
   const [transactions, setTransactions] = createSignal<Transaction[]>([]);
   const [loading, setLoading] = createSignal(true);
-  const [sending, setSending] = createSignal(false);
-  const [recipientEmail, setRecipientEmail] = createSignal('');
-  const [amount, setAmount] = createSignal('');
-  const [error, setError] = createSignal('');
-  const [success, setSuccess] = createSignal('');
-  const [showSend, setShowSend] = createSignal(false);
+  let loaded = false;
+
+  const userId = () => auth.currentUser()?.id;
 
   createEffect(() => {
-    if (!auth.isAuthenticated()) { navigate('/login'); return; }
-    loadTransactions();
+    if (!auth.isAuthenticated() || !userId() || loaded) return;
+    loaded = true;
+    load();
   });
 
-  const loadTransactions = async () => {
-    setLoading(true);
+  createEffect(() => {
+    if (!auth.isLoading() && !auth.isAuthenticated()) navigate('/login');
+  });
+
+  const load = async () => {
     try {
-      const userId = auth.currentUser()?.id;
-      if (userId) {
-        const res = await fetch(`http://localhost:5000/api/transactions/user/${userId}`, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('eql_token')}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setTransactions(data.map((tx: any) => ({
-            id: tx.id,
-            type: tx.transactionType?.toLowerCase() === 'transfer' ? 'transfer' : tx.transactionType?.toLowerCase() === 'bonus' ? 'bonus' : 'purchase',
-            amount: tx.amount,
-            description: tx.description,
-            fromUserId: tx.fromUserId,
-            toUserId: tx.toUserId,
-            itemId: tx.relatedItemId,
-            createdAt: tx.createdAt,
-          })));
-        }
-      }
-    } finally { setLoading(false); }
+      const res = await transactionsService.getAll(undefined, 1, 100);
+      setTransactions(res.data);
+    } catch (e) { console.error('Wallet load error:', e); }
+    finally { setLoading(false); }
   };
 
-  const handleSend = async (e: Event) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    const amt = parseFloat(amount());
-    if (!recipientEmail() || isNaN(amt) || amt <= 0) { setError('Preencha todos os campos'); return; }
-    setSending(true);
-    try {
-      setSuccess(`${amt} EQL enviado com sucesso`);
-      setRecipientEmail('');
-      setAmount('');
-      setShowSend(false);
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err: any) { setError(err.message || 'Erro ao enviar'); }
-    finally { setSending(false); }
+  const fmtDateTime = (d: string) => new Date(d).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+  const entries = () => {
+    const uid = userId();
+    return transactions()
+      .filter(t => t.status !== 'Cancelled')
+      .map(t => ({
+        tx: t,
+        isBuyer: t.buyerId === uid,
+        amount: t.totalPrice,
+      }))
+      .sort((a, b) => new Date(b.tx.createdAt).getTime() - new Date(a.tx.createdAt).getTime());
   };
 
-  const balance = () => auth.currentUser()?.walletBalance || 0;
-
-  const formatDate = (d: string) => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const totalIn = () => entries().filter(e => !e.isBuyer).reduce((s, e) => s + e.amount, 0);
+  const totalOut = () => entries().filter(e => e.isBuyer).reduce((s, e) => s + e.amount, 0);
 
   return (
-    <div class="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <h1 class="text-2xl font-bold mb-6" style={{ color: 'var(--color-text)' }}>Carteira</h1>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <h1 class="flex items-center gap-2 text-2xl font-bold mb-6" style={{ color: 'var(--color-text)' }}>
+        <Wallet size={24} class="eq-brand" /> Carteira
+      </h1>
 
-      {success() && (
-        <div class="mb-4 p-2.5 rounded text-xs" style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0' }}>{success()}</div>
-      )}
-
-      {/* Balance */}
-      <Card class="p-6 mb-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-xs uppercase tracking-wider font-medium" style={{ color: 'var(--color-text-muted)' }}>Saldo</p>
-            <div class="flex items-baseline gap-2 mt-1">
-              <span class="text-3xl font-bold eq-accent">{balance()}</span>
-              <span class="text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>EQL</span>
-            </div>
+      {loading() ? <LoadingSpinner class="py-20" /> : (
+        <>
+          {/* Summary */}
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+            <Card class="p-5">
+              <Wallet size={20} class="eq-brand mb-2" />
+              <p class="text-3xl font-bold eq-accent">{auth.currentUser()?.walletBalance ?? 0}</p>
+              <p class="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>Saldo disponível (EQL)</p>
+            </Card>
+            <Card class="p-5">
+              <ArrowDownLeft size={20} class="mb-2" style={{ color: '#059669' }} />
+              <p class="text-3xl font-bold" style={{ color: '#059669' }}>+{totalIn()}</p>
+              <p class="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>Total recebido (EQL)</p>
+            </Card>
+            <Card class="p-5">
+              <ArrowUpRight size={20} class="mb-2" style={{ color: '#dc2626' }} />
+              <p class="text-3xl font-bold" style={{ color: '#dc2626' }}>-{totalOut()}</p>
+              <p class="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>Total gasto (EQL)</p>
+            </Card>
           </div>
-          <div class="w-12 h-12 rounded eq-card flex items-center justify-center">
-            <WalletIcon size={20} class="eq-brand" />
-          </div>
-        </div>
-        <div class="mt-4 flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => setShowSend(!showSend())}>
-            <ArrowUpRight size={14} class="mr-1.5" /> Enviar
-          </Button>
-          <Button size="sm" variant="ghost">
-            <RefreshCw size={14} class="mr-1.5" /> Histórico
-          </Button>
-        </div>
-      </Card>
 
-      {/* Send form */}
-      {showSend() && (
-        <Card class="p-5 mb-6">
-          <h3 class="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>Enviar EQL</h3>
-          <form onSubmit={handleSend} class="space-y-3">
-            {error() && (
-              <div class="p-2.5 rounded text-xs" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>{error()}</div>
-            )}
-            <input
-              type="email"
-              value={recipientEmail()}
-              onInput={(e) => setRecipientEmail(e.currentTarget.value)}
-              placeholder="E-mail do destinatário"
-              required
-              class="eq-input"
-            />
-            <div class="relative">
-              <input
-                type="number"
-                step="0.01"
-                value={amount()}
-                onInput={(e) => setAmount(e.currentTarget.value)}
-                placeholder="Quantidade"
-                required
-                class="eq-input pr-10"
-              />
-              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>EQL</span>
-            </div>
-            <div class="flex gap-2">
-              <Button type="submit" size="sm" disabled={sending()}>
-                {sending() ? <LoadingSpinner size="w-4 h-4" class="!justify-start" /> : 'Enviar'}
-              </Button>
-              <Button type="button" variant="ghost" size="sm" onClick={() => setShowSend(false)}>Cancelar</Button>
-            </div>
-          </form>
-        </Card>
-      )}
-
-      {/* Transactions */}
-      <Card class="p-5">
-        <h3 class="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>Transações recentes</h3>
-        {loading() ? (
-          <LoadingSpinner class="py-8" />
-        ) : transactions().length === 0 ? (
-          <p class="text-xs text-center py-6" style={{ color: 'var(--color-text-muted)' }}>Nenhuma transação registrada</p>
-        ) : (
-          <div class="space-y-2">
-            {transactions().map(tx => (
-              <div class="flex items-center justify-between p-2.5 rounded" style={{ background: 'var(--color-surface-alt)' }}>
-                <div class="flex items-center gap-2">
-                  <div class="w-7 h-7 rounded flex items-center justify-center" style={{ background: (tx.type === 'sale' || tx.type === 'bonus') ? '#f0fdf4' : '#fef2f2' }}>
-                    {(tx.type === 'sale' || tx.type === 'bonus') ? <ArrowDownLeft size={14} style={{ color: '#166534' }} /> : <ArrowUpRight size={14} style={{ color: '#991b1b' }} />}
+          {/* Statement */}
+          <h2 class="font-semibold text-sm mb-3" style={{ color: 'var(--color-text)' }}>Extrato de movimentações</h2>
+          <Card class="overflow-hidden">
+            <Show when={entries().length > 0} fallback={
+              <div class="p-8 text-center"><Clock size={24} class="mx-auto mb-2" style={{ color: 'var(--color-text-muted)' }} /><p class="text-sm" style={{ color: 'var(--color-text-muted)' }}>Nenhuma movimentação ainda.</p></div>
+            }>
+              <For each={entries()}>{(e) => (
+                <div class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-[var(--color-surface-alt)]" style={{ 'border-bottom': '1px solid var(--color-border)' }} onClick={() => navigate(`/transactions/${e.tx.id}`)}>
+                  <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: e.isBuyer ? '#fee2e2' : '#dcfce7' }}>
+                    {e.isBuyer ? <ArrowUpRight size={15} style={{ color: '#dc2626' }} /> : <ArrowDownLeft size={15} style={{ color: '#059669' }} />}
                   </div>
-                  <div>
-                    <p class="text-sm font-medium" style={{ color: 'var(--color-text)' }}>{tx.description}</p>
-                    <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>{formatDate(tx.createdAt)}</p>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm truncate" style={{ color: 'var(--color-text)' }}>{e.tx.itemTitle}</p>
+                    <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                      {e.isBuyer ? `De: ${e.tx.sellerName ?? '—'}` : `Para: ${e.tx.buyerName ?? '—'}`} · {fmtDateTime(e.tx.createdAt)}
+                    </p>
                   </div>
+                  <span class={`eq-badge ${txColor[e.tx.status]} shrink-0`}>{txLabel[e.tx.status]}</span>
+                  <span class="text-sm font-bold shrink-0" style={{ color: e.isBuyer ? '#dc2626' : '#059669' }}>
+                    {e.isBuyer ? '-' : '+'}{e.amount} EQL
+                  </span>
                 </div>
-                <span class={`text-sm font-bold ${(tx.type === 'sale' || tx.type === 'bonus') ? 'text-green-700' : 'text-red-700'}`}>
-                  {(tx.type === 'sale' || tx.type === 'bonus') ? '+' : '-'}{tx.amount} EQL
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
+              )}</For>
+            </Show>
+          </Card>
+        </>
+      )}
     </div>
   );
 };

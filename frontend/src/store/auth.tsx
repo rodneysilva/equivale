@@ -13,6 +13,7 @@ interface AuthState {
   logout: () => void;
   clearError: () => void;
   updateProfile: (data: { fullName?: string; bio?: string; avatarUrl?: string }) => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState>();
@@ -89,6 +90,14 @@ export function AuthProvider(props: { children: any }) {
     setIsAuthenticated(false);
   };
 
+  const refreshProfile = async () => {
+    try {
+      const user = await authService.getProfile();
+      setCurrentUser(user);
+      setIsAuthenticated(true);
+    } catch { /* ignore */ }
+  };
+
   const state: AuthState = {
     currentUser,
     isAuthenticated,
@@ -99,6 +108,7 @@ export function AuthProvider(props: { children: any }) {
     logout,
     clearError,
     updateProfile,
+    refreshProfile,
   };
 
   return <AuthContext.Provider value={state}>{props.children}</AuthContext.Provider>;

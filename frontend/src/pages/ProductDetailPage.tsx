@@ -36,6 +36,7 @@ const ProductDetailPage: Component = () => {
     setError('');
     try {
       await transactionsService.create(params.id, 'Product', quantity());
+      if (auth.refreshProfile) await auth.refreshProfile();
       navigate('/transactions');
     } catch (err: any) { setError(err.message || 'Erro ao comprar'); }
     finally { setBuying(false); }
