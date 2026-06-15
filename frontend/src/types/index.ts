@@ -41,14 +41,14 @@ export interface Transaction {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
-  status: 'Pending' | 'ConfirmedByBuyer' | 'ConfirmedBySeller' | 'Completed' | 'Cancelled';
-  orderStatus: 'OrderPlaced' | 'PaymentConfirmed' | 'Shipped' | 'Delivered' | 'Finished';
-  buyerConfirmedAt?: string;
-  sellerConfirmedAt?: string;
-  paymentConfirmedAt?: string;
+  status: 'OrderPlaced' | 'OrderConfirmed' | 'PaymentReleased' | 'Shipped' | 'Delivered' | 'Finished' | 'Cancelled';
+  trackingInfo?: string;
+  orderPlacedAt?: string;
+  orderConfirmedAt?: string;
+  paymentReleasedAt?: string;
   shippedAt?: string;
   deliveredAt?: string;
-  completedAt?: string;
+  finishedAt?: string;
   createdAt: string;
 }
 

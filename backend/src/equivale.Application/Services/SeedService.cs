@@ -122,127 +122,76 @@ public class SeedService
 
         var products = await _productRepository.GetAllAsync(ct);
         var services = await _serviceRepository.GetAllAsync(ct);
-        var statuses = new[] { TransactionStatus.Pending, TransactionStatus.ConfirmedByBuyer, TransactionStatus.ConfirmedBySeller, TransactionStatus.Completed, TransactionStatus.Cancelled };
+        var statuses = new[] { TransactionStatus.OrderPlaced, TransactionStatus.OrderConfirmed, TransactionStatus.PaymentReleased, TransactionStatus.Shipped, TransactionStatus.Delivered, TransactionStatus.Finished, TransactionStatus.Cancelled };
         var count = 0;
 
-        // Create 5+ transactions per user across all statuses
         foreach (var user in userList)
         {
             foreach (var status in statuses)
             {
-                // Find an item this user didn't create
                 var product = products.FirstOrDefault(p => p.SellerId != user.Id);
                 var service = services.FirstOrDefault(s => s.ProviderId != user.Id);
                 var useProduct = _rng.NextDouble() > 0.5;
 
-                string sellerId;
-                string itemId;
-                string itemTitle;
-                decimal price;
-                TransactionItemType itemType;
+                string sellerId, itemId, itemTitle; decimal price; TransactionItemType itemType;
 
                 if (useProduct && product is not null)
-                {
-                    sellerId = product.SellerId;
-                    itemId = product.Id;
-                    itemTitle = product.Title;
-                    price = product.PriceInEquivale.Amount;
-                    itemType = TransactionItemType.Product;
-                }
+                { sellerId = product.SellerId; itemId = product.Id; itemTitle = product.Title; price = product.PriceInEquivale.Amount; itemType = TransactionItemType.Product; }
                 else if (service is not null)
-                {
-                    sellerId = service.ProviderId;
-                    itemId = service.Id;
-                    itemTitle = service.Title;
-                    price = service.PriceInEquivale.Amount;
-                    itemType = TransactionItemType.Service;
-                }
+                { sellerId = service.ProviderId; itemId = service.Id; itemTitle = service.Title; price = service.PriceInEquivale.Amount; itemType = TransactionItemType.Service; }
                 else continue;
 
                 var qty = _rng.Next(1, 3);
                 var daysAgo = _rng.Next(1, 30);
-
-                var transaction = new Transaction
+                var tx = new Transaction
                 {
-                    BuyerId = user.Id,
-                    SellerId = sellerId,
-                    ItemType = itemType,
-                    ItemId = itemId,
-                    ItemTitle = itemTitle,
-                    Quantity = qty,
-                    UnitPrice = new Money(price),
-                    TotalPrice = new Money(price * qty),
+                    BuyerId = user.Id, SellerId = sellerId, ItemType = itemType, ItemId = itemId, ItemTitle = itemTitle,
+                    Quantity = qty, UnitPrice = new Money(price), TotalPrice = new Money(price * qty),
                     Status = status,
-                    CreatedAt = DateTime.UtcNow.AddDays(-daysAgo),
-                    UpdatedAt = DateTime.UtcNow.AddDays(-daysAgo),
+                    OrderPlacedAt = DateTime.UtcNow.AddDays(-daysAgo),
+                    CreatedAt = DateTime.UtcNow.AddDays(-daysAgo), UpdatedAt = DateTime.UtcNow.AddDays(-daysAgo),
                 };
 
-                if (status is TransactionStatus.ConfirmedByBuyer or TransactionStatus.Completed)
-                    transaction.BuyerConfirmedAt = DateTime.UtcNow.AddDays(-daysAgo + 1);
-                if (status is TransactionStatus.ConfirmedBySeller or TransactionStatus.Completed)
-                    transaction.SellerConfirmedAt = DateTime.UtcNow.AddDays(-daysAgo + 1);
-                if (status == TransactionStatus.Completed)
-                {
-                    transaction.PaymentConfirmedAt = DateTime.UtcNow.AddDays(-daysAgo + 2);
-                    transaction.OrderStatus = OrderStatus.Finished;
-                    transaction.ShippedAt = DateTime.UtcNow.AddDays(-daysAgo + 3);
-                    transaction.DeliveredAt = DateTime.UtcNow.AddDays(-daysAgo + 4);
-                    transaction.FinishedAt = DateTime.UtcNow.AddDays(-daysAgo + 5);
-                }
-                if (status == TransactionStatus.Cancelled)
-                    transaction.CancelledAt = DateTime.UtcNow.AddDays(-daysAgo + 1);
+                if (status >= TransactionStatus.OrderConfirmed) tx.OrderConfirmedAt = DateTime.UtcNow.AddDays(-daysAgo + 1);
+                if (status >= TransactionStatus.PaymentReleased) tx.PaymentReleasedAt = DateTime.UtcNow.AddDays(-daysAgo + 2);
+                if (status >= TransactionStatus.Shipped) { tx.ShippedAt = DateTime.UtcNow.AddDays(-daysAgo + 3); tx.TrackingInfo = $"Rastreio {_rng.Next(10000, 99999)}"; }
+                if (status >= TransactionStatus.Delivered) tx.DeliveredAt = DateTime.UtcNow.AddDays(-daysAgo + 4);
+                if (status == TransactionStatus.Finished) tx.FinishedAt = DateTime.UtcNow.AddDays(-daysAgo + 5);
+                if (status == TransactionStatus.Cancelled) { tx.CancelledAt = DateTime.UtcNow.AddDays(-daysAgo + 1); tx.OrderPlacedAt = DateTime.UtcNow.AddDays(-daysAgo); }
 
-                await _transactionRepository.AddAsync(transaction, ct);
+                await _transactionRepository.AddAsync(tx, ct);
                 count++;
 
-                // Also create a transaction where this user is the seller
+                // Seller-side transaction
                 var buyer = userList.FirstOrDefault(u => u.Id != user.Id && u.Id != sellerId);
                 if (buyer is null) continue;
-
-                var sellerTransaction = new Transaction
+                var tx2 = new Transaction
                 {
-                    BuyerId = buyer.Id,
-                    SellerId = user.Id,
-                    ItemType = itemType,
-                    ItemId = itemId,
-                    ItemTitle = itemTitle,
-                    Quantity = 1,
-                    UnitPrice = new Money(price),
-                    TotalPrice = new Money(price),
+                    BuyerId = buyer.Id, SellerId = user.Id, ItemType = itemType, ItemId = itemId, ItemTitle = itemTitle,
+                    Quantity = 1, UnitPrice = new Money(price), TotalPrice = new Money(price),
                     Status = status,
-                    CreatedAt = DateTime.UtcNow.AddDays(-daysAgo - 5),
-                    UpdatedAt = DateTime.UtcNow.AddDays(-daysAgo - 5),
+                    OrderPlacedAt = DateTime.UtcNow.AddDays(-daysAgo - 5),
+                    CreatedAt = DateTime.UtcNow.AddDays(-daysAgo - 5), UpdatedAt = DateTime.UtcNow.AddDays(-daysAgo - 5),
                 };
+                if (status >= TransactionStatus.OrderConfirmed) tx2.OrderConfirmedAt = DateTime.UtcNow.AddDays(-daysAgo - 4);
+                if (status >= TransactionStatus.PaymentReleased) tx2.PaymentReleasedAt = DateTime.UtcNow.AddDays(-daysAgo - 3);
+                if (status >= TransactionStatus.Shipped) { tx2.ShippedAt = DateTime.UtcNow.AddDays(-daysAgo - 2); tx2.TrackingInfo = $"Rastreio {_rng.Next(10000, 99999)}"; }
+                if (status >= TransactionStatus.Delivered) tx2.DeliveredAt = DateTime.UtcNow.AddDays(-daysAgo - 1);
+                if (status == TransactionStatus.Finished) tx2.FinishedAt = DateTime.UtcNow.AddDays(-daysAgo);
+                if (status == TransactionStatus.Cancelled) { tx2.CancelledAt = DateTime.UtcNow.AddDays(-daysAgo - 4); tx2.OrderPlacedAt = DateTime.UtcNow.AddDays(-daysAgo - 5); }
 
-                if (status is TransactionStatus.ConfirmedByBuyer or TransactionStatus.Completed)
-                    sellerTransaction.BuyerConfirmedAt = DateTime.UtcNow.AddDays(-daysAgo - 4);
-                if (status is TransactionStatus.ConfirmedBySeller or TransactionStatus.Completed)
-                    sellerTransaction.SellerConfirmedAt = DateTime.UtcNow.AddDays(-daysAgo - 4);
-                if (status == TransactionStatus.Completed)
-                {
-                    sellerTransaction.PaymentConfirmedAt = DateTime.UtcNow.AddDays(-daysAgo - 3);
-                    sellerTransaction.OrderStatus = OrderStatus.Finished;
-                    sellerTransaction.ShippedAt = DateTime.UtcNow.AddDays(-daysAgo - 2);
-                    sellerTransaction.DeliveredAt = DateTime.UtcNow.AddDays(-daysAgo - 1);
-                    sellerTransaction.FinishedAt = DateTime.UtcNow.AddDays(-daysAgo);
-                }
-                if (status == TransactionStatus.Cancelled)
-                    sellerTransaction.CancelledAt = DateTime.UtcNow.AddDays(-daysAgo - 4);
-
-                await _transactionRepository.AddAsync(sellerTransaction, ct);
+                await _transactionRepository.AddAsync(tx2, ct);
                 count++;
-
-                if (count >= userList.Count * 10) break; // Cap at ~10 per user
+                if (count >= userList.Count * 14) break;
             }
         }
-
         return count;
     }
 
     private async Task<int> SeedReviewsAsync(CancellationToken ct)
     {
         var allTransactions = await _transactionRepository.GetAllAsync(ct);
-        var completed = allTransactions.Where(t => t.Status == TransactionStatus.Completed).ToList();
+        var completed = allTransactions.Where(t => t.Status == TransactionStatus.Finished).ToList();
         if (completed.Count == 0) return 0;
 
         var existingReviews = await _reviewRepository.GetAllAsync(ct);
@@ -278,7 +227,7 @@ public class SeedService
                 ItemType = tx.ItemType.ToString(),
                 Rating = _rng.Next(3, 6),
                 Comment = Pick(reviewComments),
-                CreatedAt = tx.PaymentConfirmedAt ?? DateTime.UtcNow,
+                CreatedAt = tx.FinishedAt ?? DateTime.UtcNow,
             }, ct);
             count++;
 
@@ -292,7 +241,7 @@ public class SeedService
                 ItemType = tx.ItemType.ToString(),
                 Rating = _rng.Next(4, 6),
                 Comment = Pick(reviewComments),
-                CreatedAt = tx.PaymentConfirmedAt ?? DateTime.UtcNow,
+                CreatedAt = tx.FinishedAt ?? DateTime.UtcNow,
             }, ct);
             count++;
         }

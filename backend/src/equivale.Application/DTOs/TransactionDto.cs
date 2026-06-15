@@ -15,13 +15,13 @@ public record TransactionDto(
     decimal UnitPrice,
     decimal TotalPrice,
     string Status,
-    string OrderStatus,
-    DateTime? BuyerConfirmedAt,
-    DateTime? SellerConfirmedAt,
-    DateTime? PaymentConfirmedAt,
+    string? TrackingInfo,
+    DateTime? OrderPlacedAt,
+    DateTime? OrderConfirmedAt,
+    DateTime? PaymentReleasedAt,
     DateTime? ShippedAt,
     DateTime? DeliveredAt,
-    DateTime? CompletedAt,
+    DateTime? FinishedAt,
     DateTime CreatedAt);
 
 public record CreateTransactionDto(

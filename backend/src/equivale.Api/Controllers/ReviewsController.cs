@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using equivale.Domain.Entities;
 using equivale.Domain.Interfaces;
+using equivale.Application.Services;
 
 namespace equivale.Api.Controllers;
 
@@ -12,15 +13,18 @@ public class ReviewsController : ControllerBase
     private readonly IBaseRepository<Review> _reviewRepository;
     private readonly IUserRepository _userRepository;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly ITransactionService _transactionService;
 
     public ReviewsController(
         IBaseRepository<Review> reviewRepository,
         IUserRepository userRepository,
-        ITransactionRepository transactionRepository)
+        ITransactionRepository transactionRepository,
+        ITransactionService transactionService)
     {
         _reviewRepository = reviewRepository;
         _userRepository = userRepository;
         _transactionRepository = transactionRepository;
+        _transactionService = transactionService;
     }
 
     [HttpGet("user/{userId}")]
@@ -52,23 +56,25 @@ public class ReviewsController : ControllerBase
         if (string.IsNullOrEmpty(userId))
             return Unauthorized();
 
-        // Verify transaction exists and is completed
+        // Verify transaction exists and delivery is confirmed
         if (!string.IsNullOrEmpty(req.TransactionId))
         {
             var transaction = await _transactionRepository.GetByIdAsync(req.TransactionId, ct);
-            if (transaction is null || transaction.Status != Domain.Enums.TransactionStatus.Completed)
-                return BadRequest(new { error = "Transaction must be completed before reviewing." });
+            if (transaction is null)
+                return BadRequest(new { error = "Transação não encontrada." });
+
+            if (transaction.Status != Domain.Enums.TransactionStatus.Delivered && transaction.Status != Domain.Enums.TransactionStatus.Finished)
+                return BadRequest(new { error = "A entrega precisa estar confirmada para avaliar." });
 
             if (transaction.BuyerId != userId && transaction.SellerId != userId)
                 return Forbid();
 
-            // Target is the other party
             var targetId = transaction.BuyerId == userId ? transaction.SellerId : transaction.BuyerId;
 
             // Check for existing review
             var existing = await _reviewRepository.GetAllAsync(ct);
             if (existing.Any(r => r.TransactionId == req.TransactionId && r.ReviewerId == userId))
-                return BadRequest(new { error = "You already reviewed this transaction." });
+                return BadRequest(new { error = "Você já avaliou esta transação." });
 
             var review = new Review
             {
@@ -83,10 +89,18 @@ public class ReviewsController : ControllerBase
             };
 
             await _reviewRepository.AddAsync(review, ct);
+
+            // If buyer is reviewing and transaction is Delivered, finish it (libera pagamento)
+            if (transaction.BuyerId == userId && transaction.Status == Domain.Enums.TransactionStatus.Delivered)
+            {
+                try { await _transactionService.FinishTransactionAsync(req.TransactionId, ct); }
+                catch { /* ignore if already finished */ }
+            }
+
             return Ok(review);
         }
 
-        return BadRequest(new { error = "TransactionId is required." });
+        return BadRequest(new { error = "TransactionId é obrigatório." });
     }
 }
 

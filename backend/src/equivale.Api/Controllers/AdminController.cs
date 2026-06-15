@@ -46,7 +46,7 @@ public class AdminController : ControllerBase
             Services: services.Count,
             Communities: communities.Count,
             Transactions: transactions.Count,
-            CompletedTransactions: transactions.Count(t => t.Status == Domain.Enums.TransactionStatus.Completed)
+            CompletedTransactions: transactions.Count(t => t.Status == Domain.Enums.TransactionStatus.Finished)
         ));
     }
 

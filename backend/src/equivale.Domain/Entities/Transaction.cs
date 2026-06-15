@@ -15,15 +15,13 @@ public class Transaction
     public Money UnitPrice { get; set; } = Money.Zero;
     public Money TotalPrice { get; set; } = Money.Zero;
 
-    // Status da transação financeira
-    public TransactionStatus Status { get; set; } = TransactionStatus.Pending;
+    public TransactionStatus Status { get; set; } = TransactionStatus.OrderPlaced;
 
-    // Status do pedido (logística)
-    public OrderStatus OrderStatus { get; set; } = OrderStatus.OrderPlaced;
-
-    public DateTime? BuyerConfirmedAt { get; set; }
-    public DateTime? SellerConfirmedAt { get; set; }
-    public DateTime? PaymentConfirmedAt { get; set; }
+    // Logística
+    public string? TrackingInfo { get; set; }
+    public DateTime? OrderPlacedAt { get; set; }
+    public DateTime? OrderConfirmedAt { get; set; }
+    public DateTime? PaymentReleasedAt { get; set; }
     public DateTime? ShippedAt { get; set; }
     public DateTime? DeliveredAt { get; set; }
     public DateTime? FinishedAt { get; set; }
@@ -31,66 +29,60 @@ public class Transaction
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
-    public bool IsCompleted => Status == TransactionStatus.Completed;
-    public bool CanBeCancelled => Status is TransactionStatus.Pending or TransactionStatus.ConfirmedByBuyer or TransactionStatus.ConfirmedBySeller;
-    public bool CanBuyerConfirm => Status is TransactionStatus.Pending or TransactionStatus.ConfirmedBySeller;
-    public bool CanSellerConfirm => Status is TransactionStatus.Pending or TransactionStatus.ConfirmedByBuyer;
-    public bool CanShip => Status == TransactionStatus.Completed && OrderStatus == OrderStatus.PaymentConfirmed;
-    public bool CanDeliver => OrderStatus == OrderStatus.Shipped;
+    // Regras de transição
+    public bool CanCancel => Status is TransactionStatus.OrderPlaced or TransactionStatus.OrderConfirmed
+        or TransactionStatus.PaymentReleased or TransactionStatus.Shipped;
 
-    public void ConfirmByBuyer()
+    public bool CanSellerConfirmOrder => Status == TransactionStatus.OrderPlaced;
+    public bool CanBuyerReleasePayment => Status == TransactionStatus.OrderConfirmed;
+    public bool CanSellerShip => Status == TransactionStatus.PaymentReleased;
+    public bool CanBuyerConfirmDelivery => Status == TransactionStatus.Shipped;
+    public bool CanFinish => Status == TransactionStatus.Delivered;
+
+    public void SellerConfirmOrder()
     {
-        if (!CanBuyerConfirm) throw new InvalidOperationException("O comprador não pode confirmar neste estágio.");
-        BuyerConfirmedAt = DateTime.UtcNow;
-        Status = SellerConfirmedAt is not null ? TransactionStatus.Completed : TransactionStatus.ConfirmedByBuyer;
-        if (Status == TransactionStatus.Completed)
-        {
-            PaymentConfirmedAt = DateTime.UtcNow;
-            OrderStatus = OrderStatus.PaymentConfirmed;
-        }
+        if (!CanSellerConfirmOrder) throw new InvalidOperationException("O vendedor não pode confirmar o pedido neste estágio.");
+        Status = TransactionStatus.OrderConfirmed;
+        OrderConfirmedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void ConfirmBySeller()
+    public void BuyerReleasePayment()
     {
-        if (!CanSellerConfirm) throw new InvalidOperationException("O vendedor não pode confirmar neste estágio.");
-        SellerConfirmedAt = DateTime.UtcNow;
-        Status = BuyerConfirmedAt is not null ? TransactionStatus.Completed : TransactionStatus.ConfirmedBySeller;
-        if (Status == TransactionStatus.Completed)
-        {
-            PaymentConfirmedAt = DateTime.UtcNow;
-            OrderStatus = OrderStatus.PaymentConfirmed;
-        }
+        if (!CanBuyerReleasePayment) throw new InvalidOperationException("O comprador não pode liberar o pagamento neste estágio.");
+        Status = TransactionStatus.PaymentReleased;
+        PaymentReleasedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void MarkShipped()
+    public void SellerShip(string? trackingInfo = null)
     {
-        if (!CanShip) throw new InvalidOperationException("O pedido não pode ser enviado neste estágio.");
-        OrderStatus = OrderStatus.Shipped;
+        if (!CanSellerShip) throw new InvalidOperationException("O envio não pode ser confirmado neste estágio.");
+        Status = TransactionStatus.Shipped;
         ShippedAt = DateTime.UtcNow;
+        TrackingInfo = trackingInfo ?? TrackingInfo;
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void MarkDelivered()
+    public void BuyerConfirmDelivery()
     {
-        if (!CanDeliver) throw new InvalidOperationException("O pedido não pode ser marcado como entregue.");
-        OrderStatus = OrderStatus.Delivered;
+        if (!CanBuyerConfirmDelivery) throw new InvalidOperationException("A entrega não pode ser confirmada neste estágio.");
+        Status = TransactionStatus.Delivered;
         DeliveredAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
 
     public void Finish()
     {
-        if (OrderStatus != OrderStatus.Delivered) throw new InvalidOperationException("O pedido precisa estar entregue para finalizar.");
-        OrderStatus = OrderStatus.Finished;
+        if (!CanFinish) throw new InvalidOperationException("A transação precisa estar entregue para finalizar.");
+        Status = TransactionStatus.Finished;
         FinishedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
 
     public void Cancel()
     {
-        if (!CanBeCancelled) throw new InvalidOperationException("A transação não pode ser cancelada.");
+        if (!CanCancel) throw new InvalidOperationException("A transação não pode ser cancelada neste estágio.");
         Status = TransactionStatus.Cancelled;
         CancelledAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;

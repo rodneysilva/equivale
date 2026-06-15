@@ -14,6 +14,7 @@ public class User
     public List<SocialLink> SocialLinks { get; set; } = [];
     public UserRole Role { get; set; } = UserRole.User;
     public Money WalletBalance { get; private set; } = Money.Zero;
+    public Money BlockedBalance { get; private set; } = Money.Zero;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
@@ -32,9 +33,44 @@ public class User
             throw new ArgumentException("Debit amount must be positive.", nameof(amount));
 
         if (WalletBalance < amount)
-            throw new InvalidOperationException("Insufficient wallet balance.");
+            throw new InvalidOperationException("Saldo insuficiente.");
 
         WalletBalance = WalletBalance - amount;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Reserva valor: move do saldo disponível para o saldo bloqueado (calção)</summary>
+    public void Block(decimal amount)
+    {
+        if (amount <= 0)
+            throw new ArgumentException("Block amount must be positive.", nameof(amount));
+
+        if (WalletBalance < amount)
+            throw new InvalidOperationException("Saldo insuficiente para reserva.");
+
+        WalletBalance = WalletBalance - amount;
+        BlockedBalance = BlockedBalance + amount;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Desbloqueia valor: devolve do bloqueado para o disponível (estorno)</summary>
+    public void Unblock(decimal amount)
+    {
+        if (amount <= 0)
+            throw new ArgumentException("Unblock amount must be positive.", nameof(amount));
+
+        BlockedBalance = BlockedBalance - amount;
+        WalletBalance = WalletBalance + amount;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>Debita do bloqueado e credita outro usuário (libera pagamento)</summary>
+    public void ReleaseBlocked(decimal amount)
+    {
+        if (amount <= 0)
+            throw new ArgumentException("Release amount must be positive.", nameof(amount));
+
+        BlockedBalance = BlockedBalance - amount;
         UpdatedAt = DateTime.UtcNow;
     }
 

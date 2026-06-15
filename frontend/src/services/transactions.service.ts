@@ -14,13 +14,13 @@ export interface BackendTransactionDto {
   unitPrice: number;
   totalPrice: number;
   status: string;
-  orderStatus: string;
-  buyerConfirmedAt?: string | null;
-  sellerConfirmedAt?: string | null;
-  paymentConfirmedAt?: string | null;
+  trackingInfo?: string | null;
+  orderPlacedAt?: string | null;
+  orderConfirmedAt?: string | null;
+  paymentReleasedAt?: string | null;
   shippedAt?: string | null;
   deliveredAt?: string | null;
-  completedAt?: string | null;
+  finishedAt?: string | null;
   createdAt: string;
 }
 
@@ -40,13 +40,13 @@ function mapTransaction(d: BackendTransactionDto): Transaction {
     unitPrice: d.unitPrice,
     totalPrice: d.totalPrice,
     status: d.status as Transaction['status'],
-    orderStatus: (d.orderStatus ?? 'OrderPlaced') as Transaction['orderStatus'],
-    buyerConfirmedAt: d.buyerConfirmedAt ?? undefined,
-    sellerConfirmedAt: d.sellerConfirmedAt ?? undefined,
-    paymentConfirmedAt: d.paymentConfirmedAt ?? undefined,
+    trackingInfo: d.trackingInfo ?? undefined,
+    orderPlacedAt: d.orderPlacedAt ?? undefined,
+    orderConfirmedAt: d.orderConfirmedAt ?? undefined,
+    paymentReleasedAt: d.paymentReleasedAt ?? undefined,
     shippedAt: d.shippedAt ?? undefined,
     deliveredAt: d.deliveredAt ?? undefined,
-    completedAt: d.completedAt ?? undefined,
+    finishedAt: d.finishedAt ?? undefined,
     createdAt: d.createdAt,
   };
 }
@@ -84,13 +84,23 @@ export const transactionsService = {
     return mapTransaction(raw);
   },
 
-  async markShipped(id: string): Promise<Transaction> {
-    const raw = await api.put<BackendTransactionDto>(`/transactions/${id}/ship`);
+  async sellerConfirmOrder(id: string): Promise<Transaction> {
+    const raw = await api.put<BackendTransactionDto>(`/transactions/${id}/confirm-order`);
     return mapTransaction(raw);
   },
 
-  async markDelivered(id: string): Promise<Transaction> {
-    const raw = await api.put<BackendTransactionDto>(`/transactions/${id}/deliver`);
+  async buyerReleasePayment(id: string): Promise<Transaction> {
+    const raw = await api.put<BackendTransactionDto>(`/transactions/${id}/release-payment`);
+    return mapTransaction(raw);
+  },
+
+  async sellerShip(id: string, trackingInfo?: string): Promise<Transaction> {
+    const raw = await api.put<BackendTransactionDto>(`/transactions/${id}/ship`, { trackingInfo });
+    return mapTransaction(raw);
+  },
+
+  async buyerConfirmDelivery(id: string): Promise<Transaction> {
+    const raw = await api.put<BackendTransactionDto>(`/transactions/${id}/confirm-delivery`);
     return mapTransaction(raw);
   },
 };
