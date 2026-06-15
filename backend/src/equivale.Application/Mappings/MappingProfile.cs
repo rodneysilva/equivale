@@ -97,12 +97,18 @@ public class MappingProfile : Profile
         CreateMap<Transaction, TransactionDto>()
             .ForMember(dest => dest.ItemType, opt => opt.MapFrom(src => src.ItemType.ToString()))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForMember(dest => dest.OrderStatus, opt => opt.MapFrom(src => src.OrderStatus.ToString()))
             .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice.Amount))
             .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.TotalPrice.Amount))
+            .ForMember(dest => dest.CompletedAt, opt => opt.MapFrom(src => src.PaymentConfirmedAt))
             .ForMember(dest => dest.BuyerName, opt => opt.Ignore())
             .ForMember(dest => dest.SellerName, opt => opt.Ignore())
             .ForCtorParam("BuyerName", opt => opt.MapFrom(_ => (string?)null))
-            .ForCtorParam("SellerName", opt => opt.MapFrom(_ => (string?)null));
+            .ForCtorParam("SellerName", opt => opt.MapFrom(_ => (string?)null))
+            .ForCtorParam("OrderStatus", opt => opt.MapFrom(src => src.OrderStatus.ToString()))
+            .ForCtorParam("PaymentConfirmedAt", opt => opt.MapFrom(src => src.PaymentConfirmedAt))
+            .ForCtorParam("ShippedAt", opt => opt.MapFrom(src => src.ShippedAt))
+            .ForCtorParam("DeliveredAt", opt => opt.MapFrom(src => src.DeliveredAt));
     }
 
     private static ProductCondition ParseCondition(string? value)

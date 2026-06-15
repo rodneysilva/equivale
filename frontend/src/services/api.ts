@@ -21,7 +21,10 @@ async function request<T>(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: response.statusText }));
-    throw new Error(error.error || error.message || error.title || 'Request failed');
+    let msg = error.error || error.message || error.title || 'Erro na requisição';
+    // Traduz mensagens técnicas comuns
+    if (msg === 'Unauthorized') msg = 'Você precisa estar logado para esta ação.';
+    throw new Error(msg);
   }
 
   if (response.status === 204) {

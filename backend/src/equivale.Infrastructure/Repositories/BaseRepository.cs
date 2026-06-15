@@ -77,6 +77,11 @@ public class BaseRepository<T> : IBaseRepository<T>, ITransactionalRepository<T>
         await _collection.DeleteOneAsync(filter, cancellationToken);
     }
 
+    public virtual async Task DeleteAllAsync(CancellationToken cancellationToken = default)
+    {
+        await _collection.DeleteManyAsync(Builders<T>.Filter.Empty, cancellationToken);
+    }
+
     public virtual async Task DeleteAsync(string id, IDbSession session, CancellationToken cancellationToken = default)
     {
         var mongoSession = ResolveMongoSession(session);

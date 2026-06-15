@@ -8,4 +8,5 @@ public interface IBaseRepository<T> where T : class
     Task AddAsync(T entity, CancellationToken cancellationToken = default);
     Task UpdateAsync(T entity, CancellationToken cancellationToken = default);
     Task DeleteAsync(string id, CancellationToken cancellationToken = default);
+    Task DeleteAllAsync(CancellationToken cancellationToken = default);
 }

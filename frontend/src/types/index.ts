@@ -42,8 +42,12 @@ export interface Transaction {
   unitPrice: number;
   totalPrice: number;
   status: 'Pending' | 'ConfirmedByBuyer' | 'ConfirmedBySeller' | 'Completed' | 'Cancelled';
+  orderStatus: 'OrderPlaced' | 'PaymentConfirmed' | 'Shipped' | 'Delivered' | 'Finished';
   buyerConfirmedAt?: string;
   sellerConfirmedAt?: string;
+  paymentConfirmedAt?: string;
+  shippedAt?: string;
+  deliveredAt?: string;
   completedAt?: string;
   createdAt: string;
 }

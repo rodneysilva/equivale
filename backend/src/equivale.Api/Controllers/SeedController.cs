@@ -26,6 +26,7 @@ public class SeedController : ControllerBase
         [FromQuery] int communities = 8,
         [FromQuery] int products = 50,
         [FromQuery] int services = 30,
+        [FromQuery] bool reset = false,
         CancellationToken cancellationToken = default)
     {
         if (!_env.IsDevelopment())
@@ -37,6 +38,7 @@ public class SeedController : ControllerBase
             Communities = communities,
             Products = products,
             Services = services,
+            ResetCollections = reset,
         };
 
         var result = await _seedService.RunAsync(opts, cancellationToken);
@@ -48,6 +50,7 @@ public class SeedController : ControllerBase
             result.Products,
             result.Services,
             result.Transactions,
+            result.Reviews,
             seedPassword = "Eql@2026"
         });
     }

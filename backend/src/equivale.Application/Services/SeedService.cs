@@ -23,10 +23,11 @@ public class SeedService
     private readonly IServiceRepository _serviceRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IBaseRepository<Review> _reviewRepository;
 
     private static readonly string SeedPassword = "Eql@2026";
     private string _passwordHash = string.Empty;
-    private readonly Random _rng = new(42);
+    private Random _rng = new(42);
 
     public SeedService(
         IUserRepository userRepository,
@@ -34,7 +35,8 @@ public class SeedService
         IProductRepository productRepository,
         IServiceRepository serviceRepository,
         IPasswordHasher passwordHasher,
-        ITransactionRepository transactionRepository)
+        ITransactionRepository transactionRepository,
+        IBaseRepository<Review> reviewRepository)
     {
         _userRepository = userRepository;
         _communityRepository = communityRepository;
@@ -42,11 +44,19 @@ public class SeedService
         _serviceRepository = serviceRepository;
         _passwordHasher = passwordHasher;
         _transactionRepository = transactionRepository;
+        _reviewRepository = reviewRepository;
     }
 
     public async Task<SeedResult> RunAsync(SeedOptions opts, CancellationToken ct = default)
     {
         _passwordHash = _passwordHasher.Hash(SeedPassword);
+
+        if (opts.ResetCollections)
+        {
+            await ResetCollectionsAsync(ct);
+            // Reset RNG for deterministic data after clearing
+            _rng = new Random(42);
+        }
 
         // Promote known admin user
         await PromoteAdminAsync(ct);
@@ -56,7 +66,18 @@ public class SeedService
         var products = await SeedProductsAsync(opts.Products, users, communities, ct);
         var services = await SeedServicesAsync(opts.Services, users, communities, ct);
         var transactions = await SeedTransactionsAsync(users, ct);
-        return new SeedResult(users.Count, communities.Count, products, services, transactions);
+        var reviews = await SeedReviewsAsync(ct);
+        return new SeedResult(users.Count, communities.Count, products, services, transactions, reviews);
+    }
+
+    private async Task ResetCollectionsAsync(CancellationToken ct)
+    {
+        await _productRepository.DeleteAllAsync(ct);
+        await _serviceRepository.DeleteAllAsync(ct);
+        await _communityRepository.DeleteAllAsync(ct);
+        await _userRepository.DeleteAllAsync(ct);
+        await _transactionRepository.DeleteAllAsync(ct);
+        await _reviewRepository.DeleteAllAsync(ct);
     }
 
     private async Task PromoteAdminAsync(CancellationToken ct)
@@ -138,7 +159,13 @@ public class SeedService
                 if (status is TransactionStatus.ConfirmedBySeller or TransactionStatus.Completed)
                     transaction.SellerConfirmedAt = DateTime.UtcNow.AddDays(-daysAgo + 1);
                 if (status == TransactionStatus.Completed)
-                    transaction.CompletedAt = DateTime.UtcNow.AddDays(-daysAgo + 2);
+                {
+                    transaction.PaymentConfirmedAt = DateTime.UtcNow.AddDays(-daysAgo + 2);
+                    transaction.OrderStatus = OrderStatus.Finished;
+                    transaction.ShippedAt = DateTime.UtcNow.AddDays(-daysAgo + 3);
+                    transaction.DeliveredAt = DateTime.UtcNow.AddDays(-daysAgo + 4);
+                    transaction.FinishedAt = DateTime.UtcNow.AddDays(-daysAgo + 5);
+                }
                 if (status == TransactionStatus.Cancelled)
                     transaction.CancelledAt = DateTime.UtcNow.AddDays(-daysAgo + 1);
 
@@ -169,7 +196,13 @@ public class SeedService
                 if (status is TransactionStatus.ConfirmedBySeller or TransactionStatus.Completed)
                     sellerTransaction.SellerConfirmedAt = DateTime.UtcNow.AddDays(-daysAgo - 4);
                 if (status == TransactionStatus.Completed)
-                    sellerTransaction.CompletedAt = DateTime.UtcNow.AddDays(-daysAgo - 3);
+                {
+                    sellerTransaction.PaymentConfirmedAt = DateTime.UtcNow.AddDays(-daysAgo - 3);
+                    sellerTransaction.OrderStatus = OrderStatus.Finished;
+                    sellerTransaction.ShippedAt = DateTime.UtcNow.AddDays(-daysAgo - 2);
+                    sellerTransaction.DeliveredAt = DateTime.UtcNow.AddDays(-daysAgo - 1);
+                    sellerTransaction.FinishedAt = DateTime.UtcNow.AddDays(-daysAgo);
+                }
                 if (status == TransactionStatus.Cancelled)
                     sellerTransaction.CancelledAt = DateTime.UtcNow.AddDays(-daysAgo - 4);
 
@@ -180,6 +213,66 @@ public class SeedService
             }
         }
 
+        return count;
+    }
+
+    private async Task<int> SeedReviewsAsync(CancellationToken ct)
+    {
+        var allTransactions = await _transactionRepository.GetAllAsync(ct);
+        var completed = allTransactions.Where(t => t.Status == TransactionStatus.Completed).ToList();
+        if (completed.Count == 0) return 0;
+
+        var existingReviews = await _reviewRepository.GetAllAsync(ct);
+        var reviewedTxIds = existingReviews.Select(r => r.TransactionId).ToHashSet();
+
+        var reviewComments = new[]
+        {
+            "Excelente! Entrega rápida e produto de ótima qualidade.",
+            "Muito bom, recomendo! Vendedor atencioso.",
+            "Transação perfeita, tudo conforme combinado.",
+            "Produto chegou em perfeito estado. Obrigado!",
+            "Ótimo atendimento, super recomendo.",
+            "Rápido e confiável. Voltarei a comprar.",
+            "Qualidade excelente pelo preço.",
+            "Serviço prestado com profissionalismo.",
+            "Muito satisfeito com a compra!",
+            "Comunicação clara e entrega no prazo.",
+            null, null, null // some without comment
+        };
+
+        var count = 0;
+        foreach (var tx in completed)
+        {
+            if (reviewedTxIds.Contains(tx.Id)) continue;
+
+            // Buyer rates seller
+            await _reviewRepository.AddAsync(new Review
+            {
+                ReviewerId = tx.BuyerId,
+                TargetUserId = tx.SellerId,
+                TransactionId = tx.Id,
+                ItemId = tx.ItemId,
+                ItemType = tx.ItemType.ToString(),
+                Rating = _rng.Next(3, 6),
+                Comment = Pick(reviewComments),
+                CreatedAt = tx.PaymentConfirmedAt ?? DateTime.UtcNow,
+            }, ct);
+            count++;
+
+            // Seller rates buyer
+            await _reviewRepository.AddAsync(new Review
+            {
+                ReviewerId = tx.SellerId,
+                TargetUserId = tx.BuyerId,
+                TransactionId = tx.Id,
+                ItemId = tx.ItemId,
+                ItemType = tx.ItemType.ToString(),
+                Rating = _rng.Next(4, 6),
+                Comment = Pick(reviewComments),
+                CreatedAt = tx.PaymentConfirmedAt ?? DateTime.UtcNow,
+            }, ct);
+            count++;
+        }
         return count;
     }
 
@@ -428,5 +521,5 @@ public class SeedService
         return created;
     }
 
-    public record SeedResult(int Users, int Communities, int Products, int Services, int Transactions);
+    public record SeedResult(int Users, int Communities, int Products, int Services, int Transactions, int Reviews);
 }

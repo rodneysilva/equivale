@@ -21,7 +21,7 @@ public class TransactionsController : ControllerBase
     private string GetUserId() =>
         User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
         ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-        ?? throw new UnauthorizedAccessException("Invalid token");
+        ?? throw new UnauthorizedAccessException("Token inválido.");
 
     [HttpPost]
     public async Task<ActionResult<TransactionDto>> Create([FromBody] CreateTransactionDto dto, CancellationToken ct)
@@ -50,7 +50,7 @@ public class TransactionsController : ControllerBase
     public async Task<ActionResult<TransactionDto>> GetById(string id, CancellationToken ct)
     {
         var t = await _transactionService.GetByIdAsync(id, ct);
-        if (t is null) return NotFound();
+        if (t is null) return NotFound(new { error = "Transação não encontrada." });
         return Ok(t);
     }
 
@@ -60,13 +60,10 @@ public class TransactionsController : ControllerBase
         try
         {
             var t = await _transactionService.ConfirmByBuyerAsync(id, GetUserId(), ct);
-            if (t is null) return NotFound();
+            if (t is null) return NotFound(new { error = "Transação não encontrada." });
             return Ok(t);
         }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
+        catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
     }
 
     [HttpPut("{id}/confirm-seller")]
@@ -75,13 +72,34 @@ public class TransactionsController : ControllerBase
         try
         {
             var t = await _transactionService.ConfirmBySellerAsync(id, GetUserId(), ct);
-            if (t is null) return NotFound();
+            if (t is null) return NotFound(new { error = "Transação não encontrada." });
             return Ok(t);
         }
-        catch (InvalidOperationException ex)
+        catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
+    }
+
+    [HttpPut("{id}/ship")]
+    public async Task<ActionResult<TransactionDto>> MarkShipped(string id, CancellationToken ct)
+    {
+        try
         {
-            return BadRequest(new { error = ex.Message });
+            var t = await _transactionService.MarkShippedAsync(id, GetUserId(), ct);
+            if (t is null) return NotFound(new { error = "Transação não encontrada." });
+            return Ok(t);
         }
+        catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
+    }
+
+    [HttpPut("{id}/deliver")]
+    public async Task<ActionResult<TransactionDto>> MarkDelivered(string id, CancellationToken ct)
+    {
+        try
+        {
+            var t = await _transactionService.MarkDeliveredAsync(id, GetUserId(), ct);
+            if (t is null) return NotFound(new { error = "Transação não encontrada." });
+            return Ok(t);
+        }
+        catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
     }
 
     [HttpPut("{id}/cancel")]
@@ -90,12 +108,9 @@ public class TransactionsController : ControllerBase
         try
         {
             var t = await _transactionService.CancelAsync(id, GetUserId(), ct);
-            if (t is null) return NotFound();
+            if (t is null) return NotFound(new { error = "Transação não encontrada." });
             return Ok(t);
         }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
+        catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
     }
 }

@@ -15,8 +15,12 @@ public record TransactionDto(
     decimal UnitPrice,
     decimal TotalPrice,
     string Status,
+    string OrderStatus,
     DateTime? BuyerConfirmedAt,
     DateTime? SellerConfirmedAt,
+    DateTime? PaymentConfirmedAt,
+    DateTime? ShippedAt,
+    DateTime? DeliveredAt,
     DateTime? CompletedAt,
     DateTime CreatedAt);
 

@@ -1,6 +1,6 @@
 using AutoMapper;
 using equivale.Application.DTOs;
-using equivale.Application.Interfaces;
+using equivale.Application.Services;
 using equivale.Domain.Entities;
 using equivale.Domain.Enums;
 using equivale.Domain.Interfaces;
@@ -15,6 +15,8 @@ public interface ITransactionService
     Task<PagedResult<TransactionDto>> GetByUserIdAsync(string userId, string? role, int page, int pageSize, CancellationToken ct = default);
     Task<TransactionDto?> ConfirmByBuyerAsync(string transactionId, string userId, CancellationToken ct = default);
     Task<TransactionDto?> ConfirmBySellerAsync(string transactionId, string userId, CancellationToken ct = default);
+    Task<TransactionDto?> MarkShippedAsync(string transactionId, string userId, CancellationToken ct = default);
+    Task<TransactionDto?> MarkDeliveredAsync(string transactionId, string userId, CancellationToken ct = default);
     Task<TransactionDto?> CancelAsync(string transactionId, string userId, CancellationToken ct = default);
 }
 
@@ -43,22 +45,23 @@ public class TransactionService : ITransactionService
     public async Task<TransactionDto> CreateAsync(string buyerId, CreateTransactionDto dto, CancellationToken ct = default)
     {
         var buyer = await _userRepository.GetByIdAsync(buyerId, ct)
-            ?? throw new InvalidOperationException("Buyer not found.");
+            ?? throw new InvalidOperationException("Comprador não encontrado.");
 
         string sellerId;
         string itemTitle;
         decimal unitPrice;
+        bool isProduct = dto.ItemType.Equals("Product", StringComparison.OrdinalIgnoreCase);
 
-        if (dto.ItemType.Equals("Product", StringComparison.OrdinalIgnoreCase))
+        if (isProduct)
         {
             var product = await _productRepository.GetByIdAsync(dto.ItemId, ct)
-                ?? throw new InvalidOperationException("Product not found.");
+                ?? throw new InvalidOperationException("Produto não encontrado.");
 
             if (product.SellerId == buyerId)
-                throw new InvalidOperationException("Cannot buy your own product.");
+                throw new InvalidOperationException("Você não pode comprar seu próprio produto.");
 
             if (product.Stock < dto.Quantity)
-                throw new InvalidOperationException("Insufficient stock.");
+                throw new InvalidOperationException("Estoque insuficiente para esta quantidade.");
 
             sellerId = product.SellerId;
             itemTitle = product.Title;
@@ -67,10 +70,10 @@ public class TransactionService : ITransactionService
         else
         {
             var service = await _serviceRepository.GetByIdAsync(dto.ItemId, ct)
-                ?? throw new InvalidOperationException("Service not found.");
+                ?? throw new InvalidOperationException("Serviço não encontrado.");
 
             if (service.ProviderId == buyerId)
-                throw new InvalidOperationException("Cannot buy your own service.");
+                throw new InvalidOperationException("Você não pode contratar seu próprio serviço.");
 
             sellerId = service.ProviderId;
             itemTitle = service.Title;
@@ -80,9 +83,9 @@ public class TransactionService : ITransactionService
         var total = unitPrice * dto.Quantity;
 
         if (buyer.WalletBalance.Amount < total)
-            throw new InvalidOperationException("Insufficient balance.");
+            throw new InvalidOperationException($"Saldo insuficiente. Você tem {buyer.WalletBalance.Amount} EQL mas precisa de {total} EQL.");
 
-        // Debit buyer (escrow)
+        // RESERVA o valor (escrow) — debita do comprador imediatamente
         buyer.Debit(total);
         await _userRepository.UpdateAsync(buyer, ct);
 
@@ -90,13 +93,14 @@ public class TransactionService : ITransactionService
         {
             BuyerId = buyerId,
             SellerId = sellerId,
-            ItemType = dto.ItemType.Equals("Product", StringComparison.OrdinalIgnoreCase) ? TransactionItemType.Product : TransactionItemType.Service,
+            ItemType = isProduct ? TransactionItemType.Product : TransactionItemType.Service,
             ItemId = dto.ItemId,
             ItemTitle = itemTitle,
             Quantity = dto.Quantity,
             UnitPrice = new Money(unitPrice),
             TotalPrice = new Money(total),
             Status = TransactionStatus.Pending,
+            OrderStatus = OrderStatus.OrderPlaced,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
@@ -108,31 +112,16 @@ public class TransactionService : ITransactionService
     public async Task<TransactionDto?> GetByIdAsync(string id, CancellationToken ct = default)
     {
         var t = await _transactionRepository.GetByIdAsync(id, ct);
-        return t is null ? null : _mapper.Map<TransactionDto>(t);
+        return t is null ? null : await EnrichAsync(t, ct);
     }
 
     public async Task<PagedResult<TransactionDto>> GetByUserIdAsync(string userId, string? role, int page, int pageSize, CancellationToken ct = default)
     {
         var (items, total) = await _transactionRepository.GetByUserIdAsync(userId, role, page, pageSize, ct);
-        var dtos = items.Select(_mapper.Map<TransactionDto>).ToList();
-
-        // Enrich with names
-        var userIds = items.Select(t => t.BuyerId).Union(items.Select(t => t.SellerId)).Distinct();
-        var users = await _userRepository.GetByIdsAsync(userIds, ct);
-        var userMap = users.ToDictionary(u => u.Id);
-
-        for (var i = 0; i < dtos.Count; i++)
-        {
-            var dto = dtos[i];
-            string? buyerName = null, sellerName = null;
-            if (userMap.TryGetValue(dto.BuyerId, out var buyer)) buyerName = buyer.Name;
-            if (userMap.TryGetValue(dto.SellerId, out var seller)) sellerName = seller.Name;
-            dtos[i] = dto with { BuyerName = buyerName, SellerName = sellerName };
-        }
-
+        var dtos = await Task.WhenAll(items.Select(t => EnrichAsync(t, ct)));
         return new PagedResult<TransactionDto>
         {
-            Items = dtos,
+            Items = dtos.ToList(),
             Page = page,
             PageSize = pageSize,
             TotalItems = total
@@ -143,54 +132,55 @@ public class TransactionService : ITransactionService
     {
         var t = await _transactionRepository.GetByIdAsync(transactionId, ct);
         if (t is null || t.BuyerId != userId) return null;
-
-        var wasCompleted = t.Status == TransactionStatus.Completed;
-        t.ConfirmByBuyer();
-
-        if (!wasCompleted && t.Status == TransactionStatus.Completed)
-            await CompleteTransactionAsync(t, ct);
-
-        await _transactionRepository.UpdateAsync(t, ct);
-        return _mapper.Map<TransactionDto>(t);
+        return await ExecuteStatusChange(t, () => t.ConfirmByBuyer(), ct);
     }
 
     public async Task<TransactionDto?> ConfirmBySellerAsync(string transactionId, string userId, CancellationToken ct = default)
     {
         var t = await _transactionRepository.GetByIdAsync(transactionId, ct);
         if (t is null || t.SellerId != userId) return null;
+        return await ExecuteStatusChange(t, () => t.ConfirmBySeller(), ct);
+    }
 
-        var wasCompleted = t.Status == TransactionStatus.Completed;
-        t.ConfirmBySeller();
+    public async Task<TransactionDto?> MarkShippedAsync(string transactionId, string userId, CancellationToken ct = default)
+    {
+        var t = await _transactionRepository.GetByIdAsync(transactionId, ct);
+        if (t is null || t.SellerId != userId) return null;
+        return await ExecuteStatusChange(t, () => t.MarkShipped(), ct);
+    }
 
-        if (!wasCompleted && t.Status == TransactionStatus.Completed)
-            await CompleteTransactionAsync(t, ct);
-
-        await _transactionRepository.UpdateAsync(t, ct);
-        return _mapper.Map<TransactionDto>(t);
+    public async Task<TransactionDto?> MarkDeliveredAsync(string transactionId, string userId, CancellationToken ct = default)
+    {
+        var t = await _transactionRepository.GetByIdAsync(transactionId, ct);
+        if (t is null || t.BuyerId != userId) return null;
+        return await ExecuteStatusChange(t, () => t.MarkDelivered(), ct);
     }
 
     public async Task<TransactionDto?> CancelAsync(string transactionId, string userId, CancellationToken ct = default)
     {
         var t = await _transactionRepository.GetByIdAsync(transactionId, ct);
         if (t is null || (t.BuyerId != userId && t.SellerId != userId)) return null;
+        return await ExecuteStatusChange(t, () => t.Cancel(), ct, isCancel: true);
+    }
 
-        t.Cancel();
+    private async Task<TransactionDto> ExecuteStatusChange(Transaction t, Action action, CancellationToken ct, bool isCancel = false)
+    {
+        var wasCompleted = t.Status == TransactionStatus.Completed;
+        action();
 
-        // Refund buyer
-        var buyer = await _userRepository.GetByIdAsync(t.BuyerId, ct);
-        if (buyer is not null)
-        {
-            buyer.Credit(t.TotalPrice.Amount);
-            await _userRepository.UpdateAsync(buyer, ct);
-        }
+        if (!wasCompleted && t.Status == TransactionStatus.Completed)
+            await CompleteTransactionAsync(t, ct);
+
+        if (isCancel)
+            await RefundBuyerAsync(t, ct);
 
         await _transactionRepository.UpdateAsync(t, ct);
-        return _mapper.Map<TransactionDto>(t);
+        return await EnrichAsync(t, ct);
     }
 
     private async Task CompleteTransactionAsync(Transaction t, CancellationToken ct)
     {
-        // Credit seller
+        // Credita o vendedor (libera o escrow)
         var seller = await _userRepository.GetByIdAsync(t.SellerId, ct);
         if (seller is not null)
         {
@@ -198,17 +188,38 @@ public class TransactionService : ITransactionService
             await _userRepository.UpdateAsync(seller, ct);
         }
 
-        // Decrement stock for products
+        // Decrementa estoque
         if (t.ItemType == TransactionItemType.Product)
         {
             var product = await _productRepository.GetByIdAsync(t.ItemId, ct);
             if (product is not null)
             {
                 product.Stock = Math.Max(0, product.Stock - t.Quantity);
-                if (product.Stock == 0)
-                    product.Status = ItemStatus.Sold;
+                if (product.Stock == 0) product.Status = ItemStatus.Sold;
                 await _productRepository.UpdateAsync(product, ct);
             }
         }
+    }
+
+    private async Task RefundBuyerAsync(Transaction t, CancellationToken ct)
+    {
+        var buyer = await _userRepository.GetByIdAsync(t.BuyerId, ct);
+        if (buyer is not null)
+        {
+            buyer.Credit(t.TotalPrice.Amount);
+            await _userRepository.UpdateAsync(buyer, ct);
+        }
+    }
+
+    private async Task<TransactionDto> EnrichAsync(Transaction t, CancellationToken ct)
+    {
+        var dto = _mapper.Map<TransactionDto>(t);
+        var users = await _userRepository.GetByIdsAsync(new[] { t.BuyerId, t.SellerId }, ct);
+        var userMap = users.ToDictionary(u => u.Id);
+        return dto with
+        {
+            BuyerName = userMap.TryGetValue(t.BuyerId, out var b) ? b.Name : null,
+            SellerName = userMap.TryGetValue(t.SellerId, out var s) ? s.Name : null
+        };
     }
 }
