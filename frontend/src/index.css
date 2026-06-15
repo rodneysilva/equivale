@@ -39,6 +39,7 @@
 
   body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-weight: 400;
     background-color: var(--color-surface-alt);
     color: var(--color-text);
     -webkit-font-smoothing: antialiased;
@@ -57,11 +58,12 @@
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.2s ease;
+    transition: box-shadow 0.2s ease, transform 0.15s ease;
   }
 
   .eq-card-hover:hover {
     box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
   }
 
   /* Button — primary sólido */
