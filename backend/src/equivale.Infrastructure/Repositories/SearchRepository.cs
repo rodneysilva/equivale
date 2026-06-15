@@ -137,6 +137,7 @@ public class SearchRepository
         Id: s.Id, ProviderId: s.ProviderId, ProviderName: null, ProviderAvatarUrl: null, Title: s.Title,
         Description: s.Description, Category: s.Category,
         PriceInEquivale: (decimal)s.PriceInEquivale,
+        Images: s.Images,
         Duration: s.Duration, Location: s.Location,
         Status: s.Status.ToString(),
         CommunityId: s.CommunityId, CommunityName: null,

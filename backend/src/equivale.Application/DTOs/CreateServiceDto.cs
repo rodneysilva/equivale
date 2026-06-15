@@ -6,6 +6,7 @@ public record CreateServiceDto(
     string Description,
     string Category,
     decimal PriceInEquivale,
+    List<string>? Images = null,
     TimeSpan? Duration = null,
     string? Location = null,
     string? CommunityId = null,

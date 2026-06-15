@@ -11,6 +11,7 @@ public class Service
     public string Description { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
     public Money PriceInEquivale { get; set; } = Money.Zero;
+    public List<string> Images { get; set; } = [];
     public TimeSpan? Duration { get; set; }
     public string? Location { get; set; }
     public ItemStatus Status { get; set; } = ItemStatus.Active;

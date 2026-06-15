@@ -326,6 +326,116 @@ public class SeedService
     private static string Cover(string seed) => $"https://picsum.photos/seed/{seed}/800/400";
     private static string Avatar(int n) => $"https://i.pravatar.cc/300?img={((n % 70) + 1)}";
 
+    // Imagens reais do Unsplash por categoria
+    private static readonly Dictionary<string, string[]> ProductImagesByCategory = new()
+    {
+        ["Artesanato"] = [
+            "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1606760227091-3dd827fa2d7b?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1531951657915-ef3b14e8d599?w=800&h=800&fit=crop",
+        ],
+        ["Fotografia"] = [
+            "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1500634245200-e5245c7574ef?w=800&h=800&fit=crop",
+        ],
+        ["Arte"] = [
+            "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1547826039-bfc35e0f1ea8?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1513519245088-0e12902e3556?w=800&h=800&fit=crop",
+        ],
+        ["Madeira"] = [
+            "https://images.unsplash.com/photo-1604147706283-d7119b5b822c?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1555041469-a586c9ea1bcf?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=800&h=800&fit=crop",
+        ],
+        ["Alimentação"] = [
+            "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1606851091851-e8c8c0fca5ba?w=800&h=800&fit=crop",
+        ],
+        ["Jardinagem"] = [
+            "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&h=800&fit=crop",
+        ],
+        ["Tecnologia"] = [
+            "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=800&h=800&fit=crop",
+        ],
+        ["Bem-estar"] = [
+            "https://images.unsplash.com/photo-1591291621164-2c6367723315?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1545459720-aac8509eb02c?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1600612253971-4224dcf20c7c?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&h=800&fit=crop",
+        ],
+    };
+
+    private static readonly Dictionary<string, string[]> ServiceImagesByCategory = new()
+    {
+        ["Design"] = [
+            "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1561070791-2526d30994b8?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1609921212029-bb5a28e60960?w=800&h=800&fit=crop",
+        ],
+        ["Programação"] = [
+            "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&h=800&fit=crop",
+        ],
+        ["Marketing"] = [
+            "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1611926653458-09294b3142bf?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=800&h=800&fit=crop",
+        ],
+        ["Escrita"] = [
+            "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1517842645767-c639042777db?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&h=800&fit=crop",
+        ],
+        ["Consultoria"] = [
+            "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1573497620053-ea5300f94f21?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&h=800&fit=crop",
+        ],
+        ["Aulas"] = [
+            "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1513258496099-48168024aec0?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=800&h=800&fit=crop",
+        ],
+        ["Fotografia"] = [
+            "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1554080353-a576cf803bda?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=800&h=800&fit=crop",
+        ],
+        ["Outros"] = [
+            "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1598653222000-6b7b7a552625?w=800&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=800&h=800&fit=crop",
+        ],
+    };
+
+    private string GetProductImage(string category)
+    {
+        if (ProductImagesByCategory.TryGetValue(category, out var imgs)) return imgs[_rng.Next(imgs.Length)];
+        return Img($"prod-{UniqueId()}");
+    }
+
+    private string GetServiceImage(string category)
+    {
+        if (ServiceImagesByCategory.TryGetValue(category, out var imgs)) return imgs[_rng.Next(imgs.Length)];
+        return Img($"svc-{UniqueId()}");
+    }
+
     private T Pick<T>(IList<T> list) => list[_rng.Next(list.Count)];
     private string UniqueId() => Guid.NewGuid().ToString("N")[..12];
 
@@ -440,7 +550,7 @@ public class SeedService
                 Category = category,
                 PriceInEquivale = new Money(_rng.Next(15, 500)),
                 ShippingCost = _rng.Next(0, 30),
-                Images = [Img($"prod-{seed}")],
+                Images = [GetProductImage(category)],
                 Status = ItemStatus.Active,
                 Condition = condition,
                 CommunityId = community?.Id,
@@ -479,6 +589,7 @@ public class SeedService
                 Description = $"Serviço de {title}. Atendimento {Pick(ServiceAdjectives)}. " + Pick(Bios),
                 Category = category,
                 PriceInEquivale = new Money(_rng.Next(30, 600)),
+                Images = [GetServiceImage(category)],
                 Duration = TimeSpan.FromHours(hours),
                 Location = Pick(Locations),
                 Status = ItemStatus.Active,

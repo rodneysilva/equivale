@@ -68,6 +68,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.PriceInEquivale, opt => opt.MapFrom(src => new Money(src.PriceInEquivale)))
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => ItemStatus.Active))
+            .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images ?? new List<string>()))
             .ForMember(dest => dest.CommunityId, opt => opt.MapFrom(src => src.CommunityId))
             .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>()))
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))

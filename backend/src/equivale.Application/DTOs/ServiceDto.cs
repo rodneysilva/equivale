@@ -9,6 +9,7 @@ public record ServiceDto(
     string Description,
     string Category,
     decimal PriceInEquivale,
+    List<string> Images,
     TimeSpan? Duration,
     string? Location,
     string Status,

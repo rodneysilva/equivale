@@ -78,6 +78,7 @@ export interface BackendServiceDto {
   description: string;
   category: string;
   priceInEquivale: number;
+  images?: string[];
   duration?: string | null;
   location?: string | null;
   status: string;
@@ -222,6 +223,7 @@ export function mapService(data: BackendServiceDto): Service {
     description: data.description,
     price: data.priceInEquivale,
     category: data.category,
+    imageUrl: data.images?.[0] ?? data.images?.[0],
     providerId: data.providerId,
     providerName: data.providerName ?? undefined,
     providerAvatar: data.providerAvatarUrl ?? undefined,
