@@ -1,118 +1,88 @@
-import { type Component, createSignal, createEffect } from 'solid-js';
+import { type Component, createEffect, createSignal } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { Plus, Globe, Lock } from 'lucide-solid';
+import { ArrowLeft, Globe, Lock } from 'lucide-solid';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import CommunityCard from '../components/community/CommunityCard';
 import { communitiesService } from '../services/communities.service';
 import { useAuth } from '../store/auth';
-import type { Community } from '../types';
+import type { CreateCommunityDto } from '../types';
 
-const CommunitiesPage: Component = () => {
-  const auth = useAuth();
+const CreateCommunityPage: Component = () => {
   const navigate = useNavigate();
+  const auth = useAuth();
 
-  const [communities, setCommunities] = createSignal<Community[]>([]);
-  const [loading, setLoading] = createSignal(true);
-  const [showCreate, setShowCreate] = createSignal(false);
-  const [creating, setCreating] = createSignal(false);
-
-  // Create form
   const [name, setName] = createSignal('');
   const [description, setDescription] = createSignal('');
   const [imageUrl, setImageUrl] = createSignal('');
   const [type, setType] = createSignal<'open' | 'private'>('open');
   const [productVisibility, setProductVisibility] = createSignal<'public' | 'members'>('public');
-  const [createError, setCreateError] = createSignal('');
+  const [loading, setLoading] = createSignal(false);
+  const [error, setError] = createSignal('');
 
   createEffect(() => {
-    loadCommunities();
+    if (!auth.isLoading() && !auth.isAuthenticated()) {
+      navigate('/login', { replace: true });
+    }
   });
 
-  const loadCommunities = async () => {
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
+    setError('');
+
+    const creatorId = auth.currentUser()?.id;
+    if (!creatorId) {
+      setError('Você precisa estar logado para criar uma comunidade.');
+      return;
+    }
+
+    if (!name().trim() || !description().trim()) {
+      setError('Nome e descrição são obrigatórios.');
+      return;
+    }
+
+    const payload: CreateCommunityDto = {
+      name: name().trim(),
+      description: description().trim(),
+      imageUrl: imageUrl().trim() || undefined,
+      type,
+      productVisibility,
+    };
+
     setLoading(true);
     try {
-      const res = await communitiesService.getAll(1, 12);
-      setCommunities(res.data);
-    } catch {
-      setCommunities([]);
+      await communitiesService.create(payload, creatorId);
+      navigate('/communities');
+    } catch (err: any) {
+      setError(err.message || 'Não foi possível criar a comunidade.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreate = async (e: Event) => {
-    e.preventDefault();
-    setCreateError('');
-    setCreating(true);
-    try {
-      const userId = auth.currentUser()?.id;
-      if (!userId) { setCreateError('Voce precisa estar logado'); return; }
-      const community = await communitiesService.create({
-        name: name(),
-        description: description(),
-        imageUrl: imageUrl() || undefined,
-        type: type(),
-        productVisibility: productVisibility(),
-      }, userId);
-      setCommunities(prev => [community, ...prev]);
-      setShowCreate(false);
-      setName('');
-      setDescription('');
-      setImageUrl('');
-      setType('open');
-      setProductVisibility('public');
-    } catch (err: any) {
-      setCreateError(err.message || 'Erro ao criar comunidade');
-    } finally {
-      setCreating(false);
-    }
-  };
-
   return (
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-      <div class="flex items-center justify-between mb-8">
-        <div>
-          <h1 class="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Comunidades</h1>
-          <p class="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Encontre seu grupo ou crie o seu</p>
-        </div>
-        {auth.isAuthenticated() && (
-          <Button onClick={() => navigate('/communities/new')}>
-            <Plus size={16} class="mr-1.5" />
-            Criar comunidade
-          </Button>
-        )}
-      </div>
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      <Button variant="ghost" class="mb-4" onClick={() => navigate('/communities')}>
+        <ArrowLeft size={16} class="mr-2" />
+        Voltar para comunidades
+      </Button>
 
-      {loading() ? (
-        <LoadingSpinner class="py-20" />
-      ) : communities().length === 0 ? (
-        <Card class="p-12 text-center">
-          <p style={{ color: 'var(--color-text-muted)' }}>Nenhuma comunidade encontrada</p>
-          <p class="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>Seja o primeiro a criar uma!</p>
-        </Card>
-      ) : (
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {communities().map(c => <CommunityCard community={c} />)}
+      <Card class="p-6 sm:p-8">
+        <div class="mb-6">
+          <h1 class="text-2xl font-semibold" style={{ color: 'var(--color-text)' }}>Criar comunidade</h1>
+          <p class="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
+            Reúna pessoas com interesses em comum e defina como ela vai funcionar.
+          </p>
         </div>
-      )}
 
-      {/* Create community modal */}
-      <Modal
-        open={showCreate()}
-        onClose={() => setShowCreate(false)}
-        title="Criar comunidade"
-        size="lg"
-      >
-        <form onSubmit={handleCreate} class="space-y-4">
-          {createError() && (
+        <form onSubmit={handleSubmit} class="space-y-4">
+          {error() && (
             <div class="p-3 rounded text-sm" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>
-              {createError()}
+              {error()}
             </div>
           )}
+
           <Input
             label="Nome"
             value={name()}
@@ -120,17 +90,19 @@ const CommunitiesPage: Component = () => {
             placeholder="Nome da comunidade"
             required
           />
+
           <div class="w-full">
             <label class="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>Descrição</label>
             <textarea
               value={description()}
               onInput={(e) => setDescription(e.currentTarget.value)}
-              placeholder="Descreva a comunidade"
+              placeholder="Descreva o propósito da comunidade"
+              rows={4}
               required
-              rows={3}
               class="eq-input resize-none"
             />
           </div>
+
           <Input
             label="URL da imagem (opcional)"
             value={imageUrl()}
@@ -138,7 +110,6 @@ const CommunitiesPage: Component = () => {
             placeholder="https://..."
           />
 
-          {/* Tipo */}
           <div>
             <label class="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>Tipo de acesso</label>
             <div class="grid grid-cols-2 gap-2">
@@ -169,7 +140,6 @@ const CommunitiesPage: Component = () => {
             </div>
           </div>
 
-          {/* Visibilidade dos produtos */}
           <div>
             <label class="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>Visibilidade dos produtos</label>
             <div class="grid grid-cols-2 gap-2">
@@ -195,19 +165,15 @@ const CommunitiesPage: Component = () => {
           </div>
 
           <div class="flex gap-2 pt-2">
-            <Button type="submit" class="flex-1" disabled={creating()}>
-              {creating() ? (
-                <LoadingSpinner size="w-4 h-4" class="!justify-start" />
-              ) : (
-                'Criar comunidade'
-              )}
+            <Button type="submit" class="flex-1" disabled={loading()}>
+              {loading() ? <LoadingSpinner size="w-4 h-4" class="!justify-start" /> : 'Criar comunidade'}
             </Button>
-            <Button variant="ghost" onClick={() => setShowCreate(false)}>Cancelar</Button>
+            <Button variant="ghost" onClick={() => navigate('/communities')}>Cancelar</Button>
           </div>
         </form>
-      </Modal>
+      </Card>
     </div>
   );
 };
 
-export default CommunitiesPage;
+export default CreateCommunityPage;
