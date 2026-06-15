@@ -7,7 +7,7 @@ using equivale.Application.Services;
 
 namespace equivale.Application.Queries.Products;
 
-public record GetAllProductsQuery(PaginationParams Pagination, string? SearchTerm = null, string? Category = null, string? Tag = null) : IRequest<PagedResult<ProductDto>>;
+public record GetAllProductsQuery(PaginationParams Pagination, string? SearchTerm = null, string? Category = null, List<string>? Tags = null) : IRequest<PagedResult<ProductDto>>;
 
 public class GetAllProductsQueryHandler : IRequestHandler<GetAllProductsQuery, PagedResult<ProductDto>>
 {
@@ -25,7 +25,7 @@ public class GetAllProductsQueryHandler : IRequestHandler<GetAllProductsQuery, P
     public async Task<PagedResult<ProductDto>> Handle(GetAllProductsQuery request, CancellationToken cancellationToken)
     {
         var (items, total) = await _productRepository.GetPagedFilteredAsync(
-            request.Pagination.Page, request.Pagination.PageSize, request.Category, request.SearchTerm, request.Tag, cancellationToken);
+            request.Pagination.Page, request.Pagination.PageSize, request.Category, request.SearchTerm, request.Tags, cancellationToken);
 
         var dtos = items.Select(_mapper.Map<ProductDto>).ToList();
         await _enricher.EnrichProductsAsync(dtos, cancellationToken);

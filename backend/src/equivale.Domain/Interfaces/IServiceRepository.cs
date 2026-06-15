@@ -7,5 +7,5 @@ public interface IServiceRepository : IBaseRepository<Service>
     Task<IReadOnlyList<Service>> GetByProviderIdAsync(string providerId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Service>> GetByCategoryAsync(string category, CancellationToken cancellationToken = default);
     Task<(IReadOnlyList<Service> Items, int Total)> GetPagedFilteredAsync(
-        int page, int pageSize, string? category = null, string? searchTerm = null, string? tag = null, CancellationToken cancellationToken = default);
+        int page, int pageSize, string? category = null, string? searchTerm = null, List<string>? tags = null, CancellationToken cancellationToken = default);
 }

@@ -36,12 +36,20 @@ export const searchService = {
     return api.get<UnifiedSearchResult>(`/search/all?${params}`);
   },
 
-  async getProductFacets(): Promise<FacetResult> {
-    return api.get<FacetResult>('/search/product-facets');
+  async getProductFacets(category?: string, tags?: string[]): Promise<FacetResult> {
+    const params = new URLSearchParams();
+    if (category) params.set('category', category);
+    if (tags && tags.length > 0) tags.forEach(t => params.append('tags', t));
+    const qs = params.toString();
+    return api.get<FacetResult>(`/search/product-facets${qs ? '?' + qs : ''}`);
   },
 
-  async getServiceFacets(): Promise<FacetResult> {
-    return api.get<FacetResult>('/search/service-facets');
+  async getServiceFacets(category?: string, tags?: string[]): Promise<FacetResult> {
+    const params = new URLSearchParams();
+    if (category) params.set('category', category);
+    if (tags && tags.length > 0) tags.forEach(t => params.append('tags', t));
+    const qs = params.toString();
+    return api.get<FacetResult>(`/search/service-facets${qs ? '?' + qs : ''}`);
   },
 };
 

@@ -79,19 +79,23 @@ public class SearchController : ControllerBase
     }
 
     [HttpGet("product-facets")]
-    public async Task<ActionResult<FacetResult>> GetProductFacets(CancellationToken cancellationToken = default)
+    public async Task<ActionResult<FacetResult>> GetProductFacets(
+        [FromQuery] string? category = null, [FromQuery] List<string>? tags = null,
+        CancellationToken cancellationToken = default)
     {
-        var categories = await _searchRepository.GetProductCategoryCountsAsync(cancellationToken);
-        var tags = await _searchRepository.GetProductTagCountsAsync(cancellationToken);
-        return Ok(new FacetResult(categories, tags));
+        var cats = await _searchRepository.GetProductCategoryCountsAsync(null, tags, cancellationToken);
+        var tgs = await _searchRepository.GetProductTagCountsAsync(category, null, cancellationToken);
+        return Ok(new FacetResult(cats, tgs));
     }
 
     [HttpGet("service-facets")]
-    public async Task<ActionResult<FacetResult>> GetServiceFacets(CancellationToken cancellationToken = default)
+    public async Task<ActionResult<FacetResult>> GetServiceFacets(
+        [FromQuery] string? category = null, [FromQuery] List<string>? tags = null,
+        CancellationToken cancellationToken = default)
     {
-        var categories = await _searchRepository.GetServiceCategoryCountsAsync(cancellationToken);
-        var tags = await _searchRepository.GetServiceTagCountsAsync(cancellationToken);
-        return Ok(new FacetResult(categories, tags));
+        var cats = await _searchRepository.GetServiceCategoryCountsAsync(null, tags, cancellationToken);
+        var tgs = await _searchRepository.GetServiceTagCountsAsync(category, null, cancellationToken);
+        return Ok(new FacetResult(cats, tgs));
     }
 }
 

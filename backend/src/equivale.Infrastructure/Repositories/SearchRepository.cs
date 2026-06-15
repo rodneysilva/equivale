@@ -68,47 +68,54 @@ public class SearchRepository
         return new PagedResult<ServiceDto> { Items = dtos, Page = page, PageSize = pageSize, TotalItems = total };
     }
 
-    public async Task<Dictionary<string, int>> GetProductCategoryCountsAsync(CancellationToken cancellationToken = default)
+    public async Task<Dictionary<string, int>> GetProductCategoryCountsAsync(string? category = null, List<string>? tags = null, CancellationToken cancellationToken = default)
     {
-        return await GetCategoryCountsAsync(_products, cancellationToken);
+        return await GetCategoryCountsAsync(_products, category, tags, cancellationToken);
     }
 
-    public async Task<Dictionary<string, int>> GetServiceCategoryCountsAsync(CancellationToken cancellationToken = default)
+    public async Task<Dictionary<string, int>> GetServiceCategoryCountsAsync(string? category = null, List<string>? tags = null, CancellationToken cancellationToken = default)
     {
-        return await GetCategoryCountsAsync(_services, cancellationToken);
+        return await GetCategoryCountsAsync(_services, category, tags, cancellationToken);
     }
 
-    public async Task<Dictionary<string, int>> GetProductTagCountsAsync(CancellationToken cancellationToken = default)
+    public async Task<Dictionary<string, int>> GetProductTagCountsAsync(string? category = null, List<string>? tags = null, CancellationToken cancellationToken = default)
     {
-        return await GetTagCountsAsync(_products, cancellationToken);
+        return await GetTagCountsAsync(_products, category, tags, cancellationToken);
     }
 
-    public async Task<Dictionary<string, int>> GetServiceTagCountsAsync(CancellationToken cancellationToken = default)
+    public async Task<Dictionary<string, int>> GetServiceTagCountsAsync(string? category = null, List<string>? tags = null, CancellationToken cancellationToken = default)
     {
-        return await GetTagCountsAsync(_services, cancellationToken);
+        return await GetTagCountsAsync(_services, category, tags, cancellationToken);
     }
 
-    private static async Task<Dictionary<string, int>> GetCategoryCountsAsync<T>(IMongoCollection<T> collection, CancellationToken ct)
+    private static FilterDefinition<T> BuildFacetFilter<T>(string? category, List<string>? tags)
     {
-        var pipeline = new[]
-        {
-            new BsonDocument("$group", new BsonDocument { { "_id", "$Category" }, { "count", new BsonDocument("$sum", 1) } }),
-            new BsonDocument("$sort", new BsonDocument("count", -1))
-        };
-        var results = await collection.Aggregate<BsonDocument>(pipeline).ToListAsync(ct);
+        var filters = new List<FilterDefinition<T>>();
+        if (!string.IsNullOrWhiteSpace(category))
+            filters.Add(Builders<T>.Filter.Eq("Category", category));
+        if (tags is not null && tags.Count > 0)
+            filters.Add(Builders<T>.Filter.AnyIn("Tags", tags));
+        return filters.Count == 0 ? Builders<T>.Filter.Empty : Builders<T>.Filter.And(filters);
+    }
+
+    private static async Task<Dictionary<string, int>> GetCategoryCountsAsync<T>(IMongoCollection<T> collection, string? category, List<string>? tags, CancellationToken ct)
+    {
+        var matchFilter = BuildFacetFilter<T>(null, tags); // Category counts ignore selected category but respect tags
+        var aggregate = collection.Aggregate().Match(matchFilter);
+        var grouped = aggregate.Group(new BsonDocument { { "_id", "$Category" }, { "count", new BsonDocument("$sum", 1) } });
+        var sorted = grouped.Sort(new BsonDocument("count", -1));
+        var results = await sorted.ToListAsync(ct);
         return results.Where(r => r["_id"] != BsonNull.Value).ToDictionary(r => r["_id"].AsString, r => r["count"].AsInt32);
     }
 
-    private static async Task<Dictionary<string, int>> GetTagCountsAsync<T>(IMongoCollection<T> collection, CancellationToken ct)
+    private static async Task<Dictionary<string, int>> GetTagCountsAsync<T>(IMongoCollection<T> collection, string? category, List<string>? tags, CancellationToken ct)
     {
-        var pipeline = new[]
-        {
-            new BsonDocument("$unwind", "$Tags"),
-            new BsonDocument("$group", new BsonDocument { { "_id", "$Tags" }, { "count", new BsonDocument("$sum", 1) } }),
-            new BsonDocument("$sort", new BsonDocument("count", -1)),
-            new BsonDocument("$limit", 20)
-        };
-        var results = await collection.Aggregate<BsonDocument>(pipeline).ToListAsync(ct);
+        var matchFilter = BuildFacetFilter<T>(category, null); // Tag counts respect selected category but ignore selected tags
+        var aggregate = collection.Aggregate().Match(matchFilter);
+        var unwound = aggregate.Unwind("Tags");
+        var grouped = unwound.Group(new BsonDocument { { "_id", "$Tags" }, { "count", new BsonDocument("$sum", 1) } });
+        var sorted = grouped.Sort(new BsonDocument("count", -1)).Limit(20);
+        var results = await sorted.ToListAsync(ct);
         return results.Where(r => r["_id"] != BsonNull.Value).ToDictionary(r => r["_id"].AsString, r => r["count"].AsInt32);
     }
 
