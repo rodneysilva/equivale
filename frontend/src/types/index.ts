@@ -1,4 +1,9 @@
 // User types
+export interface SocialLink {
+  type: string;
+  url: string;
+}
+
 export interface User {
   id: string;
   username: string;
@@ -6,11 +11,21 @@ export interface User {
   fullName: string;
   bio?: string;
   avatarUrl?: string;
+  socialLinks?: SocialLink[];
   role: 'user' | 'admin';
   walletBalance: number;
   createdAt: string;
   updatedAt?: string;
   isBanned: boolean;
+}
+
+export interface UserCommunity {
+  id: string;
+  name: string;
+  imageUrl?: string;
+  membersCount: number;
+  isOwner: boolean;
+  isModerator: boolean;
 }
 
 export interface RegisterDto {

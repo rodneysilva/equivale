@@ -16,6 +16,7 @@ export interface BackendUserDto {
   email: string;
   avatarUrl?: string | null;
   bio?: string | null;
+  socialLinks?: { type: string; url: string }[];
   role: string;
   walletBalance: number;
   createdAt: string;
@@ -180,6 +181,7 @@ export function mapUser(data: BackendUserDto): User {
     fullName: data.name,
     bio: data.bio ?? undefined,
     avatarUrl: data.avatarUrl ?? undefined,
+    socialLinks: data.socialLinks ?? undefined,
     role: data.role === 'Admin' ? 'admin' : 'user',
     walletBalance: data.walletBalance,
     createdAt: data.createdAt,

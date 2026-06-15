@@ -7,23 +7,26 @@ using MediatR;
 
 namespace equivale.Api.Controllers;
 
+public record UserCommunityDto(string Id, string Name, string? ImageUrl, int MembersCount, bool IsOwner, bool IsModerator);
+
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly IUserRepository _userRepository;
+    private readonly ICommunityRepository _communityRepository;
     private readonly IMediator _mediator;
 
-    public UsersController(IUserService userService, IUserRepository userRepository, IMediator mediator)
+    public UsersController(IUserService userService, IUserRepository userRepository, ICommunityRepository communityRepository, IMediator mediator)
     {
         _userService = userService;
         _userRepository = userRepository;
+        _communityRepository = communityRepository;
         _mediator = mediator;
     }
 
     [HttpGet]
-    [Authorize]
     public async Task<ActionResult<PagedResult<UserDto>>> GetAll(
         [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
     {
@@ -38,6 +41,21 @@ public class UsersController : ControllerBase
         var user = await _userService.GetByIdAsync(id, cancellationToken);
         if (user is null) return NotFound();
         return Ok(user);
+    }
+
+    [HttpGet("{id}/communities")]
+    public async Task<ActionResult<List<UserCommunityDto>>> GetUserCommunities(string id, CancellationToken cancellationToken)
+    {
+        var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+        if (user is null) return NotFound();
+
+        var communities = await _communityRepository.GetAllAsync(cancellationToken);
+        var userCommunities = communities
+            .Where(c => c.Members.Contains(id) || c.CreatorId == id)
+            .Select(c => new UserCommunityDto(c.Id, c.Name, c.ImageUrl, c.Members.Count, c.CreatorId == id, c.Moderators.Contains(id)))
+            .ToList();
+
+        return Ok(userCommunities);
     }
 
     [HttpPut("{id}")]

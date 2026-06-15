@@ -36,16 +36,16 @@ public class ServiceRepository : BaseRepository<Service>, IServiceRepository
     }
 
     public async Task<(IReadOnlyList<Service> Items, int Total)> GetPagedFilteredAsync(
-        int page, int pageSize, string? category = null, string? searchTerm = null, List<string>? tags = null, CancellationToken cancellationToken = default)
+        int page, int pageSize, string? category = null, string? searchTerm = null, List<string>? tags = null, string? providerId = null, CancellationToken cancellationToken = default)
     {
-        var filter = BuildFilter(category, searchTerm, tags);
+        var filter = BuildFilter(category, searchTerm, tags, providerId);
         var skip = (page - 1) * pageSize;
         var total = (int)await _services.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
         var items = await _services.Find(filter).Skip(skip).Limit(pageSize).ToListAsync(cancellationToken);
         return (items.AsReadOnly(), total);
     }
 
-    private static FilterDefinition<Service> BuildFilter(string? category, string? searchTerm, List<string>? tags)
+    private static FilterDefinition<Service> BuildFilter(string? category, string? searchTerm, List<string>? tags, string? providerId)
     {
         var filters = new List<FilterDefinition<Service>>();
 
@@ -56,7 +56,10 @@ public class ServiceRepository : BaseRepository<Service>, IServiceRepository
             filters.Add(Builders<Service>.Filter.Text(searchTerm));
 
         if (tags is not null && tags.Count > 0)
-            filters.Add(Builders<Service>.Filter.AnyIn(s => s.Tags, tags));
+            filters.Add(Builders<Service>.Filter.All(s => s.Tags, tags));
+
+        if (!string.IsNullOrWhiteSpace(providerId))
+            filters.Add(Builders<Service>.Filter.Eq(s => s.ProviderId, providerId));
 
         return filters.Count == 0 ? Builders<Service>.Filter.Empty : Builders<Service>.Filter.And(filters);
     }

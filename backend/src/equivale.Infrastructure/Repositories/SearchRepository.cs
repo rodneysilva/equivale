@@ -94,13 +94,14 @@ public class SearchRepository
         if (!string.IsNullOrWhiteSpace(category))
             filters.Add(Builders<T>.Filter.Eq("Category", category));
         if (tags is not null && tags.Count > 0)
-            filters.Add(Builders<T>.Filter.AnyIn("Tags", tags));
+            filters.Add(Builders<T>.Filter.All("Tags", tags));
         return filters.Count == 0 ? Builders<T>.Filter.Empty : Builders<T>.Filter.And(filters);
     }
 
     private static async Task<Dictionary<string, int>> GetCategoryCountsAsync<T>(IMongoCollection<T> collection, string? category, List<string>? tags, CancellationToken ct)
     {
-        var matchFilter = BuildFacetFilter<T>(null, tags); // Category counts ignore selected category but respect tags
+        // Category counts: respect selected tags (refinement) but ignore selected category
+        var matchFilter = BuildFacetFilter<T>(null, tags);
         var aggregate = collection.Aggregate().Match(matchFilter);
         var grouped = aggregate.Group(new BsonDocument { { "_id", "$Category" }, { "count", new BsonDocument("$sum", 1) } });
         var sorted = grouped.Sort(new BsonDocument("count", -1));
@@ -110,7 +111,8 @@ public class SearchRepository
 
     private static async Task<Dictionary<string, int>> GetTagCountsAsync<T>(IMongoCollection<T> collection, string? category, List<string>? tags, CancellationToken ct)
     {
-        var matchFilter = BuildFacetFilter<T>(category, null); // Tag counts respect selected category but ignore selected tags
+        // Tag counts: respect BOTH selected category AND selected tags (cascade refinement)
+        var matchFilter = BuildFacetFilter<T>(category, tags);
         var aggregate = collection.Aggregate().Match(matchFilter);
         var unwound = aggregate.Unwind("Tags");
         var grouped = unwound.Group(new BsonDocument { { "_id", "$Tags" }, { "count", new BsonDocument("$sum", 1) } });

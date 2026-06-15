@@ -28,11 +28,11 @@ public class ServicesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<PagedResult<ServiceDto>>> GetAll(
         [FromQuery] int page = 1, [FromQuery] int pageSize = 20,
-        [FromQuery] string? category = null, [FromQuery] string? search = null, [FromQuery] List<string>? tags = null,
+        [FromQuery] string? category = null, [FromQuery] string? search = null, [FromQuery] List<string>? tags = null, [FromQuery] string? providerId = null,
         CancellationToken cancellationToken = default)
     {
         var query = new Application.Queries.Services.GetAllServicesQuery(
-            new PaginationParams { Page = page, PageSize = pageSize }, search, category, tags);
+            new PaginationParams { Page = page, PageSize = pageSize }, search, category, tags, providerId);
         var result = await _mediator.Send(query, cancellationToken);
         return Ok(result);
     }

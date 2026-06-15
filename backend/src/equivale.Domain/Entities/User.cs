@@ -11,6 +11,7 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     public string? AvatarUrl { get; set; }
     public string? Bio { get; set; }
+    public List<SocialLink> SocialLinks { get; set; } = [];
     public UserRole Role { get; set; } = UserRole.User;
     public Money WalletBalance { get; private set; } = Money.Zero;
     public DateTime CreatedAt { get; set; }

@@ -18,6 +18,8 @@ import CreateProductPage from './pages/CreateProductPage';
 import CreateServicePage from './pages/CreateServicePage';
 import CreateCommunityPage from './pages/CreateCommunityPage';
 import SearchPage from './pages/SearchPage';
+import UserProfilePage from './pages/UserProfilePage';
+import UsersListPage from './pages/UsersListPage';
 
 const App: Component = () => {
   return (
@@ -46,6 +48,8 @@ const App: Component = () => {
       <Route path="/services/new" component={CreateServicePage} />
       <Route path="/communities/new" component={CreateCommunityPage} />
       <Route path="/search" component={SearchPage} />
+      <Route path="/users" component={UsersListPage} />
+      <Route path="/users/:id" component={UserProfilePage} />
     </Router>
   );
 };

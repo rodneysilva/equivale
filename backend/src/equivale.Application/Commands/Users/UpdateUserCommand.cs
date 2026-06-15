@@ -29,6 +29,8 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserD
             user.AvatarUrl = request.User.AvatarUrl;
         if (request.User.Bio is not null)
             user.Bio = request.User.Bio;
+        if (request.User.SocialLinks is not null)
+            user.SocialLinks = request.User.SocialLinks;
         user.UpdatedAt = DateTime.UtcNow;
 
         await _userRepository.UpdateAsync(user, cancellationToken);

@@ -36,16 +36,16 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
     }
 
     public async Task<(IReadOnlyList<Product> Items, int Total)> GetPagedFilteredAsync(
-        int page, int pageSize, string? category = null, string? searchTerm = null, List<string>? tags = null, CancellationToken cancellationToken = default)
+        int page, int pageSize, string? category = null, string? searchTerm = null, List<string>? tags = null, string? sellerId = null, CancellationToken cancellationToken = default)
     {
-        var filter = BuildFilter(category, searchTerm, tags);
+        var filter = BuildFilter(category, searchTerm, tags, sellerId);
         var skip = (page - 1) * pageSize;
         var total = (int)await _products.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
         var items = await _products.Find(filter).Skip(skip).Limit(pageSize).ToListAsync(cancellationToken);
         return (items.AsReadOnly(), total);
     }
 
-    private static FilterDefinition<Product> BuildFilter(string? category, string? searchTerm, List<string>? tags)
+    private static FilterDefinition<Product> BuildFilter(string? category, string? searchTerm, List<string>? tags, string? sellerId)
     {
         var filters = new List<FilterDefinition<Product>>();
 
@@ -56,7 +56,10 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
             filters.Add(Builders<Product>.Filter.Text(searchTerm));
 
         if (tags is not null && tags.Count > 0)
-            filters.Add(Builders<Product>.Filter.AnyIn(p => p.Tags, tags));
+            filters.Add(Builders<Product>.Filter.All(p => p.Tags, tags));
+
+        if (!string.IsNullOrWhiteSpace(sellerId))
+            filters.Add(Builders<Product>.Filter.Eq(p => p.SellerId, sellerId));
 
         return filters.Count == 0 ? Builders<Product>.Filter.Empty : Builders<Product>.Filter.And(filters);
     }

@@ -84,7 +84,7 @@ public class SearchController : ControllerBase
         CancellationToken cancellationToken = default)
     {
         var cats = await _searchRepository.GetProductCategoryCountsAsync(null, tags, cancellationToken);
-        var tgs = await _searchRepository.GetProductTagCountsAsync(category, null, cancellationToken);
+        var tgs = await _searchRepository.GetProductTagCountsAsync(category, tags, cancellationToken);
         return Ok(new FacetResult(cats, tgs));
     }
 
@@ -94,7 +94,7 @@ public class SearchController : ControllerBase
         CancellationToken cancellationToken = default)
     {
         var cats = await _searchRepository.GetServiceCategoryCountsAsync(null, tags, cancellationToken);
-        var tgs = await _searchRepository.GetServiceTagCountsAsync(category, null, cancellationToken);
+        var tgs = await _searchRepository.GetServiceTagCountsAsync(category, tags, cancellationToken);
         return Ok(new FacetResult(cats, tgs));
     }
 }
