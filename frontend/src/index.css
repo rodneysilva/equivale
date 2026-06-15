@@ -3,10 +3,10 @@
 /* Equivale Design System — Formal, jovem, alternativo */
 @layer base {
   :root {
-    --color-primary: #78350f;
-    --color-primary-hover: #92400e;
-    --color-primary-light: #fef3c7;
-    --color-accent: #b45309;
+    --color-primary: #6366f1;
+    --color-primary-hover: #4f46e5;
+    --color-primary-light: #e0e7ff;
+    --color-accent: #4f46e5;
     --color-surface: #ffffff;
     --color-surface-alt: #f8f7f4;
     --color-border: #e5e2db;
@@ -21,10 +21,10 @@
   }
 
   .dark {
-    --color-primary: #fbbf24;
-    --color-primary-hover: #f59e0b;
-    --color-primary-light: #451a03;
-    --color-accent: #f59e0b;
+    --color-primary: #818cf8;
+    --color-primary-hover: #6366f1;
+    --color-primary-light: #312e81;
+    --color-accent: #a5b4fc;
     --color-surface: #1c1917;
     --color-surface-alt: #292524;
     --color-border: #3f3a36;

@@ -49,11 +49,12 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
         await _userRepository.AddAsync(user, cancellationToken);
 
         return new AuthResponseDto(
-            Token: string.Empty, // JWT will be generated in API layer
+            Token: string.Empty,
             UserId: user.Id,
             Email: user.Email.Address,
             Name: user.Name,
-            Role: user.Role
+            Role: user.Role,
+            WalletBalance: user.WalletBalance.Amount
         );
     }
 }

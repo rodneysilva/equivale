@@ -8,6 +8,7 @@ export interface BackendAuthResponse {
   email: string;
   name: string;
   role: number;
+  walletBalance: number;
 }
 
 export interface BackendUserDto {
@@ -165,8 +166,8 @@ export function mapAuthResponse(data: BackendAuthResponse): AuthResponse {
       username: data.name,
       email: data.email,
       fullName: data.name,
-      role: data.role === 1 ? 'admin' : 'user',
-      walletBalance: 0,
+      role: data.role === 0 ? 'admin' : 'user',
+      walletBalance: data.walletBalance ?? 0,
       createdAt: new Date().toISOString(),
       isBanned: false,
     },
