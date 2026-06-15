@@ -40,31 +40,24 @@ const CommunityDetailPage: Component = () => {
       const userId = auth.currentUser()?.id;
       if (!userId) { setLoading(false); return; }
 
-      // Check membership: owner, moderator, or regular member
-      const isOwner = data.ownerId === userId;
-      const isMod = data.moderators?.includes(userId);
-      let isRegularMember = false;
+      // Check membership via members endpoint (most reliable)
+      let member = data.ownerId === userId;
+      let allMembers: CommunityMember[] = [];
+      try {
+        allMembers = await communitiesService.getMembers(data.id);
+        if (!member) member = allMembers.some(m => m.id === userId);
+      } catch { /* ignore */ }
 
-      if (!isOwner && !isMod) {
-        try {
-          const userCommunities = await communitiesService.getByMember(userId);
-          isRegularMember = userCommunities.some(c => c.id === data.id);
-        } catch { /* ignore */ }
-      }
-
-      const member = isOwner || isMod || isRegularMember;
       setIsMember(member);
 
-      // Only load content if user is a member
       if (member) {
-        const [p, s, m] = await Promise.all([
+        setMembers(allMembers);
+        const [p, s] = await Promise.all([
           productsService.getAll(1, 6, undefined, undefined, undefined, undefined, data.id),
           servicesService.getAll(1, 6, undefined, undefined, undefined, undefined, data.id),
-          communitiesService.getMembers(data.id).catch(() => []),
         ]);
         setProducts(p.data);
         setServices(s.data);
-        setMembers(m);
       }
     } catch {
       setError('Comunidade não encontrada');
@@ -155,13 +148,13 @@ const CommunityDetailPage: Component = () => {
                   <span class={`eq-badge ${community()!.type === 'private' ? 'eq-badge-warning' : 'eq-badge-primary'}`}>
                     {community()!.type === 'private' ? (<><Lock size={10} class="mr-1" /> Privada</>) : (<><Globe size={10} class="mr-1" /> Aberta</>)}
                   </span>
-                  <span class="eq-badge" style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}>
+                  <span class="eq-badge" style={{ background: 'rgba(0,0,0,0.3)', color: '#fff' }}>
                     <Users size={10} class="mr-1" /> {community()!.membersCount}
                   </span>
                 </div>
               </div>
               <Show when={isMember()}>
-                <Button variant="outline" size="sm" onClick={handleLeave} disabled={actionLoading()} class="shrink-0" style={{ background: 'rgba(255,255,255,0.9)' }}>
+                <Button variant="outline" size="sm" onClick={handleLeave} disabled={actionLoading()} class="shrink-0" style={{ background: 'var(--color-surface)', color: 'var(--color-text)' }}>
                   <UserMinus size={14} class="mr-1" /> Sair
                 </Button>
               </Show>
@@ -240,7 +233,7 @@ const CommunityDetailPage: Component = () => {
                 <h2 class="flex items-center gap-2 text-base font-bold" style={{ color: 'var(--color-text)' }}>
                   <Package size={16} class="eq-brand" /> Produtos
                 </h2>
-                <button onClick={() => navigate(`/products?communityId=${params.id}`)} class="flex items-center gap-1 text-xs eq-link">
+                <button onClick={() => navigate(`/communities/${params.id}/products`)} class="flex items-center gap-1 text-xs eq-link">
                   Ver todos <ArrowRight size={12} />
                 </button>
               </div>
@@ -257,7 +250,7 @@ const CommunityDetailPage: Component = () => {
                 <h2 class="flex items-center gap-2 text-base font-bold" style={{ color: 'var(--color-text)' }}>
                   <Zap size={16} class="eq-brand" /> Serviços
                 </h2>
-                <button onClick={() => navigate(`/services?communityId=${params.id}`)} class="flex items-center gap-1 text-xs eq-link">
+                <button onClick={() => navigate(`/communities/${params.id}/services`)} class="flex items-center gap-1 text-xs eq-link">
                   Ver todos <ArrowRight size={12} />
                 </button>
               </div>

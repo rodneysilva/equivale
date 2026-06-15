@@ -20,6 +20,9 @@ import CreateCommunityPage from './pages/CreateCommunityPage';
 import SearchPage from './pages/SearchPage';
 import UserProfilePage from './pages/UserProfilePage';
 import UsersListPage from './pages/UsersListPage';
+import CommunityProductsPage from './pages/CommunityProductsPage';
+import CommunityServicesPage from './pages/CommunityServicesPage';
+import CommunityMembersPage from './pages/CommunityMembersPage';
 
 const App: Component = () => {
   return (
@@ -35,6 +38,9 @@ const App: Component = () => {
       <Route path="/" component={HomePage} />
       <Route path="/communities" component={CommunitiesPage} />
       <Route path="/communities/:id" component={CommunityDetailPage} />
+      <Route path="/communities/:id/products" component={CommunityProductsPage} />
+      <Route path="/communities/:id/services" component={CommunityServicesPage} />
+      <Route path="/communities/:id/members" component={CommunityMembersPage} />
       <Route path="/products" component={ProductsPage} />
       <Route path="/products/:id" component={ProductDetailPage} />
       <Route path="/services" component={ServicesPage} />
