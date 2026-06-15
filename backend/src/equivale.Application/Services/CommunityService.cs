@@ -24,7 +24,7 @@ public class CommunityService : ICommunityService
     public async Task<CommunityDto> CreateAsync(CreateCommunityDto dto, CancellationToken cancellationToken = default)
         => await _mediator.Send(new CreateCommunityCommand(dto), cancellationToken);
 
-    public async Task<CommunityDto?> UpdateAsync(string id, CreateCommunityDto dto, CancellationToken cancellationToken = default)
+    public async Task<CommunityDto?> UpdateAsync(string id, UpdateCommunityDto dto, CancellationToken cancellationToken = default)
         => await _mediator.Send(new UpdateCommunityCommand(id, dto), cancellationToken);
 
     public async Task DeleteAsync(string id, CancellationToken cancellationToken = default)
@@ -32,13 +32,23 @@ public class CommunityService : ICommunityService
         await _mediator.Send(new DeleteCommunityCommand(id), cancellationToken);
     }
 
-    public async Task JoinAsync(string communityId, string userId, CancellationToken cancellationToken = default)
+    public async Task JoinAsync(string communityId, string userId, string? inviteCode = null, CancellationToken cancellationToken = default)
     {
-        await _mediator.Send(new JoinCommunityCommand(communityId, userId), cancellationToken);
+        await _mediator.Send(new JoinCommunityCommand(communityId, userId, inviteCode), cancellationToken);
     }
 
     public async Task LeaveAsync(string communityId, string userId, CancellationToken cancellationToken = default)
     {
         await _mediator.Send(new LeaveCommunityCommand(communityId, userId), cancellationToken);
+    }
+
+    public async Task AddModeratorAsync(string communityId, string userId, CancellationToken cancellationToken = default)
+    {
+        await _mediator.Send(new AddModeratorCommand(communityId, userId), cancellationToken);
+    }
+
+    public async Task RemoveModeratorAsync(string communityId, string userId, CancellationToken cancellationToken = default)
+    {
+        await _mediator.Send(new RemoveModeratorCommand(communityId, userId), cancellationToken);
     }
 }

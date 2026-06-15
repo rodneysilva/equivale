@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
@@ -13,12 +14,14 @@ public class ServicesController : ControllerBase
 {
     private readonly IServiceService _serviceService;
     private readonly IServiceRepository _serviceRepository;
+    private readonly ITransactionService _transactionService;
     private readonly IMediator _mediator;
 
-    public ServicesController(IServiceService serviceService, IServiceRepository serviceRepository, IMediator mediator)
+    public ServicesController(IServiceService serviceService, IServiceRepository serviceRepository, ITransactionService transactionService, IMediator mediator)
     {
         _serviceService = serviceService;
         _serviceRepository = serviceRepository;
+        _transactionService = transactionService;
         _mediator = mediator;
     }
 
@@ -69,5 +72,29 @@ public class ServicesController : ControllerBase
     {
         var services = await _serviceService.GetByProviderAsync(providerId, cancellationToken);
         return Ok(services);
+    }
+
+    [HttpPost("{id}/hire")]
+    [Authorize]
+    public async Task<ActionResult<TransactionDto>> Hire(string id, CancellationToken cancellationToken)
+    {
+        var service = await _serviceService.GetByIdAsync(id, cancellationToken);
+        if (service is null) return NotFound();
+
+        var clientId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+            ?? throw new UnauthorizedAccessException("Invalid token");
+
+        if (clientId == service.ProviderId)
+            return BadRequest("Cannot hire your own service");
+
+        var transaction = await _transactionService.CreateAsync(new CreateTransactionDto(
+            FromUserId: clientId,
+            ToUserId: service.ProviderId,
+            Amount: service.PriceInEquivale,
+            Description: $"Service hire: {service.Title}",
+            TransactionType: "Purchase",
+            RelatedItemId: id), cancellationToken);
+
+        return Ok(transaction);
     }
 }

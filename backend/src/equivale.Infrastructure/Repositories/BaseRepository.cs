@@ -1,3 +1,4 @@
+using MongoDB.Bson;
 using MongoDB.Driver;
 using equivale.Application.Interfaces;
 using equivale.Domain.Interfaces;
@@ -29,11 +30,13 @@ public class BaseRepository<T> : IBaseRepository<T>, ITransactionalRepository<T>
 
     public virtual async Task AddAsync(T entity, CancellationToken cancellationToken = default)
     {
+        EnsureEntityHasId(entity);
         await _collection.InsertOneAsync(entity, cancellationToken: cancellationToken);
     }
 
     public virtual async Task AddAsync(T entity, IDbSession session, CancellationToken cancellationToken = default)
     {
+        EnsureEntityHasId(entity);
         var mongoSession = ResolveMongoSession(session);
         await _collection.InsertOneAsync(mongoSession, entity, cancellationToken: cancellationToken);
     }
@@ -83,6 +86,30 @@ public class BaseRepository<T> : IBaseRepository<T>, ITransactionalRepository<T>
             .Limit(pageSize)
             .ToListAsync(cancellationToken);
         return (items.AsReadOnly(), total);
+    }
+
+    private static void EnsureEntityHasId(T entity)
+    {
+        ArgumentNullException.ThrowIfNull(entity);
+
+        var idProperty = typeof(T).GetProperty("Id");
+        if (idProperty?.CanWrite != true)
+            return;
+
+        var currentValue = idProperty.GetValue(entity)?.ToString();
+        if (!string.IsNullOrWhiteSpace(currentValue))
+            return;
+
+        if (idProperty.PropertyType == typeof(string))
+        {
+            idProperty.SetValue(entity, ObjectId.GenerateNewId().ToString());
+            return;
+        }
+
+        if (idProperty.PropertyType == typeof(ObjectId))
+        {
+            idProperty.SetValue(entity, ObjectId.GenerateNewId());
+        }
     }
 
     private static IClientSessionHandle ResolveMongoSession(IDbSession session)

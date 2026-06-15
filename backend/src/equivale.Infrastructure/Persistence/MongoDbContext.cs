@@ -1,3 +1,4 @@
+using System.Threading;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using equivale.Domain.Entities;
@@ -27,8 +28,13 @@ public sealed class MongoDbContext
     public IMongoCollection<Transaction> Transactions => Database.GetCollection<Transaction>("transactions");
     public IMongoCollection<Review> Reviews => Database.GetCollection<Review>("reviews");
 
+    private static int _serializersRegistered = 0;
+
     private static void RegisterValueObjectSerializers()
     {
+        if (Interlocked.CompareExchange(ref _serializersRegistered, 1, 0) != 0)
+            return;
+
         BsonSerializer.RegisterSerializer(new EmailBsonSerializer());
         BsonSerializer.RegisterSerializer(new MoneyBsonSerializer());
     }

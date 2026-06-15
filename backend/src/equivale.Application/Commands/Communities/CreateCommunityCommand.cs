@@ -22,7 +22,17 @@ public class CreateCommunityCommandHandler : IRequestHandler<CreateCommunityComm
     {
         var community = _mapper.Map<Domain.Entities.Community>(request.Community);
         community.Members.Add(request.Community.CreatorId);
+        community.Moderators.Add(request.Community.CreatorId);
+
+        if (community.Type == "private")
+        {
+            community.InviteCode = GenerateInviteCode();
+        }
+
         await _communityRepository.AddAsync(community, cancellationToken);
         return _mapper.Map<CommunityDto>(community);
     }
+
+    private static string GenerateInviteCode() =>
+        Guid.NewGuid().ToString("N").Substring(0, 8).ToUpperInvariant();
 }

@@ -51,12 +51,16 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
 
         // Community mappings
-        CreateMap<Community, CommunityDto>();
+        CreateMap<Community, CommunityDto>()
+            .ForMember(dest => dest.MembersCount, opt => opt.MapFrom(src => src.Members.Count));
         CreateMap<CreateCommunityDto, Community>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.Members, opt => opt.MapFrom(src => new List<string>()))
+            .ForMember(dest => dest.Moderators, opt => opt.MapFrom(src => new List<string>()))
+            .ForMember(dest => dest.InviteCode, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
             .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
+        // UpdateCommunityDto is mapped manually in the command handler
 
         // Transaction mappings
         CreateMap<Transaction, TransactionDto>()

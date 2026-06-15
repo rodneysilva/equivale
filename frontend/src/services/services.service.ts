@@ -1,25 +1,44 @@
 import { api } from './api';
-import type { Service, CreateServiceDto, UpdateServiceDto, PaginatedResponse } from '../types';
+import {
+  mapService, mapPagedResult,
+  type BackendServiceDto, type BackendCreateServiceDto, type BackendPagedResult
+} from './mappers';
+import type { Service, CreateServiceDto, PaginatedResponse } from '../types';
+
+function toBackendCreate(data: CreateServiceDto, providerId?: string): BackendCreateServiceDto {
+  return {
+    providerId: providerId || '',
+    title: data.title,
+    description: data.description,
+    category: data.category,
+    priceInEquivale: data.price,
+    duration: data.duration || null,
+    location: data.location || null,
+  };
+}
 
 export const servicesService = {
-  async getAll(page = 1, pageSize = 12, category?: string, search?: string): Promise<{ data: Service[]; totalPages: number }> {
+  async getAll(page = 1, pageSize = 12, category?: string, search?: string): Promise<PaginatedResponse<Service>> {
     const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
     if (category) params.set('category', category);
     if (search) params.set('search', search);
-    const items = await api.get<Service[]>(`/services?${params}`);
-    return { data: items, totalPages: 1 };
+    const raw = await api.get<BackendPagedResult<BackendServiceDto>>(`/services?${params}`);
+    return mapPagedResult(raw, mapService);
   },
 
   async getById(id: string): Promise<Service> {
-    return api.get<Service>(`/services/${id}`);
+    const raw = await api.get<BackendServiceDto>(`/services/${id}`);
+    return mapService(raw);
   },
 
-  async create(data: CreateServiceDto): Promise<Service> {
-    return api.post<Service>('/services', data);
+  async create(data: CreateServiceDto, providerId: string): Promise<Service> {
+    const raw = await api.post<BackendServiceDto>('/services', toBackendCreate(data, providerId));
+    return mapService(raw);
   },
 
-  async update(id: string, data: UpdateServiceDto): Promise<Service> {
-    return api.put<Service>(`/services/${id}`, data);
+  async update(id: string, data: Partial<CreateServiceDto>, providerId: string): Promise<Service> {
+    const raw = await api.put<BackendServiceDto>(`/services/${id}`, toBackendCreate(data as CreateServiceDto, providerId));
+    return mapService(raw);
   },
 
   async delete(id: string): Promise<void> {
@@ -27,14 +46,12 @@ export const servicesService = {
   },
 
   async getByProvider(providerId: string): Promise<Service[]> {
-    return api.get<Service[]>(`/services/provider/${providerId}`);
+    const raw = await api.get<BackendServiceDto[]>(`/services/provider/${providerId}`);
+    return raw.map(mapService);
   },
 
-  async getByCategory(category: string): Promise<Service[]> {
-    return api.get<Service[]>(`/services/category/${category}`);
-  },
-
-  async hire(serviceId: string): Promise<{ transactionId: string }> {
-    return api.post<{ transactionId: string }>(`/services/${serviceId}/hire`);
+  async hire(serviceId: string): Promise<{ id: string; amount: number }> {
+    const raw = await api.post<{ id: string; amount: number }>(`/services/${serviceId}/hire`);
+    return raw;
   },
 };

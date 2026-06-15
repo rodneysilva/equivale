@@ -5,7 +5,7 @@ using MediatR;
 
 namespace equivale.Application.Commands.Communities;
 
-public record JoinCommunityCommand(string CommunityId, string UserId) : IRequest<CommunityDto?>;
+public record JoinCommunityCommand(string CommunityId, string UserId, string? InviteCode = null) : IRequest<CommunityDto?>;
 
 public class JoinCommunityCommandHandler : IRequestHandler<JoinCommunityCommand, CommunityDto?>
 {
@@ -22,6 +22,12 @@ public class JoinCommunityCommandHandler : IRequestHandler<JoinCommunityCommand,
     {
         var community = await _communityRepository.GetByIdAsync(request.CommunityId, cancellationToken);
         if (community is null) return null;
+
+        if (community.Type == "private")
+        {
+            if (string.IsNullOrWhiteSpace(request.InviteCode) || community.InviteCode != request.InviteCode)
+                throw new InvalidOperationException("Invalid invite code");
+        }
 
         if (!community.Members.Contains(request.UserId))
         {

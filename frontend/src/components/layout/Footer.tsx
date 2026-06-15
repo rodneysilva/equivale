@@ -1,48 +1,47 @@
 import type { Component } from 'solid-js';
-import { Heart } from 'lucide-solid';
 
 const Footer: Component = () => {
   return (
-    <footer class="glass-card rounded-none border-t border-b-0 mt-16">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer class="eq-divider mt-16" style={{ background: 'var(--color-surface)' }}>
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div>
-            <h3 class="text-xl font-bold gradient-text mb-3">equivale</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-              Troque talentos e produtos com moeda virtual. Uma nova forma de economia colaborativa.
+            <h3 class="text-base font-bold eq-brand mb-2">equivale</h3>
+            <p class="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+              Economia colaborativa por meio de comunidades. Troque talentos e produtos com moeda virtual.
             </p>
           </div>
           <div>
-            <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Marketplace</h4>
-            <ul class="space-y-2">
-              <li><a href="/products" class="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-500 transition-colors">Produtos</a></li>
-              <li><a href="/services" class="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-500 transition-colors">Serviços</a></li>
-              <li><a href="/communities" class="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-500 transition-colors">Comunidades</a></li>
+            <h4 class="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-secondary)' }}>Marketplace</h4>
+            <ul class="space-y-1.5">
+              <li><a href="/products" class="text-xs eq-link">Produtos</a></li>
+              <li><a href="/services" class="text-xs eq-link">Serviços</a></li>
+              <li><a href="/communities" class="text-xs eq-link">Comunidades</a></li>
             </ul>
           </div>
           <div>
-            <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Conta</h4>
-            <ul class="space-y-2">
-              <li><a href="/profile" class="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-500 transition-colors">Perfil</a></li>
-              <li><a href="/wallet" class="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-500 transition-colors">Carteira</a></li>
-              <li><a href="/login" class="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-500 transition-colors">Entrar</a></li>
+            <h4 class="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-secondary)' }}>Conta</h4>
+            <ul class="space-y-1.5">
+              <li><a href="/profile" class="text-xs eq-link">Perfil</a></li>
+              <li><a href="/wallet" class="text-xs eq-link">Carteira</a></li>
+              <li><a href="/login" class="text-xs eq-link">Entrar</a></li>
             </ul>
           </div>
           <div>
-            <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Sobre</h4>
-            <ul class="space-y-2">
-              <li><span class="text-sm text-gray-500 dark:text-gray-400">Termos de Uso</span></li>
-              <li><span class="text-sm text-gray-500 dark:text-gray-400">Privacidade</span></li>
-              <li><span class="text-sm text-gray-500 dark:text-gray-400">Ajuda</span></li>
+            <h4 class="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-secondary)' }}>Legal</h4>
+            <ul class="space-y-1.5">
+              <li><span class="text-xs" style={{ color: 'var(--color-text-muted)' }}>Termos de Uso</span></li>
+              <li><span class="text-xs" style={{ color: 'var(--color-text-muted)' }}>Privacidade</span></li>
+              <li><span class="text-xs" style={{ color: 'var(--color-text-muted)' }}>Suporte</span></li>
             </ul>
           </div>
         </div>
-        <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p class="text-sm text-gray-500 dark:text-gray-400">
+        <div class="mt-8 pt-4 eq-divider flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>
             © 2025 equivale. Todos os direitos reservados.
           </p>
-          <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
-            Feito com <Heart size={14} class="text-red-500" /> no Brasil
+          <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+            Feito no Brasil
           </p>
         </div>
       </div>

@@ -4,15 +4,15 @@ import type { User, RegisterDto, LoginDto } from '../types';
 import { authService } from '../services/auth.service';
 
 interface AuthState {
-  currentUser: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
+  currentUser: () => User | null;
+  isAuthenticated: () => boolean;
+  isLoading: () => boolean;
+  error: () => string | null;
   login: (data: LoginDto) => Promise<void>;
   register: (data: RegisterDto) => Promise<void>;
   logout: () => void;
   clearError: () => void;
-  setCurrentUser: (user: User | null) => void;
+  updateProfile: (data: { fullName?: string; bio?: string; avatarUrl?: string }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState>();
@@ -77,6 +77,17 @@ export function AuthProvider(props: { children: any }) {
     }
   };
 
+  const updateProfile = async (data: { fullName?: string; bio?: string; avatarUrl?: string }) => {
+    setError(null);
+    try {
+      const updated = await authService.updateProfile(data);
+      setCurrentUser(updated);
+    } catch (err: any) {
+      setError(err.message || 'Erro ao atualizar perfil');
+      throw err;
+    }
+  };
+
   const logout = () => {
     authService.logout();
     setCurrentUser(null);
@@ -92,7 +103,7 @@ export function AuthProvider(props: { children: any }) {
     register,
     logout,
     clearError,
-    setCurrentUser,
+    updateProfile,
   };
 
   return <AuthContext.Provider value={state}>{props.children}</AuthContext.Provider>;

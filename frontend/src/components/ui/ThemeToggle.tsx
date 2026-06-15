@@ -6,13 +6,13 @@ const ThemeToggle: Component = () => {
   return (
     <button
       onClick={toggleTheme}
-      class="p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+      class="p-2 rounded eq-btn-ghost"
       aria-label="Toggle theme"
     >
       {isDark() ? (
-        <Sun size={20} class="text-yellow-400" />
+        <Sun size={18} class="eq-brand" />
       ) : (
-        <Moon size={20} class="text-gray-600" />
+        <Moon size={18} class="eq-brand" />
       )}
     </button>
   );

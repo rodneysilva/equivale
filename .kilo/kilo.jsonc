@@ -1,0 +1,21 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "permission": {
+    // Allow shell commands (git, dotnet, npm, etc.) without prompting
+    "bash": "allow",
+    // Allow editing project source files without prompting
+    "edit": {
+      "src/**": "allow",
+      "frontend/src/**": "allow",
+      "backend/**": "allow",
+      "docs/**": "allow",
+      "README.md": "allow",
+      "BUSINESS.md": "allow",
+      ".gitignore": "allow"
+    },
+    "read": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "task": "allow"
+  }
+}

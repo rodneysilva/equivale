@@ -1,8 +1,8 @@
 import { type Component, createSignal, createEffect } from 'solid-js';
 import { useParams, useNavigate } from '@solidjs/router';
-import { Zap, ArrowLeft, Tag, User } from 'lucide-solid';
-import GlassCard from '../components/ui/GlassCard';
-import LiquidButton from '../components/ui/LiquidButton';
+import { Zap, ArrowLeft, Tag } from 'lucide-solid';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import Avatar from '../components/ui/Avatar';
 import Badge from '../components/ui/Badge';
@@ -11,144 +11,89 @@ import { useAuth } from '../store/auth';
 import type { Service } from '../types';
 
 const ServiceDetailPage: Component = () => {
-  const params = useParams();
+  const params = useParams<{ id: string }>();
   const navigate = useNavigate();
   const auth = useAuth();
-
   const [service, setService] = createSignal<Service | null>(null);
   const [loading, setLoading] = createSignal(true);
   const [error, setError] = createSignal('');
   const [hiring, setHiring] = createSignal(false);
 
-  createEffect(() => {
-    loadService();
-  });
+  createEffect(() => { loadService(); });
 
   const loadService = async () => {
     setLoading(true);
-    try {
-      const data = await servicesService.getById(params.id);
-      setService(data);
-    } catch {
-      setError('Serviço não encontrado');
-    } finally {
-      setLoading(false);
-    }
+    try { setService(await servicesService.getById(params.id)); }
+    catch { setError('Serviço não encontrado'); }
+    finally { setLoading(false); }
   };
 
   const handleHire = async () => {
-    if (!auth.isAuthenticated()) {
-      navigate('/login');
-      return;
-    }
+    if (!auth.isAuthenticated()) { navigate('/login'); return; }
     setHiring(true);
-    try {
-      await servicesService.hire(params.id);
-      navigate('/wallet');
-    } catch (err: any) {
-      setError(err.message || 'Erro ao contratar');
-    } finally {
-      setHiring(false);
-    }
+    try { await servicesService.hire(params.id); navigate('/wallet'); }
+    catch (err: any) { setError(err.message || 'Erro ao contratar'); }
+    finally { setHiring(false); }
   };
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
+  const formatDate = (d: string) => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 
   return (
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <button
-        onClick={() => navigate(-1)}
-        class="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 mb-6 transition-colors"
-      >
-        <ArrowLeft size={18} />
-        Voltar
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <button onClick={() => navigate(-1)} class="flex items-center gap-1.5 text-sm eq-link mb-6">
+        <ArrowLeft size={14} /> Voltar
       </button>
-
-      {loading() ? (
-        <LoadingSpinner class="py-20" />
-      ) : error() ? (
-        <GlassCard class="p-8 text-center">
-          <p class="text-gray-500 dark:text-gray-400">{error()}</p>
-        </GlassCard>
+      {loading() ? <LoadingSpinner class="py-20" /> : error() ? (
+        <Card class="p-8 text-center"><p style={{ color: 'var(--color-text-muted)' }}>{error()}</p></Card>
       ) : service() ? (
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Service details */}
-          <div class="lg:col-span-2 space-y-6">
+          <div class="lg:col-span-2 space-y-5">
             <div>
               <div class="flex items-center gap-2 mb-2">
-                <Badge variant="primary">
-                  <Tag size={12} class="mr-1" />
-                  {service()!.category}
-                </Badge>
+                <Badge variant="primary"><Tag size={10} class="mr-1" />{service()!.category}</Badge>
                 <Badge variant={service()!.status === 'available' ? 'success' : 'info'}>
                   {service()!.status === 'available' ? 'Disponível' : 'Indisponível'}
                 </Badge>
               </div>
-              <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{service()!.title}</h1>
+              <h1 class="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>{service()!.title}</h1>
             </div>
-
-            <GlassCard class="p-6">
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Descrição</h2>
-              <p class="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{service()!.description}</p>
-            </GlassCard>
-
+            <Card class="p-5">
+              <h2 class="text-sm font-semibold mb-2" style={{ color: 'var(--color-text-secondary)' }}>Descrição</h2>
+              <p class="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--color-text-muted)' }}>{service()!.description}</p>
+            </Card>
             {service()!.providerName && (
-              <GlassCard class="p-4">
+              <Card class="p-3">
                 <div class="flex items-center gap-3">
                   <Avatar name={service()!.providerName} size="md" />
                   <div>
-                    <p class="font-medium text-gray-900 dark:text-white">{service()!.providerName}</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Prestador de serviço</p>
+                    <p class="text-sm font-medium" style={{ color: 'var(--color-text)' }}>{service()!.providerName}</p>
+                    <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>Prestador</p>
                   </div>
                 </div>
-              </GlassCard>
+              </Card>
             )}
-
-            <GlassCard class="p-4">
-              <div class="text-sm text-gray-500 dark:text-gray-400">
+            <Card class="p-3">
+              <div class="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                 Criado em {formatDate(service()!.createdAt)}
-                {service()!.updatedAt !== service()!.createdAt && (
-                  <> · Atualizado em {formatDate(service()!.updatedAt)}</>
-                )}
+                {service()!.updatedAt !== service()!.createdAt && <> · Atualizado em {formatDate(service()!.updatedAt)}</>}
               </div>
-            </GlassCard>
+            </Card>
           </div>
-
-          {/* Purchase sidebar */}
           <div class="lg:col-span-1">
-            <div class="lg:sticky lg:top-24 space-y-4">
-              <GlassCard class="p-6 text-center">
-                <div class="flex items-baseline justify-center gap-2 mb-6">
-                  <span class="text-4xl font-bold gradient-text">{service()!.price}</span>
-                  <span class="text-xl text-gray-500 dark:text-gray-400 font-medium">EQL</span>
+            <div class="lg:sticky lg:top-20 space-y-4">
+              <Card class="p-5 text-center">
+                <div class="flex items-baseline justify-center gap-2 mb-5">
+                  <span class="text-3xl font-bold eq-accent">{service()!.price}</span>
+                  <span class="text-base font-medium" style={{ color: 'var(--color-text-muted)' }}>EQL</span>
                 </div>
-                <LiquidButton
-                  size="lg"
-                  class="w-full"
-                  onClick={handleHire}
-                  disabled={hiring() || service()!.status !== 'available'}
-                >
-                  {hiring() ? (
-                    <LoadingSpinner size="w-5 h-5" class="!justify-start" />
-                  ) : (
-                    <>
-                      <Zap size={20} class="mr-2" />
-                      Contratar Serviço
-                    </>
+                <Button size="lg" class="w-full" onClick={handleHire} disabled={hiring() || service()!.status !== 'available'}>
+                  {hiring() ? <LoadingSpinner size="w-4 h-4" class="!justify-start" /> : (
+                    <><Zap size={16} class="mr-2" /> Contratar</>
                   )}
-                </LiquidButton>
-              </GlassCard>
-
+                </Button>
+              </Card>
               {error() && (
-                <div class="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm">
-                  {error()}
-                </div>
+                <div class="p-3 rounded text-sm" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>{error()}</div>
               )}
             </div>
           </div>

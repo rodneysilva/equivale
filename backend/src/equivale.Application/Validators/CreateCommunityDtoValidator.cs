@@ -17,5 +17,13 @@ public class CreateCommunityDtoValidator : AbstractValidator<CreateCommunityDto>
 
         RuleFor(x => x.CreatorId)
             .NotEmpty().WithMessage("CreatorId is required.");
+
+        RuleFor(x => x.Type)
+            .Must(type => type is "open" or "private")
+            .WithMessage("Type must be 'open' or 'private'.");
+
+        RuleFor(x => x.ProductVisibility)
+            .Must(vis => vis is "public" or "members")
+            .WithMessage("ProductVisibility must be 'public' or 'members'.");
     }
 }

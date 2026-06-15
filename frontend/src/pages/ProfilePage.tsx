@@ -1,181 +1,144 @@
 import { type Component, createSignal, createEffect } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { User as UserIcon, Mail, Edit3, ShoppingBag, Briefcase, LogIn } from 'lucide-solid';
-import GlassCard from '../components/ui/GlassCard';
-import LiquidButton from '../components/ui/LiquidButton';
-import LiquidInput from '../components/ui/LiquidInput';
+import { Edit, Save, X, User, Mail, Calendar, Package, ShoppingBag } from 'lucide-solid';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import Avatar from '../components/ui/Avatar';
-import ProductCard from '../components/marketplace/ProductCard';
-import ServiceCard from '../components/marketplace/ServiceCard';
-import { authService } from '../services/auth.service';
-import { productsService } from '../services/products.service';
-import { servicesService } from '../services/services.service';
 import { useAuth } from '../store/auth';
-import type { Product, Service } from '../types';
 
 const ProfilePage: Component = () => {
   const navigate = useNavigate();
   const auth = useAuth();
-
-  const [products, setProducts] = createSignal<Product[]>([]);
-  const [services, setServices] = createSignal<Service[]>([]);
-  const [loading, setLoading] = createSignal(true);
   const [editing, setEditing] = createSignal(false);
-  const [saving, setSaving] = createSignal(false);
-
-  // Edit form
   const [fullName, setFullName] = createSignal('');
+  const [email, setEmail] = createSignal('');
   const [bio, setBio] = createSignal('');
+  const [avatarUrl, setAvatarUrl] = createSignal('');
+  const [saving, setSaving] = createSignal(false);
+  const [error, setError] = createSignal('');
+  const [success, setSuccess] = createSignal('');
 
   createEffect(() => {
-    if (!auth.isAuthenticated()) {
-      navigate('/login');
-      return;
+    if (!auth.isAuthenticated()) { navigate('/login'); return; }
+    if (auth.currentUser()) {
+      setFullName(auth.currentUser()!.fullName || '');
+      setEmail(auth.currentUser()!.email || '');
+      setBio(auth.currentUser()!.bio || '');
+      setAvatarUrl(auth.currentUser()!.avatarUrl || '');
     }
-    loadUserData();
   });
-
-  const loadUserData = async () => {
-    setLoading(true);
-    const user = auth.currentUser();
-    if (user) {
-      setFullName(user.fullName);
-      setBio(user.bio || '');
-      try {
-        const [userProducts, userServices] = await Promise.all([
-          productsService.getBySeller(user.id),
-          servicesService.getByProvider(user.id),
-        ]);
-        setProducts(userProducts);
-        setServices(userServices);
-      } catch {
-        // silently fail
-      }
-    }
-    setLoading(false);
-  };
 
   const handleSave = async () => {
     setSaving(true);
+    setError('');
+    setSuccess('');
     try {
-      const updated = await authService.updateProfile({
-        fullName: fullName(),
-        bio: bio(),
-      });
-      auth.setCurrentUser(updated);
+      await auth.updateProfile({ fullName: fullName(), bio: bio(), avatarUrl: avatarUrl() });
       setEditing(false);
-    } catch {
-      // handle error
-    } finally {
-      setSaving(false);
-    }
+      setSuccess('Perfil atualizado');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Erro ao salvar');
+    } finally { setSaving(false); }
   };
 
-  if (loading()) {
-    return (
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <LoadingSpinner class="py-20" />
-      </div>
-    );
-  }
+  const handleCancel = () => {
+    if (auth.currentUser()) {
+      setFullName(auth.currentUser()!.fullName || '');
+      setBio(auth.currentUser()!.bio || '');
+      setAvatarUrl(auth.currentUser()!.avatarUrl || '');
+    }
+    setEditing(false);
+    setError('');
+  };
 
-  if (!auth.isAuthenticated() || !auth.currentUser()) {
-    return (
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <LogIn size={40} class="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-        <p class="text-gray-500 dark:text-gray-400 mb-4">Faça login para ver seu perfil</p>
-        <LiquidButton onClick={() => navigate('/login')}>Entrar</LiquidButton>
-      </div>
-    );
-  }
+  const user = () => auth.currentUser();
 
-  const user = auth.currentUser()!;
+  const formatDate = (d: string) => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 
   return (
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Profile header */}
-      <GlassCard class="p-6 sm:p-8">
-        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-          <Avatar name={user.fullName || user.username} src={user.avatarUrl} size="xl" />
-          <div class="flex-1 text-center sm:text-left">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Perfil</h1>
+        {!editing() && (
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+            <Edit size={14} class="mr-1.5" /> Editar
+          </Button>
+        )}
+      </div>
+
+      {success() && (
+        <div class="mb-4 p-2.5 rounded text-xs" style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0' }}>{success()}</div>
+      )}
+      {error() && (
+        <div class="mb-4 p-2.5 rounded text-xs" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>{error()}</div>
+      )}
+
+      {/* Info card */}
+      <Card class="p-6 mb-6">
+        <div class="flex items-start gap-4">
+          <Avatar src={editing() ? avatarUrl() : user()?.avatarUrl} name={fullName() || user()?.username || '?'} size="xl" />
+          <div class="flex-1">
             {editing() ? (
               <div class="space-y-3">
-                <LiquidInput
-                  label="Nome"
-                  value={fullName()}
-                  onInput={(e) => setFullName(e.currentTarget.value)}
-                />
-                <div class="w-full">
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bio</label>
-                  <textarea
-                    value={bio()}
-                    onInput={(e) => setBio(e.currentTarget.value)}
-                    rows={3}
-                    class="liquid-input w-full text-gray-900 dark:text-gray-100 placeholder-gray-400 resize-none"
-                    placeholder="Conte um pouco sobre você..."
-                  />
+                <div>
+                  <label class="block text-xs font-medium mb-1" style={{ color: 'var(--color-text-secondary)' }}>Nome completo</label>
+                  <input type="text" value={fullName()} onInput={(e) => setFullName(e.currentTarget.value)} class="eq-input" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium mb-1" style={{ color: 'var(--color-text-secondary)' }}>Foto (URL)</label>
+                  <input type="url" value={avatarUrl()} onInput={(e) => setAvatarUrl(e.currentTarget.value)} placeholder="https://..." class="eq-input" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium mb-1" style={{ color: 'var(--color-text-secondary)' }}>Bio</label>
+                  <textarea value={bio()} onInput={(e) => setBio(e.currentTarget.value)} rows={3} placeholder="Conte um pouco sobre você..." class="eq-input resize-none" />
                 </div>
                 <div class="flex gap-2">
-                  <LiquidButton size="sm" onClick={handleSave} disabled={saving()}>
-                    {saving() ? <LoadingSpinner size="w-4 h-4" class="!justify-start" /> : 'Salvar'}
-                  </LiquidButton>
-                  <LiquidButton variant="ghost" size="sm" onClick={() => setEditing(false)}>Cancelar</LiquidButton>
+                  <Button size="sm" onClick={handleSave} disabled={saving()}>
+                    {saving() ? <LoadingSpinner size="w-4 h-4" class="!justify-start" /> : <><Save size={14} class="mr-1.5" /> Salvar</>}
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={handleCancel}>Cancelar</Button>
                 </div>
               </div>
             ) : (
-              <>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{user.fullName || user.username}</h1>
-                <p class="text-gray-500 dark:text-gray-400 flex items-center justify-center sm:justify-start gap-1.5 mt-1">
-                  <Mail size={14} />
-                  {user.email}
+              <div class="space-y-1">
+                <h2 class="text-lg font-bold" style={{ color: 'var(--color-text)' }}>{user()?.fullName || user()?.username}</h2>
+                <p class="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                  <Mail size={12} /> {user()?.email}
                 </p>
-                {user.bio && <p class="text-gray-600 dark:text-gray-300 mt-2">{user.bio}</p>}
-                <div class="flex items-center gap-4 mt-3 justify-center sm:justify-start">
-                  <span class="text-sm font-medium text-gray-600 dark:text-gray-400">{user.walletBalance} EQL</span>
-                  <LiquidButton variant="ghost" size="sm" onClick={() => setEditing(true)}>
-                    <Edit3 size={14} class="mr-1" />
-                    Editar
-                  </LiquidButton>
-                </div>
-              </>
+                <p class="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                  <Calendar size={12} /> Membro desde {user()?.createdAt ? formatDate(user()!.createdAt) : '—'}
+                </p>
+                {user()?.bio && (
+                  <p class="text-sm mt-2 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{user()?.bio}</p>
+                )}
+              </div>
             )}
           </div>
         </div>
-      </GlassCard>
+      </Card>
 
-      {/* User's products */}
-      <div class="mt-8">
-        <div class="flex items-center gap-2 mb-4">
-          <ShoppingBag size={20} class="text-indigo-500" />
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Meus Produtos</h2>
-        </div>
-        {products().length === 0 ? (
-          <GlassCard class="p-8 text-center">
-            <p class="text-gray-500 dark:text-gray-400">Você ainda não publicou nenhum produto</p>
-          </GlassCard>
-        ) : (
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products().map(p => <ProductCard product={p} />)}
+      {/* Stats */}
+      <div class="grid grid-cols-2 gap-4">
+        <Card class="p-4">
+          <div class="flex items-center gap-2">
+            <Package size={16} class="eq-brand" />
+            <div>
+              <p class="text-lg font-bold" style={{ color: 'var(--color-text)' }}>—</p>
+              <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>Produtos publicados</p>
+            </div>
           </div>
-        )}
-      </div>
-
-      {/* User's services */}
-      <div class="mt-8">
-        <div class="flex items-center gap-2 mb-4">
-          <Briefcase size={20} class="text-indigo-500" />
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white">Meus Serviços</h2>
-        </div>
-        {services().length === 0 ? (
-          <GlassCard class="p-8 text-center">
-            <p class="text-gray-500 dark:text-gray-400">Você ainda não publicou nenhum serviço</p>
-          </GlassCard>
-        ) : (
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services().map(s => <ServiceCard service={s} />)}
+        </Card>
+        <Card class="p-4">
+          <div class="flex items-center gap-2">
+            <ShoppingBag size={16} class="eq-brand" />
+            <div>
+              <p class="text-lg font-bold" style={{ color: 'var(--color-text)' }}>—</p>
+              <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>Transações realizadas</p>
+            </div>
           </div>
-        )}
+        </Card>
       </div>
     </div>
   );

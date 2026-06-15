@@ -1,5 +1,4 @@
 import type { Component } from 'solid-js';
-import { User } from 'lucide-solid';
 
 interface AvatarProps {
   src?: string;
@@ -11,10 +10,10 @@ interface AvatarProps {
 const Avatar: Component<AvatarProps> = (props) => {
   const sizeClass = () => {
     switch (props.size) {
-      case 'sm': return 'w-8 h-8 text-sm';
+      case 'sm': return 'w-8 h-8 text-xs';
       case 'lg': return 'w-12 h-12 text-lg';
       case 'xl': return 'w-16 h-16 text-xl';
-      default: return 'w-10 h-10 text-base';
+      default: return 'w-10 h-10 text-sm';
     }
   };
 
@@ -29,7 +28,7 @@ const Avatar: Component<AvatarProps> = (props) => {
   };
 
   return (
-    <div class={`relative inline-flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-semibold overflow-hidden ${sizeClass()} ${props.class || ''}`}>
+    <div class={`eq-avatar ${sizeClass()} ${props.class || ''}`}>
       {props.src ? (
         <img src={props.src} alt={props.name || 'avatar'} class="w-full h-full object-cover" />
       ) : (

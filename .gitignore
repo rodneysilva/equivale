@@ -60,6 +60,9 @@ ScaffoldingReadMe.txt
 *.pubxml
 *.publishproj
 
+# Backend file uploads (runtime)
+uploads/
+
 # ===========================
 # Frontend / Node
 # ===========================

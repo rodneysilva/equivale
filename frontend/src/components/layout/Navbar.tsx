@@ -5,10 +5,9 @@ import { useAuth } from '../../store/auth';
 import ThemeToggle from '../ui/ThemeToggle';
 
 const navLinks = [
-  { path: '/', label: 'Início' },
+  { path: '/communities', label: 'Comunidades' },
   { path: '/products', label: 'Produtos' },
   { path: '/services', label: 'Serviços' },
-  { path: '/communities', label: 'Comunidades' },
 ];
 
 const Navbar: Component = () => {
@@ -25,13 +24,13 @@ const Navbar: Component = () => {
 
   return (
     <>
-      <nav class="fixed top-0 left-0 right-0 z-50 liquid-nav">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex items-center justify-between h-16">
+      <nav class="fixed top-0 left-0 right-0 z-50 eq-nav">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6">
+          <div class="flex items-center justify-between h-14">
             {/* Logo */}
             <button
               onClick={() => handleNav('/')}
-              class="text-2xl font-bold gradient-text cursor-pointer"
+              class="text-lg font-bold eq-brand cursor-pointer tracking-tight"
             >
               equivale
             </button>
@@ -41,11 +40,12 @@ const Navbar: Component = () => {
               {navLinks.map(link => (
                 <button
                   onClick={() => handleNav(link.path)}
-                  class={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                  class={`px-3 py-1.5 rounded text-sm font-medium transition-colors cursor-pointer ${
                     location.pathname === link.path
-                      ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      ? 'eq-brand'
+                      : 'hover:bg-[var(--color-border-light)]'
                   }`}
+                  style={{ color: location.pathname === link.path ? 'var(--color-primary)' : 'var(--color-text-secondary)' }}
                 >
                   {link.label}
                 </button>
@@ -58,55 +58,54 @@ const Navbar: Component = () => {
 
               {auth.isAuthenticated() && auth.currentUser() && (
                 <>
-                  {/* Wallet badge */}
                   <button
                     onClick={() => handleNav('/wallet')}
-                    class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 text-sm font-medium hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
+                    class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium eq-badge eq-badge-primary cursor-pointer"
                   >
-                    <Wallet size={16} />
-                    <span>{auth.currentUser()!.walletBalance} EQL</span>
+                    <Wallet size={12} />
+                    {auth.currentUser()!.walletBalance} EQL
                   </button>
 
-                  {/* User dropdown */}
                   <div class="relative">
                     <button
                       onClick={() => setDropdownOpen(!dropdownOpen())}
-                      class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      class="flex items-center gap-1.5 p-1 rounded eq-btn-ghost"
                     >
-                      <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold">
+                      <div class="eq-avatar w-7 h-7 text-xs">
                         {(auth.currentUser()!.fullName || auth.currentUser()!.username)[0].toUpperCase()}
                       </div>
-                      <ChevronDown size={14} class="text-gray-500 hidden sm:block" />
+                      <ChevronDown size={12} style={{ color: 'var(--color-text-muted)' }} />
                     </button>
 
                     {dropdownOpen() && (
-                      <div class="absolute right-0 top-full mt-2 w-48 glass-card p-2 z-50">
+                      <div class="absolute right-0 top-full mt-1 w-44 eq-card p-1.5 z-50">
                         <button
                           onClick={() => { handleNav('/profile'); setDropdownOpen(false); }}
-                          class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                          class="w-full flex items-center gap-2 px-3 py-2 rounded text-sm eq-btn-ghost"
                         >
-                          <User size={16} /> Perfil
+                          <User size={14} /> Perfil
                         </button>
                         <button
                           onClick={() => { handleNav('/wallet'); setDropdownOpen(false); }}
-                          class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                          class="w-full flex items-center gap-2 px-3 py-2 rounded text-sm eq-btn-ghost"
                         >
-                          <Wallet size={16} /> Carteira
+                          <Wallet size={14} /> Carteira
                         </button>
                         {auth.currentUser()!.role === 'admin' && (
                           <button
                             onClick={() => { handleNav('/admin'); setDropdownOpen(false); }}
-                            class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            class="w-full flex items-center gap-2 px-3 py-2 rounded text-sm eq-btn-ghost"
                           >
-                            <Shield size={16} /> Admin
+                            <Shield size={14} /> Admin
                           </button>
                         )}
-                        <hr class="my-1 border-gray-200 dark:border-gray-700" />
+                        <hr class="my-1 eq-divider" />
                         <button
                           onClick={() => { auth.logout(); setDropdownOpen(false); }}
-                          class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                          class="w-full flex items-center gap-2 px-3 py-2 rounded text-sm eq-btn-ghost"
+                          style={{ color: '#dc2626' }}
                         >
-                          <LogOut size={16} /> Sair
+                          <LogOut size={14} /> Sair
                         </button>
                       </div>
                     )}
@@ -118,43 +117,42 @@ const Navbar: Component = () => {
                 <div class="flex items-center gap-2">
                   <button
                     onClick={() => handleNav('/login')}
-                    class="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    class="px-3 py-1.5 rounded text-sm font-medium eq-btn-ghost"
                   >
                     Entrar
                   </button>
                   <button
                     onClick={() => handleNav('/register')}
-                    class="liquid-button text-sm px-4 py-2"
+                    class="eq-btn eq-btn-sm"
                   >
-                    Criar Conta
+                    Criar conta
                   </button>
                 </div>
               )}
 
-              {/* Mobile hamburger */}
               <button
                 onClick={() => setMobileOpen(!mobileOpen())}
-                class="md:hidden p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                class="md:hidden p-1.5 rounded eq-btn-ghost"
               >
-                {mobileOpen() ? <X size={20} /> : <Menu size={20} />}
+                {mobileOpen() ? <X size={18} /> : <Menu size={18} />}
               </button>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Mobile menu overlay */}
+      {/* Mobile menu */}
       {mobileOpen() && (
         <div class="fixed inset-0 z-40 md:hidden">
-          <div class="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <div class="absolute top-16 left-0 right-0 liquid-nav p-4 space-y-1">
+          <div class="absolute inset-0 bg-black/30" onClick={() => setMobileOpen(false)} />
+          <div class="absolute top-14 left-0 right-0 eq-nav p-3 space-y-0.5">
             {navLinks.map(link => (
               <button
                 onClick={() => handleNav(link.path)}
-                class={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                class={`w-full text-left px-3 py-2.5 rounded text-sm font-medium transition-colors ${
                   location.pathname === link.path
-                    ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    ? 'eq-brand'
+                    : 'eq-btn-ghost'
                 }`}
               >
                 {link.label}
@@ -162,23 +160,14 @@ const Navbar: Component = () => {
             ))}
             {auth.isAuthenticated() && (
               <>
-                <button
-                  onClick={() => handleNav('/wallet')}
-                  class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-                >
-                  <Wallet size={16} /> Carteira ({auth.currentUser()!.walletBalance} EQL)
+                <button onClick={() => handleNav('/wallet')} class="w-full text-left px-3 py-2.5 rounded text-sm eq-btn-ghost flex items-center gap-2">
+                  <Wallet size={14} /> Carteira ({auth.currentUser()!.walletBalance} EQL)
                 </button>
-                <button
-                  onClick={() => handleNav('/profile')}
-                  class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-                >
-                  <User size={16} /> Perfil
+                <button onClick={() => handleNav('/profile')} class="w-full text-left px-3 py-2.5 rounded text-sm eq-btn-ghost flex items-center gap-2">
+                  <User size={14} /> Perfil
                 </button>
-                <button
-                  onClick={() => { auth.logout(); setMobileOpen(false); }}
-                  class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2"
-                >
-                  <LogOut size={16} /> Sair
+                <button onClick={() => { auth.logout(); setMobileOpen(false); }} class="w-full text-left px-3 py-2.5 rounded text-sm eq-btn-ghost flex items-center gap-2" style={{ color: '#dc2626' }}>
+                  <LogOut size={14} /> Sair
                 </button>
               </>
             )}
@@ -186,8 +175,7 @@ const Navbar: Component = () => {
         </div>
       )}
 
-      {/* Spacer for fixed nav */}
-      <div class="h-16" />
+      <div class="h-14" />
     </>
   );
 };

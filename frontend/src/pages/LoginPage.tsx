@@ -1,119 +1,65 @@
 import { type Component, createSignal, createEffect } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-solid';
-import GlassCard from '../components/ui/GlassCard';
-import LiquidButton from '../components/ui/LiquidButton';
-import LiquidInput from '../components/ui/LiquidInput';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useAuth } from '../store/auth';
 
 const LoginPage: Component = () => {
   const navigate = useNavigate();
   const auth = useAuth();
-
   const [email, setEmail] = createSignal('');
   const [password, setPassword] = createSignal('');
   const [showPassword, setShowPassword] = createSignal(false);
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal('');
 
-  createEffect(() => {
-    if (auth.isAuthenticated()) {
-      navigate('/', { replace: true });
-    }
-  });
+  createEffect(() => { if (auth.isAuthenticated()) navigate('/', { replace: true }); });
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    try {
-      await auth.login({ email: email(), password: password() });
-      navigate('/');
-    } catch (err: any) {
-      setError(err.message || 'Erro ao fazer login');
-    } finally {
-      setLoading(false);
-    }
+    try { await auth.login({ email: email(), password: password() }); navigate('/'); }
+    catch (err: any) { setError(err.message || 'Erro ao fazer login'); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div class="min-h-[calc(100vh-8rem)] flex items-center justify-center px-4 py-12 relative overflow-hidden">
-      {/* Animated background blobs */}
-      <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute -top-40 -right-40 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" />
-        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ 'animation-delay': '1s' }} />
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse" style={{ 'animation-delay': '2s' }} />
-      </div>
-
-      <GlassCard class="w-full max-w-md p-8 relative z-10">
-        <div class="text-center mb-8">
-          <h1 class="text-3xl font-bold gradient-text mb-2">Bem-vindo de volta</h1>
-          <p class="text-gray-500 dark:text-gray-400">Entre na sua conta para continuar</p>
+    <div class="min-h-[calc(100vh-7rem)] flex items-center justify-center px-4 py-12">
+      <Card class="w-full max-w-sm p-6">
+        <div class="text-center mb-6">
+          <h1 class="text-xl font-bold eq-brand">Entrar</h1>
+          <p class="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>Acesse sua conta</p>
         </div>
-
-        <form onSubmit={handleSubmit} class="space-y-5">
+        <form onSubmit={handleSubmit} class="space-y-4">
           {error() && (
-            <div class="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm">
-              {error()}
-            </div>
+            <div class="p-2.5 rounded text-xs" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>{error()}</div>
           )}
-
           <div class="relative">
-            <Mail size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="email"
-              value={email()}
-              onInput={(e) => setEmail(e.currentTarget.value)}
-              placeholder="Seu e-mail"
-              required
-              class="liquid-input w-full pl-10 text-gray-900 dark:text-gray-100 placeholder-gray-400"
-            />
+            <Mail size={16} class="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-muted)' }} />
+            <input type="email" value={email()} onInput={(e) => setEmail(e.currentTarget.value)} placeholder="Seu e-mail" required class="eq-input pl-9" />
           </div>
-
           <div class="relative">
-            <Lock size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type={showPassword() ? 'text' : 'password'}
-              value={password()}
-              onInput={(e) => setPassword(e.currentTarget.value)}
-              placeholder="Sua senha"
-              required
-              class="liquid-input w-full pl-10 pr-10 text-gray-900 dark:text-gray-100 placeholder-gray-400"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword())}
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              {showPassword() ? <EyeOff size={18} /> : <Eye size={18} />}
+            <Lock size={16} class="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-muted)' }} />
+            <input type={showPassword() ? 'text' : 'password'} value={password()} onInput={(e) => setPassword(e.currentTarget.value)} placeholder="Sua senha" required class="eq-input pl-9 pr-9" />
+            <button type="button" onClick={() => setShowPassword(!showPassword())} class="absolute right-3 top-1/2 -translate-y-1/2 eq-btn-ghost p-0">
+              {showPassword() ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
-
-          <LiquidButton type="submit" class="w-full" disabled={loading()}>
-            {loading() ? (
-              <LoadingSpinner size="w-5 h-5" class="!justify-start" />
-            ) : (
-              <>
-                Entrar
-                <ArrowRight size={18} class="ml-2" />
-              </>
+          <Button type="submit" class="w-full" disabled={loading()}>
+            {loading() ? <LoadingSpinner size="w-4 h-4" class="!justify-start" /> : (
+              <>Entrar <ArrowRight size={14} class="ml-2" /></>
             )}
-          </LiquidButton>
+          </Button>
         </form>
-
-        <div class="mt-6 text-center">
-          <p class="text-sm text-gray-500 dark:text-gray-400">
-            Não tem uma conta?{' '}
-            <button
-              onClick={() => navigate('/register')}
-              class="text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
-            >
-              Criar conta
-            </button>
+        <div class="mt-5 text-center">
+          <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+            Não tem conta? <button onClick={() => navigate('/register')} class="eq-link">Criar conta</button>
           </p>
         </div>
-      </GlassCard>
+      </Card>
     </div>
   );
 };

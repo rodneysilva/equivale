@@ -64,7 +64,12 @@ builder.Services.AddHealthChecks()
         tags: ["db", "ready"]);
 
 // JWT Authentication
-var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()!;
+var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>() ?? new JwtSettings();
+if (string.IsNullOrWhiteSpace(jwtSettings.Secret))
+{
+    jwtSettings.Secret = "dev-only-secret-key-change-in-production!!";
+}
+
 var key = Encoding.UTF8.GetBytes(jwtSettings.Secret);
 
 builder.Services.AddAuthentication(options =>
@@ -96,10 +101,10 @@ builder.Services.AddRateLimiter(options =>
             partitionKey: context.User.Identity?.Name ?? context.Request.Headers["X-Forwarded-For"].ToString() ?? "anonymous",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 10,
+                PermitLimit = 10000,
                 Window = TimeSpan.FromMinutes(1),
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = 2
+                QueueLimit = 200
             }));
 
     options.OnRejected = async (context, cancellationToken) =>
@@ -116,14 +121,15 @@ builder.Services.AddRateLimiter(options =>
 });
 
 // CORS
-var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? ["http://localhost:3000"];
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? ["http://localhost:3001"];
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 

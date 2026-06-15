@@ -1,5 +1,5 @@
 import type { Component } from 'solid-js';
-import GlassCard from '../ui/GlassCard';
+import Card from '../ui/Card';
 
 interface CategoryFilterProps {
   categories: string[];
@@ -9,17 +9,21 @@ interface CategoryFilterProps {
 
 const CategoryFilter: Component<CategoryFilterProps> = (props) => {
   return (
-    <GlassCard class="p-4">
-      <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Categorias</h3>
-      <ul class="space-y-1">
+    <Card class="p-4">
+      <h3 class="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--color-text-secondary)' }}>Categorias</h3>
+      <ul class="space-y-0.5">
         <li>
           <button
             onClick={() => props.onSelect('')}
-            class={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+            class={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
               !props.selected
-                ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-medium'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                ? 'font-medium'
+                : ''
             }`}
+            style={{
+              background: !props.selected ? 'var(--color-primary-light)' : 'transparent',
+              color: !props.selected ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+            }}
           >
             Todas
           </button>
@@ -28,18 +32,20 @@ const CategoryFilter: Component<CategoryFilterProps> = (props) => {
           <li>
             <button
               onClick={() => props.onSelect(cat)}
-              class={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                props.selected === cat
-                  ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-medium'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+              class={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                props.selected === cat ? 'font-medium' : ''
               }`}
+              style={{
+                background: props.selected === cat ? 'var(--color-primary-light)' : 'transparent',
+                color: props.selected === cat ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+              }}
             >
               {cat}
             </button>
           </li>
         ))}
       </ul>
-    </GlassCard>
+    </Card>
   );
 };
 

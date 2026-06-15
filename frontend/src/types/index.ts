@@ -9,6 +9,7 @@ export interface User {
   role: 'user' | 'admin';
   walletBalance: number;
   createdAt: string;
+  updatedAt?: string;
   isBanned: boolean;
 }
 
@@ -43,6 +44,8 @@ export interface Product {
   sellerAvatar?: string;
   condition: 'new' | 'used' | 'refurbished';
   status: 'available' | 'sold' | 'pending_moderation';
+  communityId?: string;
+  communityName?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -54,11 +57,8 @@ export interface CreateProductDto {
   category: string;
   imageUrl?: string;
   images?: string[];
-  condition: 'new' | 'used' | 'refurbished';
-}
-
-export interface UpdateProductDto extends Partial<CreateProductDto> {
-  status?: 'available' | 'sold';
+  condition?: 'new' | 'used' | 'refurbished';
+  communityId?: string;
 }
 
 // Service types
@@ -72,6 +72,8 @@ export interface Service {
   providerId: string;
   providerName?: string;
   providerAvatar?: string;
+  duration?: string;
+  location?: string;
   status: 'available' | 'completed' | 'pending_moderation';
   createdAt: string;
   updatedAt: string;
@@ -83,10 +85,8 @@ export interface CreateServiceDto {
   price: number;
   category: string;
   imageUrl?: string;
-}
-
-export interface UpdateServiceDto extends Partial<CreateServiceDto> {
-  status?: 'available' | 'completed';
+  duration?: string;
+  location?: string;
 }
 
 // Community types
@@ -100,6 +100,11 @@ export interface Community {
   ownerName?: string;
   membersCount: number;
   postsCount: number;
+  type: 'open' | 'private';
+  moderators: string[];
+  moderatorNames?: string[];
+  inviteCode?: string;
+  productVisibility: 'public' | 'members';
   createdAt: string;
 }
 
@@ -108,6 +113,8 @@ export interface CreateCommunityDto {
   description: string;
   imageUrl?: string;
   coverUrl?: string;
+  type?: 'open' | 'private';
+  productVisibility?: 'public' | 'members';
 }
 
 // Transaction / Wallet types
@@ -119,7 +126,6 @@ export interface Transaction {
   fromUserId: string;
   toUserId: string;
   itemId?: string;
-  itemType?: 'product' | 'service';
   createdAt: string;
 }
 
@@ -136,7 +142,6 @@ export interface Review {
   comment: string;
   reviewerId: string;
   reviewerName?: string;
-  reviewerAvatar?: string;
   targetId: string;
   targetType: 'product' | 'service' | 'user';
   createdAt: string;

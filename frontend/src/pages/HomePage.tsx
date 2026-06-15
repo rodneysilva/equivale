@@ -1,11 +1,11 @@
 import { type Component, createSignal, createEffect } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { ArrowRight, Package, Zap, Users, TrendingUp, ShoppingBag, Briefcase, Globe } from 'lucide-solid';
-import GlassCard from '../components/ui/GlassCard';
-import LiquidButton from '../components/ui/LiquidButton';
+import { ArrowRight, Users, Package, Zap, Globe, Lock, Eye, EyeOff } from 'lucide-solid';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import CommunityCard from '../components/community/CommunityCard';
 import ProductGrid from '../components/marketplace/ProductGrid';
 import ServiceGrid from '../components/marketplace/ServiceGrid';
-import CommunityCard from '../components/community/CommunityCard';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { productsService } from '../services/products.service';
 import { servicesService } from '../services/services.service';
@@ -29,7 +29,7 @@ const HomePage: Component = () => {
       const [productsRes, servicesRes, communitiesRes] = await Promise.all([
         productsService.getAll(1, 4),
         servicesService.getAll(1, 4),
-        communitiesService.getAll(1, 4),
+        communitiesService.getAll(1, 6),
       ]);
       setProducts(productsRes.data);
       setServices(servicesRes.data);
@@ -41,130 +41,147 @@ const HomePage: Component = () => {
     }
   };
 
-  const stats = [
-    { label: 'Produtos', value: '2.5k+', icon: Package },
-    { label: 'Serviços', value: '1.2k+', icon: Zap },
-    { label: 'Comunidades', value: '350+', icon: Globe },
-    { label: 'Transações', value: '15k+', icon: TrendingUp },
-  ];
-
   return (
     <div>
-      {/* Hero Section */}
-      <section class="relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500" />
-        <div class="absolute inset-0 opacity-20">
-          <div class="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl animate-pulse" />
-          <div class="absolute bottom-10 right-20 w-96 h-96 bg-pink-300 rounded-full blur-3xl animate-pulse" style={{ 'animation-delay': '1s' }} />
-        </div>
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32">
-          <div class="text-center">
-            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
-              Troque talentos e produtos
+      {/* Hero — sóbrio, direto */}
+      <section class="border-b" style={{ background: 'var(--color-surface)', 'border-color': 'var(--color-border)' }}>
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+          <div class="max-w-2xl">
+            <h1 class="text-3xl sm:text-4xl font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>
+              Construa sua comunidade.
               <br />
-              <span class="text-indigo-200">com moeda virtual</span>
+              <span class="eq-brand">Troque com quem confia.</span>
             </h1>
-            <p class="text-lg sm:text-xl text-indigo-100 mb-8 max-w-2xl mx-auto">
-              O marketplace colaborativo onde sua moeda é seu talento. Compre, venda e troque usando EQL.
+            <p class="mt-4 text-base leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+              No equivale, comunidades são o centro de tudo. Crie ou entre em uma comunidade, compartilhe produtos e serviços, e use EQL — a moeda que conecta pessoas.
             </p>
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <LiquidButton size="lg" onClick={() => navigate('/products')}>
-                <ShoppingBag size={20} class="mr-2" />
-                Explorar Marketplace
-              </LiquidButton>
-              <LiquidButton variant="outline" size="lg" class="!bg-white/10 !text-white !border-white/20 hover:!bg-white/20" onClick={() => navigate('/register')}>
-                Criar Conta Grátis
-              </LiquidButton>
+            <div class="flex flex-wrap items-center gap-3 mt-8">
+              <Button size="lg" onClick={() => navigate('/communities')}>
+                Explorar comunidades
+                <ArrowRight size={16} class="ml-2" />
+              </Button>
+              <Button variant="outline" size="lg" onClick={() => navigate('/register')}>
+                Criar conta
+              </Button>
+            </div>
+          </div>
+
+          {/* Stats — minimal */}
+          <div class="grid grid-cols-3 gap-4 mt-16 max-w-lg">
+            <div>
+              <p class="text-2xl font-bold eq-brand">350+</p>
+              <p class="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Comunidades</p>
+            </div>
+            <div>
+              <p class="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>2.5k+</p>
+              <p class="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Produtos</p>
+            </div>
+            <div>
+              <p class="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>15k+</p>
+              <p class="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Transações</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats */}
-      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-10">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {stats.map(stat => (
-            <GlassCard class="p-4 text-center">
-              <stat.icon size={24} class="mx-auto text-indigo-500 mb-2" />
-              <p class="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">{stat.label}</p>
-            </GlassCard>
-          ))}
-        </div>
-      </section>
-
-      {/* Featured Products */}
-      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      {/* Comunidades — SEÇÃO PRINCIPAL */}
+      <section class="max-w-6xl mx-auto px-4 sm:px-6 py-16">
         <div class="flex items-center justify-between mb-8">
           <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Produtos em Destaque</h2>
-            <p class="text-gray-500 dark:text-gray-400 mt-1">Descubra itens incríveis na comunidade</p>
+            <h2 class="text-xl font-bold" style={{ color: 'var(--color-text)' }}>Comunidades</h2>
+            <p class="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Encontre seu grupo e comece a trocar</p>
           </div>
-          <button
-            onClick={() => navigate('/products')}
-            class="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-medium text-sm hover:underline"
-          >
-            Ver todos <ArrowRight size={16} />
-          </button>
-        </div>
-        {loading() ? <LoadingSpinner class="py-12" /> : <ProductGrid products={products()} />}
-      </section>
-
-      {/* Featured Services */}
-      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div class="flex items-center justify-between mb-8">
-          <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Serviços em Destaque</h2>
-            <p class="text-gray-500 dark:text-gray-400 mt-1">Talentos e habilidades à sua disposição</p>
-          </div>
-          <button
-            onClick={() => navigate('/services')}
-            class="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-medium text-sm hover:underline"
-          >
-            Ver todos <ArrowRight size={16} />
-          </button>
-        </div>
-        {loading() ? <LoadingSpinner class="py-12" /> : <ServiceGrid services={services()} />}
-      </section>
-
-      {/* Featured Communities */}
-      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div class="flex items-center justify-between mb-8">
-          <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Comunidades Ativas</h2>
-            <p class="text-gray-500 dark:text-gray-400 mt-1">Conecte-se com pessoas que compartilham seus interesses</p>
-          </div>
-          <button
-            onClick={() => navigate('/communities')}
-            class="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-medium text-sm hover:underline"
-          >
-            Ver todas <ArrowRight size={16} />
+          <button onClick={() => navigate('/communities')} class="flex items-center gap-1 text-sm eq-link">
+            Ver todas <ArrowRight size={14} />
           </button>
         </div>
         {loading() ? (
           <LoadingSpinner class="py-12" />
         ) : (
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {communities().map(c => <CommunityCard community={c} />)}
           </div>
         )}
       </section>
 
-      {/* CTA */}
-      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <GlassCard class="p-8 sm:p-12 text-center bg-gradient-to-r from-indigo-500/10 to-purple-500/10">
-          <Briefcase size={40} class="mx-auto text-indigo-500 mb-4" />
-          <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            Tem um talento ou produto para oferecer?
+      {/* Como funciona */}
+      <section class="max-w-6xl mx-auto px-4 sm:px-6 py-16">
+        <h2 class="text-xl font-bold mb-8" style={{ color: 'var(--color-text)' }}>Como funciona</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card class="p-6">
+            <div class="eq-avatar w-10 h-10 text-sm mb-3">
+              <Users size={18} />
+            </div>
+            <h3 class="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>Crie ou entre em uma comunidade</h3>
+            <p class="text-xs mt-2 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+              Comunidades abertas ou por convite. Cada uma com seus próprios moderadores e regras de visibilidade.
+            </p>
+          </Card>
+          <Card class="p-6">
+            <div class="eq-avatar w-10 h-10 text-sm mb-3">
+              <Package size={18} />
+            </div>
+            <h3 class="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>Compartilhe produtos e serviços</h3>
+            <p class="text-xs mt-2 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+              Publique dentro da sua comunidade. O dono decide se os itens ficam visíveis para não-membros.
+            </p>
+          </Card>
+          <Card class="p-6">
+            <div class="eq-avatar w-10 h-10 text-sm mb-3">
+              <Zap size={18} />
+            </div>
+            <h3 class="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>Troque com EQL</h3>
+            <p class="text-xs mt-2 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+              A moeda virtual do marketplace. Compre, venda e transfira dentro da plataforma.
+            </p>
+          </Card>
+        </div>
+      </section>
+
+      {/* Produtos em destaque */}
+      <section class="max-w-6xl mx-auto px-4 sm:px-6 py-16">
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h2 class="text-xl font-bold" style={{ color: 'var(--color-text)' }}>Produtos</h2>
+            <p class="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Itens recentes nas comunidades</p>
+          </div>
+          <button onClick={() => navigate('/products')} class="flex items-center gap-1 text-sm eq-link">
+            Ver todos <ArrowRight size={14} />
+          </button>
+        </div>
+        {loading() ? <LoadingSpinner class="py-12" /> : <ProductGrid products={products()} />}
+      </section>
+
+      {/* Serviços em destaque */}
+      <section class="max-w-6xl mx-auto px-4 sm:px-6 py-16">
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h2 class="text-xl font-bold" style={{ color: 'var(--color-text)' }}>Serviços</h2>
+            <p class="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Talentos disponíveis</p>
+          </div>
+          <button onClick={() => navigate('/services')} class="flex items-center gap-1 text-sm eq-link">
+            Ver todos <ArrowRight size={14} />
+          </button>
+        </div>
+        {loading() ? <LoadingSpinner class="py-12" /> : <ServiceGrid services={services()} />}
+      </section>
+
+      {/* CTA final */}
+      <section class="max-w-6xl mx-auto px-4 sm:px-6 py-16">
+        <Card class="p-8 sm:p-12 text-center" style={{ background: 'var(--color-surface)' }}>
+          <h2 class="text-xl sm:text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
+            Pronto para começar?
           </h2>
-          <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-xl mx-auto">
-            Cadastre-se gratuitamente e comece a vender seus produtos e serviços usando moeda virtual.
+          <p class="mt-3 text-sm max-w-md mx-auto" style={{ color: 'var(--color-text-muted)' }}>
+            Cadastre-se gratuitamente, crie sua comunidade ou entre em uma existente.
           </p>
-          <LiquidButton size="lg" onClick={() => navigate('/register')}>
-            Começar Agora
-            <ArrowRight size={20} class="ml-2" />
-          </LiquidButton>
-        </GlassCard>
+          <div class="mt-6">
+            <Button size="lg" onClick={() => navigate('/register')}>
+              Criar conta gratuita
+              <ArrowRight size={16} class="ml-2" />
+            </Button>
+          </div>
+        </Card>
       </section>
     </div>
   );

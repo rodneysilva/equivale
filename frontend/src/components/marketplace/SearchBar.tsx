@@ -10,13 +10,13 @@ interface SearchBarProps {
 const SearchBar: Component<SearchBarProps> = (props) => {
   return (
     <div class="relative w-full">
-      <Search size={20} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+      <Search size={16} class="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-muted)' }} />
       <input
         type="text"
         value={props.value}
         onInput={(e) => props.onInput(e.currentTarget.value)}
         placeholder={props.placeholder || 'Buscar...'}
-        class="liquid-input w-full pl-10 pr-4 text-gray-900 dark:text-gray-100 placeholder-gray-400"
+        class="eq-input pl-9"
       />
     </div>
   );

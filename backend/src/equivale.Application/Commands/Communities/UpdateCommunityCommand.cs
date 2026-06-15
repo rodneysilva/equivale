@@ -5,7 +5,7 @@ using MediatR;
 
 namespace equivale.Application.Commands.Communities;
 
-public record UpdateCommunityCommand(string Id, CreateCommunityDto Community) : IRequest<CommunityDto?>;
+public record UpdateCommunityCommand(string Id, UpdateCommunityDto Community) : IRequest<CommunityDto?>;
 
 public class UpdateCommunityCommandHandler : IRequestHandler<UpdateCommunityCommand, CommunityDto?>
 {
@@ -23,12 +23,20 @@ public class UpdateCommunityCommandHandler : IRequestHandler<UpdateCommunityComm
         var community = await _communityRepository.GetByIdAsync(request.Id, cancellationToken);
         if (community is null) return null;
 
-        community.Name = request.Community.Name;
-        community.Description = request.Community.Description;
-        if (request.Community.BannerUrl is not null)
-            community.BannerUrl = request.Community.BannerUrl;
-        community.UpdatedAt = DateTime.UtcNow;
+        if (request.Community.Name is not null)
+            community.Name = request.Community.Name;
+        if (request.Community.Description is not null)
+            community.Description = request.Community.Description;
+        if (request.Community.ImageUrl is not null)
+            community.ImageUrl = request.Community.ImageUrl;
+        if (request.Community.CoverUrl is not null)
+            community.CoverUrl = request.Community.CoverUrl;
+        if (request.Community.Type is not null)
+            community.Type = request.Community.Type;
+        if (request.Community.ProductVisibility is not null)
+            community.ProductVisibility = request.Community.ProductVisibility;
 
+        community.UpdatedAt = DateTime.UtcNow;
         await _communityRepository.UpdateAsync(community, cancellationToken);
         return _mapper.Map<CommunityDto>(community);
     }

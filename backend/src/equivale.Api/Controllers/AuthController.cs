@@ -1,8 +1,9 @@
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
 using equivale.Application.Interfaces.Services;
 using equivale.Api.Configuration;
-using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 
 namespace equivale.Api.Controllers;
@@ -12,12 +13,21 @@ namespace equivale.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly IUserService _userService;
     private readonly JwtSettings _jwtSettings;
 
-    public AuthController(IAuthService authService, IConfiguration configuration)
+    public AuthController(IAuthService authService, IUserService userService, IConfiguration configuration)
     {
         _authService = authService;
-        _jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>()!;
+        _userService = userService;
+
+        var jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>() ?? new JwtSettings();
+        if (string.IsNullOrWhiteSpace(jwtSettings.Secret))
+        {
+            jwtSettings.Secret = "dev-only-secret-key-change-in-production!!";
+        }
+
+        _jwtSettings = jwtSettings;
     }
 
     [HttpPost("register")]
@@ -48,6 +58,28 @@ public class AuthController : ControllerBase
         {
             return Unauthorized(ex.Message);
         }
+    }
+
+    [HttpGet("profile")]
+    [Authorize]
+    public async Task<ActionResult<UserDto>> GetProfile(CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+            ?? throw new UnauthorizedAccessException("Invalid token");
+        var user = await _userService.GetByIdAsync(userId, cancellationToken);
+        if (user is null) return NotFound();
+        return Ok(user);
+    }
+
+    [HttpPut("profile")]
+    [Authorize]
+    public async Task<ActionResult<UserDto>> UpdateProfile([FromBody] UpdateUserDto dto, CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+            ?? throw new UnauthorizedAccessException("Invalid token");
+        var user = await _userService.UpdateAsync(userId, dto, cancellationToken);
+        if (user is null) return NotFound();
+        return Ok(user);
     }
 
     private string GenerateJwtToken(AuthResponseDto user)

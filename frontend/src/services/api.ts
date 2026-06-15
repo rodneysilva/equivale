@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'http://localhost:5053/api';
 
 function getToken(): string | null {
   return localStorage.getItem('eql_token');
