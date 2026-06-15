@@ -72,7 +72,11 @@ public class MappingProfile : Profile
 
         // Community mappings
         CreateMap<Community, CommunityDto>()
-            .ForMember(dest => dest.MembersCount, opt => opt.MapFrom(src => src.Members.Count));
+            .ForMember(dest => dest.MembersCount, opt => opt.MapFrom(src => src.Members.Count))
+            .ForMember(dest => dest.CreatorName, opt => opt.Ignore())
+            .ForMember(dest => dest.ModeratorNames, opt => opt.Ignore())
+            .ForCtorParam("CreatorName", opt => opt.MapFrom(_ => (string?)null))
+            .ForCtorParam("ModeratorNames", opt => opt.MapFrom(_ => (List<string>?)null));
         CreateMap<CreateCommunityDto, Community>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.Members, opt => opt.MapFrom(src => new List<string>()))
