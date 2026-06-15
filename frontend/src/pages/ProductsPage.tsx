@@ -1,4 +1,4 @@
-import { type Component, createSignal, createEffect, onMount, For, Show } from 'solid-js';
+import { type Component, createSignal, createEffect, on, onMount, For, Show } from 'solid-js';
 import { useNavigate, useSearchParams } from '@solidjs/router';
 import { Plus } from 'lucide-solid';
 import { productsService } from '../services/products.service';
@@ -38,25 +38,16 @@ const ProductsPage: Component = () => {
   };
 
   onMount(async () => {
-    try {
-      const [f] = await Promise.all([searchService.getProductFacets()]);
-      setFacets(f);
-    } catch { /* ignore */ }
-    loadProducts();
+    try { setFacets(await searchService.getProductFacets()); } catch { /* ignore */ }
+    await loadProducts();
   });
 
-  const reload = () => { setPage(1); };
+  // Reload ONLY when filter signals change (defer skips initial run)
+  createEffect(on(() => [category(), search(), tag(), page()], () => { loadProducts(); }, { defer: true }));
 
-  const handleSearch = (value: string) => { setSearch(value); reload(); };
-  const handleCategory = (cat: string) => { setCategory(cat); reload(); };
-  const handleTag = (t: string) => { setTag(t); reload(); };
-  const handlePage = (newPage: number) => { setPage(newPage); };
-
-  // Reload when any filter changes
-  createEffect(() => {
-    category(); search(); tag(); page();
-    if (!loading()) loadProducts();
-  });
+  const handleSearch = (v: string) => { setSearch(v); setPage(1); };
+  const handleCategory = (c: string) => { setCategory(c); setPage(1); };
+  const handleTag = (t: string) => { setTag(t); setPage(1); };
 
   const activeFilters = () => {
     const f: string[] = [];
@@ -66,6 +57,8 @@ const ProductsPage: Component = () => {
     return f;
   };
 
+  const clearFilters = () => { setCategory(''); setTag(''); setSearch(''); setPage(1); };
+
   return (
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div class="mb-6 flex items-start justify-between gap-4">
@@ -74,31 +67,22 @@ const ProductsPage: Component = () => {
           <p class="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Explore produtos disponíveis</p>
         </div>
         <Button onClick={() => navigate('/products/new')}>
-          <Plus size={16} class="mr-1.5" />
-          Publicar
+          <Plus size={16} class="mr-1.5" /> Publicar
         </Button>
       </div>
 
       <Show when={activeFilters().length > 0}>
         <div class="mb-4 flex flex-wrap items-center gap-2">
-          <span class="text-xs" style={{ color: 'var(--color-text-muted)' }}>Filtros ativos:</span>
-          <For each={activeFilters()}>
-            {(f) => (
-              <span class="eq-badge eq-badge-primary">{f}</span>
-            )}
-          </For>
-          <button onClick={() => { setCategory(''); setTag(''); setSearch(''); reload(); }} class="text-xs eq-link">
-            Limpar
-          </button>
+          <span class="text-xs" style={{ color: 'var(--color-text-muted)' }}>Filtros:</span>
+          <For each={activeFilters()}>{(f) => <span class="eq-badge eq-badge-primary">{f}</span>}</For>
+          <button onClick={clearFilters} class="text-xs eq-link">Limpar</button>
         </div>
       </Show>
 
       <div class="flex flex-col lg:flex-row gap-6">
         <div class="lg:w-52 shrink-0">
           <div class="lg:sticky space-y-3" style={{ top: '7rem' }}>
-            <Card class="p-3">
-              <SearchBar value={search()} onInput={handleSearch} placeholder="Buscar..." />
-            </Card>
+            <Card class="p-3"><SearchBar value={search()} onInput={handleSearch} placeholder="Buscar..." /></Card>
             <CategoryFilter categories={facets().categories} selected={category()} onSelect={handleCategory} />
             <TagFilter tags={facets().tags} selected={tag()} onSelect={handleTag} />
           </div>
@@ -107,13 +91,9 @@ const ProductsPage: Component = () => {
           <ProductGrid products={products()} isLoading={loading()} />
           <Show when={totalPages() > 1}>
             <div class="flex items-center justify-center gap-2 mt-8">
-              <button onClick={() => handlePage(Math.max(1, page() - 1))} disabled={page() <= 1} class="eq-btn eq-btn-outline eq-btn-sm">
-                Anterior
-              </button>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page() <= 1} class="eq-btn eq-btn-outline eq-btn-sm">Anterior</button>
               <span class="text-xs" style={{ color: 'var(--color-text-muted)' }}>{page()} de {totalPages()}</span>
-              <button onClick={() => handlePage(Math.min(totalPages(), page() + 1))} disabled={page() >= totalPages()} class="eq-btn eq-btn-outline eq-btn-sm">
-                Próximo
-              </button>
+              <button onClick={() => setPage(p => Math.min(totalPages(), p + 1))} disabled={page() >= totalPages()} class="eq-btn eq-btn-outline eq-btn-sm">Próximo</button>
             </div>
           </Show>
         </div>

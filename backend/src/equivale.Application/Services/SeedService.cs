@@ -6,6 +6,15 @@ using equivale.Domain.ValueObjects;
 
 namespace equivale.Application.Services;
 
+public class SeedOptions
+{
+    public int Users { get; set; } = 14;
+    public int Communities { get; set; } = 8;
+    public int Products { get; set; } = 50;
+    public int Services { get; set; } = 30;
+    public bool ResetCollections { get; set; } = false;
+}
+
 public class SeedService
 {
     private readonly IUserRepository _userRepository;
@@ -16,6 +25,7 @@ public class SeedService
 
     private static readonly string SeedPassword = "Eql@2026";
     private string _passwordHash = string.Empty;
+    private readonly Random _rng = new(42);
 
     public SeedService(
         IUserRepository userRepository,
@@ -31,365 +41,260 @@ public class SeedService
         _passwordHasher = passwordHasher;
     }
 
-    public async Task<SeedResult> RunAsync(CancellationToken cancellationToken = default)
+    public async Task<SeedResult> RunAsync(SeedOptions opts, CancellationToken ct = default)
     {
         _passwordHash = _passwordHasher.Hash(SeedPassword);
-
-        var users = await SeedUsersAsync(cancellationToken);
-        var communities = await SeedCommunitiesAsync(users, cancellationToken);
-        var products = await SeedProductsAsync(users, communities, cancellationToken);
-        var services = await SeedServicesAsync(users, communities, cancellationToken);
-
+        var users = await SeedUsersAsync(opts.Users, ct);
+        var communities = await SeedCommunitiesAsync(opts.Communities, users, ct);
+        var products = await SeedProductsAsync(opts.Products, users, communities, ct);
+        var services = await SeedServicesAsync(opts.Services, users, communities, ct);
         return new SeedResult(users.Count, communities.Count, products, services);
     }
 
-    private async Task<Dictionary<string, User>> SeedUsersAsync(CancellationToken ct)
+    // ===================== WORD BANKS =====================
+
+    private static readonly string[] FirstNames = [
+        "Marina","Rafael","Juliana","Pedro","Camila","Lucas","Beatriz","Gabriel",
+        "Fernanda","Thiago","Ana","Carlos","Patricia","Bruno","Sofia","Diego",
+        "Larissa","Felipe","Carla","Rodrigo","Bruna","Vinicius","Amanda","Leandro",
+        "Tatiane","Marcelo","Isabela","Ricardo","Daniela","Eduardo","Vanessa","Gustavo"
+    ];
+
+    private static readonly string[] LastNames = [
+        "Costa","Oliveira","Ferreira","Almeida","Santos","Pereira","Rocha","Martins",
+        "Lima","Souza","Ribeiro","Nunes","Carvalho","Gomes","Barbosa","Cardoso",
+        "Teixeira","Moreira","Alves","Mendes","Castro","Araujo","Pinto","Cavalcanti"
+    ];
+
+    private static readonly string[] Bios = [
+        "Artesã e ceramista apaixonada por criar peças únicas.",
+        "Desenvolvedor full-stack que ama compartilhar conhecimento.",
+        "Fotógrafa profissional especializada em natureza e retratos.",
+        "Marceneiro artesanal focado em técnicas tradicionais.",
+        "Chef vegana que cria receitas saudáveis e saborosas.",
+        "Músico e produtor com paixão por sons independentes.",
+        "Designer e ilustradora com olhar para detalhes.",
+        "Jardinheiro urbano e permacultor sustentável.",
+        "Terapeuta holística dedicada ao bem-estar integral.",
+        "Consultor de marketing e copywriter criativo.",
+        "Artista plástica especializada em aquarela botânica.",
+        "Chef confeiteiro artesanal sem glúten.",
+        "Arquiteta focada em design sustentável.",
+        "Técnico de eletrônica e maker DIY."
+    ];
+
+    private static readonly (string Name, string Desc)[] CommunityThemes = [
+        ("Artes & Artesanato", "Comunidade de artesãos e criadores que valorizam o feito à mão."),
+        ("Devs Colaborativos", "Desenvolvedores que trocam conhecimento e serviços técnicos."),
+        ("Cozinha Vegana", "Receitas, produtos e serviços veganos para quem ama plantas."),
+        ("Músicos Independentes", "Músicos e produtores que colaboram e criam juntos."),
+        ("Clube da Fotografia", "Fotógrafos compartilhando técnica, shoots e equipamentos."),
+        ("Jardinagem & Permacultura", "Cultivadores urbanos e amantes de plantas."),
+        ("Madeira & Marcenaria", "Marceneiros e artesãos da madeira."),
+        ("Bem-estar & Saúde Natural", "Terapeutas e entusiastas de vida saudável."),
+        ("DIY & Makers", "Makers, inventores e entusiastas de faça-você-mesmo."),
+        ("Cultura Alternativa", "Arte alternativa, música indie e estilo de vida não convencional.")
+    ];
+
+    private static readonly Dictionary<string, string[]> ProductTemplates = new()
+    {
+        ["Artesanato"] = ["Vaso de cerâmica","Bolsa de crochê","Porta-joias entalhado","Velas aromáticas","Mandala de macramê","Colar de sementes","Renda bordada","Sabonete artesanal","Dreamcatcher","Tapete tecido à mão"],
+        ["Fotografia"] = ["Câmera analógica","Print de paisagem","Tripé profissional","Lente 50mm","Bolsa para câmera","Polaroid","Filtro ND","Cartão SD 128GB","Iluminador de ring light","Backdrop de tecido"],
+        ["Arte"] = ["Quadro abstrato","Ilustração digital","Kit de pincéis","Aquarela emoldurada","Poster de arte","Tela em branco","Escultura em gesso","Serigrafia limitada","Caneta nanquim set","Kit de tintas acrílicas"],
+        ["Madeira"] = ["Mesa de centro","Tábua de corte","Estante flutuante","Banco rústico","Cabideiro de parede","Bowls de madeira","Prancha de corte","Relógio de tronco","Caixa organizadora","Mesa de jantar"],
+        ["Alimentação"] = ["Granola artesanal","Mel orgânico","Kit de temperos","Pão integral","Bombom de cacau","Geleia de pimenta","Kombucha","Biscoito amanteigado","Doce de leite vegano","Chá artesanal"],
+        ["Jardinagem"] = ["Muda de suculenta","Kit horta vertical","Plantas medicinais","Cactos variados","Vasos de cimento","Sementes orgânicas","Orquídea","Bonsai","Trepadeira","Kit vasinho decorativo"],
+        ["Tecnologia"] = ["Teclado mecânico","Raspberry Pi","Monitor 24 polegadas","Headphone Bluetooth","Hub USB-C","Arduino + sensores","Mouse gamer","Webcam HD","SSD 512GB","Power bank 20000mAh"],
+        ["Bem-estar"] = ["Tapete de yoga","Kit de incensos","Cristal de quartzo","Difusor de aromas","Óleos essenciais","Bloco de yoga","Rolo de massagem","Vela de meditação","Mala de cristais","Kit acupuntura auricular"]
+    };
+
+    private static readonly Dictionary<string, string[]> ServiceTemplates = new()
+    {
+        ["Design"] = ["Criação de identidade visual","Design de stickers","Diagramação de e-book","Capa de livro","Logo minimalista","Design de cardápio","Banners para redes sociais","Wireframe de app"],
+        ["Programação"] = ["Consultoria de desenvolvimento","Desenvolvimento de API","Configuração WordPress","Correção de bugs","Bot para Discord","Automação de planilhas","Integração de pagamento","Deploy de aplicação"],
+        ["Marketing"] = ["Estratégia de redes sociais","Copywriting para landing","Gestão de tráfego pago","Roteiro para vídeo","E-mail marketing","Auditoria de SEO","Plano de conteúdo","Consultoria de marca"],
+        ["Escrita"] = ["Revisão de texto","Redação de artigos","Tradução EN-PT","Roteiro para podcast","Descrição de produtos","E-book ghostwriter","Legenda para Instagram","Edação de TCC"],
+        ["Consultoria"] = ["Consultoria nutricional","Avaliação de jardim","Design de interiores","Consultoria financeira","Mentoria de carreira","Avaliação de gadgets","Consultoria de imagem","Planejamento estratégico"],
+        ["Aulas"] = ["Aula de violão","Aula de cerâmica","Aula de yoga","Curso de fotografia","Aula de desenho","Workshop de jardinagem","Aula de pão artesanal","Aula de idiomas"],
+        ["Fotografia"] = ["Ensaio fotográfico","Edição de fotos","Edição de vídeo","Fotografia de produto","Making of de evento","Restauro de fotos antigas","Composite digital","Cover de perfil"],
+        ["Outros"] = ["Composição de jingle","Produção de beat","Mixagem de áudio","Aulas de canto","Roteiro musical","Locução comercial","Produção de clipe","Sound design"]
+    };
+
+    private static readonly string[] ProductAdjectives = ["premium","artesanal","exclusivo","sustentável","vintage","natural","orgânico","handmade","edición limitada","reforçado"];
+    private static readonly string[] ServiceAdjectives = ["personalizado","profissional","completo","expresso","premium","intensivo","individual","em grupo"];
+    private static readonly string[] Locations = ["Remoto","Online","Presencial - São Paulo","Presencial - Rio de Janeiro","Híbrido", null];
+
+    // ===================== SEED METHODS =====================
+
+    private static string Img(string seed) => $"https://picsum.photos/seed/{seed}/800/800";
+    private static string Cover(string seed) => $"https://picsum.photos/seed/{seed}/800/400";
+    private static string Avatar(int n) => $"https://i.pravatar.cc/300?img={((n % 70) + 1)}";
+
+    private T Pick<T>(IList<T> list) => list[_rng.Next(list.Count)];
+    private string UniqueId() => Guid.NewGuid().ToString("N")[..12];
+
+    private async Task<Dictionary<string, User>> SeedUsersAsync(int count, CancellationToken ct)
     {
         var result = new Dictionary<string, User>();
-        foreach (var data in Users)
+        var created = 0;
+        var attempts = 0;
+        while (created < count && attempts < count * 3)
         {
-            var email = new Email(data.Email);
-            var existing = await _userRepository.GetByEmailAsync(email, ct);
-            if (existing is not null)
-            {
-                result[data.Key] = existing;
-                continue;
-            }
+            attempts++;
+            var first = Pick(FirstNames);
+            var last = Pick(LastNames);
+            var name = $"{first} {last}";
+            var emailKey = $"{first.ToLower()}.{last.ToLower()}{_rng.Next(10, 999)}";
+            var email = $"{emailKey}@equivale.test";
+            var evo = new Email(email);
 
+            var existing = await _userRepository.GetByEmailAsync(evo, ct);
+            if (existing is not null) continue;
+
+            var daysAgo = _rng.Next(1, 90);
             var user = new User
             {
-                Name = data.Name,
-                Email = email,
+                Name = name,
+                Email = evo,
                 PasswordHash = _passwordHash,
-                AvatarUrl = data.AvatarUrl,
-                Bio = data.Bio,
+                AvatarUrl = Avatar(created + 1),
+                Bio = Pick(Bios),
                 Role = UserRole.User,
-                CreatedAt = DateTime.UtcNow.AddDays(-data.DaysAgo),
-                UpdatedAt = DateTime.UtcNow.AddDays(-data.DaysAgo),
+                CreatedAt = DateTime.UtcNow.AddDays(-daysAgo),
+                UpdatedAt = DateTime.UtcNow.AddDays(-daysAgo),
             };
-            user.Credit(500);
+            user.Credit(_rng.Next(100, 1000));
             await _userRepository.AddAsync(user, ct);
-            result[data.Key] = user;
+            result[$"u{created}"] = user;
+            created++;
         }
         return result;
     }
 
-    private async Task<Dictionary<string, Community>> SeedCommunitiesAsync(
-        Dictionary<string, User> users, CancellationToken ct)
+    private async Task<Dictionary<string, Community>> SeedCommunitiesAsync(int count, Dictionary<string, User> users, CancellationToken ct)
     {
         var result = new Dictionary<string, Community>();
-        foreach (var data in Communities)
+        if (users.Count == 0) return result;
+
+        var created = 0;
+        var attempts = 0;
+        while (created < count && attempts < count * 3)
         {
-            var existing = await _communityRepository.GetByNameAsync(data.Name, ct);
-            if (existing is not null)
-            {
-                result[data.Key] = existing;
-                continue;
-            }
+            attempts++;
+            var theme = CommunityThemes[created % CommunityThemes.Length];
+            var suffix = created >= CommunityThemes.Length ? $" {_rng.Next(2, 99)}" : "";
+            var name = theme.Name + suffix;
 
-            var creator = users[data.CreatorKey];
-            var moderators = data.ModeratorKeys.Select(k => users[k].Id).ToList();
+            var existing = await _communityRepository.GetByNameAsync(name, ct);
+            if (existing is not null) { result[$"c{created}"] = existing; created++; continue; }
+
+            var userList = users.Values.ToList();
+            var creator = Pick(userList);
+            var moderators = userList.OrderBy(_ => _rng.Next()).Take(_rng.Next(2, 4)).Select(u => u.Id).ToList();
             if (!moderators.Contains(creator.Id)) moderators.Add(creator.Id);
+            var members = userList.OrderBy(_ => _rng.Next()).Take(_rng.Next(3, Math.Min(8, userList.Count))).Select(u => u.Id).Union(moderators).Distinct().ToList();
 
-            var members = data.MemberKeys.Select(k => users[k].Id).ToList();
-            members = members.Union(moderators).Distinct().ToList();
-
+            var seed = UniqueId();
+            var daysAgo = _rng.Next(1, 80);
             var community = new Community
             {
-                Name = data.Name,
-                Description = data.Description,
-                ImageUrl = data.ImageUrl,
-                CoverUrl = data.CoverUrl,
+                Name = name,
+                Description = theme.Desc,
+                ImageUrl = Img($"com-{seed}"),
+                CoverUrl = Cover($"cover-{seed}"),
                 CreatorId = creator.Id,
                 Members = members,
                 Moderators = moderators,
-                Type = data.Type,
+                Type = _rng.NextDouble() > 0.8 ? "private" : "open",
                 ProductVisibility = "public",
-                CreatedAt = DateTime.UtcNow.AddDays(-data.DaysAgo),
-                UpdatedAt = DateTime.UtcNow.AddDays(-data.DaysAgo),
+                CreatedAt = DateTime.UtcNow.AddDays(-daysAgo),
+                UpdatedAt = DateTime.UtcNow.AddDays(-daysAgo),
             };
             await _communityRepository.AddAsync(community, ct);
-            result[data.Key] = community;
+            result[$"c{created}"] = community;
+            created++;
         }
         return result;
     }
 
-    private async Task<int> SeedProductsAsync(
-        Dictionary<string, User> users,
-        Dictionary<string, Community> communities,
-        CancellationToken ct)
+    private async Task<int> SeedProductsAsync(int count, Dictionary<string, User> users, Dictionary<string, Community> communities, CancellationToken ct)
     {
-        var count = 0;
-        foreach (var data in Products)
+        if (users.Count == 0) return 0;
+        var userList = users.Values.ToList();
+        var communityList = communities.Values.ToList();
+        var categories = ProductTemplates.Keys.ToList();
+        var created = 0;
+
+        for (var i = 0; i < count; i++)
         {
-            var seller = users[data.SellerKey];
-            var communityId = data.CommunityKey is null ? null : communities[data.CommunityKey].Id;
+            var category = Pick(categories);
+            var baseName = Pick(ProductTemplates[category]);
+            var adjective = _rng.NextDouble() > 0.4 ? $" {Pick(ProductAdjectives)}" : "";
+            var title = $"{baseName}{adjective}";
+            var seller = Pick(userList);
+            var community = _rng.NextDouble() > 0.4 && communityList.Count > 0 ? Pick(communityList) : null;
+            var seed = UniqueId();
+            var condition = _rng.NextDouble() > 0.7 ? (_rng.NextDouble() > 0.5 ? ProductCondition.Used : ProductCondition.Refurbished) : ProductCondition.New;
 
             var product = new Product
             {
                 SellerId = seller.Id,
-                Title = data.Title,
-                Description = data.Description,
-                Category = data.Category,
-                PriceInEquivale = new Money(data.Price),
-                Images = data.Images,
+                Title = title,
+                Description = $"{title}. Produto da categoria {category}. " + Pick(Bios),
+                Category = category,
+                PriceInEquivale = new Money(_rng.Next(15, 500)),
+                Images = [Img($"prod-{seed}")],
                 Status = ItemStatus.Active,
-                Condition = data.Condition,
-                CommunityId = communityId,
-                Tags = TagGenerator.Generate(data.Title, data.Category, data.Description),
-                CreatedAt = DateTime.UtcNow.AddDays(-data.DaysAgo),
-                UpdatedAt = DateTime.UtcNow.AddDays(-data.DaysAgo),
+                Condition = condition,
+                CommunityId = community?.Id,
+                Tags = TagGenerator.Generate(title, category, null),
+                CreatedAt = DateTime.UtcNow.AddDays(-_rng.Next(1, 60)),
+                UpdatedAt = DateTime.UtcNow.AddDays(-_rng.Next(0, 30)),
             };
             await _productRepository.AddAsync(product, ct);
-            count++;
+            created++;
         }
-        return count;
+        return created;
     }
 
-    private async Task<int> SeedServicesAsync(
-        Dictionary<string, User> users,
-        Dictionary<string, Community> communities,
-        CancellationToken ct)
+    private async Task<int> SeedServicesAsync(int count, Dictionary<string, User> users, Dictionary<string, Community> communities, CancellationToken ct)
     {
-        var count = 0;
-        foreach (var data in Services)
+        if (users.Count == 0) return 0;
+        var userList = users.Values.ToList();
+        var communityList = communities.Values.ToList();
+        var categories = ServiceTemplates.Keys.ToList();
+        var created = 0;
+
+        for (var i = 0; i < count; i++)
         {
-            var provider = users[data.ProviderKey];
-            var communityId = data.CommunityKey is null ? null : communities[data.CommunityKey].Id;
+            var category = Pick(categories);
+            var baseName = Pick(ServiceTemplates[category]);
+            var adjective = _rng.NextDouble() > 0.5 ? $" {Pick(ServiceAdjectives)}" : "";
+            var title = $"{baseName}{adjective}";
+            var provider = Pick(userList);
+            var community = _rng.NextDouble() > 0.5 && communityList.Count > 0 ? Pick(communityList) : null;
+            var hours = _rng.Next(1, 15);
 
             var service = new Service
             {
                 ProviderId = provider.Id,
-                Title = data.Title,
-                Description = data.Description,
-                Category = data.Category,
-                PriceInEquivale = new Money(data.Price),
-                Duration = data.Duration,
-                Location = data.Location,
+                Title = title,
+                Description = $"Serviço de {title}. Atendimento {Pick(ServiceAdjectives)}. " + Pick(Bios),
+                Category = category,
+                PriceInEquivale = new Money(_rng.Next(30, 600)),
+                Duration = TimeSpan.FromHours(hours),
+                Location = Pick(Locations),
                 Status = ItemStatus.Active,
-                CommunityId = communityId,
-                Tags = TagGenerator.Generate(data.Title, data.Category, data.Description),
-                CreatedAt = DateTime.UtcNow.AddDays(-data.DaysAgo),
-                UpdatedAt = DateTime.UtcNow.AddDays(-data.DaysAgo),
+                CommunityId = community?.Id,
+                Tags = TagGenerator.Generate(title, category, null),
+                CreatedAt = DateTime.UtcNow.AddDays(-_rng.Next(1, 50)),
+                UpdatedAt = DateTime.UtcNow.AddDays(-_rng.Next(0, 25)),
             };
             await _serviceRepository.AddAsync(service, ct);
-            count++;
+            created++;
         }
-        return count;
+        return created;
     }
 
     public record SeedResult(int Users, int Communities, int Products, int Services);
-
-    // ===================== DATA =====================
-
-    private record UserData(string Key, string Name, string Email, string Bio, string AvatarUrl, int DaysAgo);
-    private record CommunityData(string Key, string Name, string Description, string? ImageUrl, string? CoverUrl,
-        string CreatorKey, string[] ModeratorKeys, string[] MemberKeys, string Type, int DaysAgo);
-    private record ProductData(string Title, string Description, string Category, decimal Price,
-        List<string> Images, ProductCondition Condition, string SellerKey, string? CommunityKey, int DaysAgo);
-    private record ServiceData(string Title, string Description, string Category, decimal Price,
-        TimeSpan? Duration, string? Location, string ProviderKey, string? CommunityKey, int DaysAgo);
-
-    private static string Img(string seed) => $"https://picsum.photos/seed/{seed}/800/800";
-    private static string Cover(string seed) => $"https://picsum.photos/seed/{seed}/800/400";
-
-    private static readonly List<UserData> Users = new()
-    {
-        new("u1", "Marina Costa", "marina.costa@equivale.test", "Artesã e ceramista. Amo transformar barro em arte há mais de 10 anos.", "https://i.pravatar.cc/300?img=5", 90),
-        new("u2", "Rafael Oliveira", "rafael.oliveira@equivale.test", "Desenvolvedor full-stack e entusiasta de open source. Compartilho conhecimento por paixão.", "https://i.pravatar.cc/300?img=12", 85),
-        new("u3", "Juliana Ferreira", "juliana.ferreira@equivale.test", "Fotógrafa profissional especializada em retratos e natureza. Vegan e amante de animais.", "https://i.pravatar.cc/300?img=20", 80),
-        new("u4", "Pedro Almeida", "pedro.almeida@equivale.test", "Marceneiro artesanal. Trabalho com madeira maciça e técnicas tradicionais.", "https://i.pravatar.cc/300?img=33", 75),
-        new("u5", "Camila Santos", "camila.santos@equivale.test", "Nutricionista e chef vegana. Crio receitas saudáveis e deliciosas.", "https://i.pravatar.cc/300?img=47", 70),
-        new("u6", "Lucas Pereira", "lucas.pereira@equivale.test", "Músico e produtor musical. Toco violão, guitarra e produzo tracks eletrônicas.", "https://i.pravatar.cc/300?img=51", 65),
-        new("u7", "Beatriz Rocha", "beatriz.rocha@equivale.test", "Designer gráfica e ilustradora. Crio marcas, stickers e arte digital.", "https://i.pravatar.cc/300?img=44", 60),
-        new("u8", "Gabriel Martins", "gabriel.martins@equivale.test", "Jardinheiro urbano e permacultor. Cultivo hortas verticais e plantas medicinais.", "https://i.pravatar.cc/300?img=60", 55),
-        new("u9", "Fernanda Lima", "fernanda.lima@equivale.test", "Terapeuta holística e professora de yoga. Foco em bem-estar e mindfulness.", "https://i.pravatar.cc/300?img=32", 50),
-        new("u10", "Thiago Souza", "thiago.souza@equivale.test", "Consultor de marketing digital e copywriter. Ajudo pequenos negócios a crescerem.", "https://i.pravatar.cc/300?img=15", 45),
-        new("u11", "Ana Paula Ribeiro", "ana.ribeiro@equivale.test", "Ilustradora e artista plástica. Especialista em aquarela e desenho botânico.", "https://i.pravatar.cc/300?img=25", 42),
-        new("u12", "Carlos Eduardo", "carlos.eduardo@equivale.test", "Chef confeiteiro artesanal. Faço bolos, pães e doces naturais sem glúten.", "https://i.pravatar.cc/300?img=53", 38),
-        new("u13", "Patricia Nunes", "patricia.nunes@equivale.test", "Arquiteta e designer de interiores focada em sustentabilidade e materiais naturais.", "https://i.pravatar.cc/300?img=48", 33),
-        new("u14", "Bruno Carvalho", "bruno.carvalho@equivale.test", "Eletricista e técnico de eletrônica. Reparo gadgets e construo projetos DIY.", "https://i.pravatar.cc/300?img=68", 28),
-    };
-
-    private static readonly List<CommunityData> Communities = new()
-    {
-        new("c_arte", "Artes & Artesanato", "Comunidade de artesãos, ceramistas e criadores que valorizam o feito à mão.",
-            Img("com-arte"), Cover("cover-arte"),
-            "u1", new[] { "u7", "u3" }, new[] { "u4", "u9" }, "open", 80),
-        new("c_dev", "Devs Colaborativos", "Desenvolvedores que trocam conhecimento, código e serviços técnicos.",
-            Img("com-dev"), Cover("cover-dev"),
-            "u2", new[] { "u10" }, new[] { "u7" }, "open", 78),
-        new("c_vegano", "Cozinha Vegana", "Receitas, produtos e serviços veganos. Comunidade acolhedora para quem ama plantas e animais.",
-            Img("com-vegano"), Cover("cover-vegano"),
-            "u5", new[] { "u8" }, new[] { "u3", "u9" }, "open", 75),
-        new("c_musica", "Músicos Independentes", "Músicos, produtores e DJs que colaboram, ensinam e criam juntos.",
-            Img("com-musica"), Cover("cover-musica"),
-            "u6", new[] { "u10", "u2" }, new[] { "u1" }, "open", 70),
-        new("c_foto", "Clube da Fotografia", "Fotógrafos amadores e profissionais compartilhando técnica, shoots e equipamentos.",
-            Img("com-foto"), Cover("cover-foto"),
-            "u3", new[] { "u1", "u7" }, new[] { "u6" }, "open", 68),
-        new("c_jardim", "Jardinagem & Permacultura", "Cultivadores urbanos, jardineiros e amantes de plantas verdes.",
-            Img("com-jardim"), Cover("cover-jardim"),
-            "u8", new[] { "u5", "u9" }, new[] { "u1" }, "open", 65),
-        new("c_madeira", "Madeira & Marcenaria", "Marceneiros e artesãos da madeira. Móveis sob medida, utensílios e restauração.",
-            Img("com-madeira"), Cover("cover-madeira"),
-            "u4", new[] { "u13", "u1" }, new[] { "u14" }, "open", 60),
-        new("c_saude", "Bem-estar & Saúde Natural", "Terapeutas, professores de yoga e entusiastas de medicina natural e holística.",
-            Img("com-saude"), Cover("cover-saude"),
-            "u9", new[] { "u5", "u13" }, new[] { "u8", "u11" }, "open", 58),
-    };
-
-    private static readonly List<ProductData> Products = new()
-    {
-        // Artesanato
-        new("Vaso de cerâmica artesanal", "Vaso único feito à mão com argila vermelha, queima lenta. Cada peça é irrepetível.", "Artesanato", 85, new List<string>{ Img("vaso-ceramica") }, ProductCondition.New, "u1", "c_arte", 40),
-        new("Bolsa de crochê colorida", "Bolsa artesanal em crochê com fios reciclados. Resistente e sustentável.", "Artesanato", 60, new List<string>{ Img("bolsa-croche") }, ProductCondition.New, "u1", "c_arte", 38),
-        new("Porta-joias de madeira decorado", "Porta-joias entalhado à mão com acabamento natural.", "Artesanato", 45, new List<string>{ Img("porta-joias") }, ProductCondition.New, "u1", null, 35),
-        new("Velas aromáticas artesanais (kit 3)", "Kit de 3 velas de cera de soja com essências de lavanda, eucalipto e baunilha.", "Artesanato", 35, new List<string>{ Img("velas-kit") }, ProductCondition.New, "u1", "c_arte", 30),
-        new("Mandala de macramê", "Mandala decorativa em macramê feita com cordão algodão cru.", "Artesanato", 70, new List<string>{ Img("mandala") }, ProductCondition.New, "u7", "c_arte", 28),
-
-        // Fotografia
-        new("Câmera analógica 35mm", "Câmera vintage em ótimo estado, perfeita para quem quer começar com filme.", "Fotografia", 320, new List<string>{ Img("camera-analog") }, ProductCondition.Used, "u3", "c_foto", 42),
-        new("Print de paisagem (A3)", "Impressão em papel fosco de paisagem da Serra Gaúcha. Edição limitada.", "Fotografia", 50, new List<string>{ Img("print-paisagem") }, ProductCondition.New, "u3", "c_foto", 36),
-        new("Tripé profissional de alumínio", "Tripé robusto com altura até 1,70m. Pouco uso, excelente estado.", "Fotografia", 110, new List<string>{ Img("tripe") }, ProductCondition.Refurbished, "u3", null, 33),
-        new("Livro: A Arte da Fotografia", "Livro didático sobre composição e iluminação. Edição em português.", "Fotografia", 25, new List<string>{ Img("livro-foto") }, ProductCondition.Used, "u3", "c_foto", 25),
-
-        // Arte
-        new("Quadro abstrato em acrílico", "Tela 60x80cm com pintura acrílica abstrata em tons quentes.", "Arte", 180, new List<string>{ Img("quadro") }, ProductCondition.New, "u7", "c_arte", 37),
-        new("Ilustração digital personalizada", "Retrato digital em estilo aquarela, entregue em alta resolução.", "Arte", 90, new List<string>{ Img("ilustracao") }, ProductCondition.New, "u7", "c_arte", 34),
-        new("Kit de pincéis profissionais", "Conjunto de 12 pincéis sintéticos para pintura artística.", "Arte", 40, new List<string>{ Img("pincels") }, ProductCondition.New, "u7", null, 22),
-
-        // Madeira
-        new("Mesa de centro de madeira maciça", "Mesa artesanal em madeira freijó, acabamento natural. Peça única.", "Madeira", 450, new List<string>{ Img("mesa") }, ProductCondition.New, "u4", null, 41),
-        new("Tabua de corte rústica", "Tábua de servir em madeira maciça com acabamento em óleo mineral.", "Madeira", 55, new List<string>{ Img("tabua") }, ProductCondition.New, "u4", "c_arte", 32),
-        new("Estante de parede flutuante", "Estante minimalista em madeira reflorestada, fácil instalação.", "Madeira", 120, new List<string>{ Img("estante") }, ProductCondition.New, "u4", null, 27),
-
-        // Alimentação
-        new("Granola artesanal vegana (1kg)", "Granola caseira sem açúcar, com castanhas, coco e cacau.", "Alimentação", 28, new List<string>{ Img("granola") }, ProductCondition.New, "u5", "c_vegano", 30),
-        new("Mel orgânico puro (500g)", "Mel de florada silvestre, colhido de forma sustentável.", "Alimentação", 35, new List<string>{ Img("mel") }, ProductCondition.New, "u5", "c_vegano", 28),
-        new("Kit temperos orgânicos", "6 potes de temperos cultivados sem agrotóxicos.", "Alimentação", 42, new List<string>{ Img("temperos") }, ProductCondition.New, "u8", "c_jardim", 25),
-        new("Pão integral artesanal", "Pão de fermentação natural, sem conservantes. Retirada no dia.", "Alimentação", 18, new List<string>{ Img("pao") }, ProductCondition.New, "u5", "c_vegano", 20),
-
-        // Jardinagem
-        new("Muda de suculenta rara", "Muda de Echeveria rara em vaso decorativo de cerâmica.", "Jardinagem", 22, new List<string>{ Img("suculenta") }, ProductCondition.New, "u8", "c_jardim", 29),
-        new("Kit horta vertical (3 níveis)", "Estrutura completa para horta vertical com 3 vasos e suporte.", "Jardinagem", 95, new List<string>{ Img("horta-vertical") }, ProductCondition.New, "u8", "c_jardim", 26),
-        new("Plantas medicinais (kit 4)", "Mudas de camomila, capim-cidreira, hortelã e alecrim.", "Jardinagem", 38, new List<string>{ Img("medicinais") }, ProductCondition.New, "u8", "c_jardim", 18),
-
-        // Tecnologia
-        new("Teclado mecânico usado", "Teclado mecânico switch brown, ABNT2. Funcionando perfeitamente.", "Tecnologia", 220, new List<string>{ Img("teclado") }, ProductCondition.Used, "u2", "c_dev", 40),
-        new("Raspberry Pi 4 (4GB)", "Placa single-board completa com case e fonte original.", "Tecnologia", 280, new List<string>{ Img("raspberry") }, ProductCondition.Refurbished, "u2", "c_dev", 35),
-        new("Monitor 24\" Full HD", "Monitor IPS em ótimo estado, entradas HDMI e DisplayPort.", "Tecnologia", 350, new List<string>{ Img("monitor") }, ProductCondition.Used, "u2", null, 31),
-
-        // Bem-estar
-        new("Tapete de yoga antiderrapante", "Tapete ecológico em TPE, 6mm de espessura. Super confortável.", "Bem-estar", 65, new List<string>{ Img("tapete-yoga") }, ProductCondition.New, "u9", null, 28),
-        new("Kit incensos naturais (12un)", "Incensos artesanais de ervas, sem química. Cada um com aroma único.", "Bem-estar", 30, new List<string>{ Img("incensos") }, ProductCondition.New, "u9", null, 24),
-        new("Cristal de quartzo rosa", "Pedra natural polida para meditação e decoração.", "Bem-estar", 25, new List<string>{ Img("cristal") }, ProductCondition.New, "u9", null, 19),
-
-        // Mais Artesanato
-        new("Colar de sementes handmade", "Colar artesanal feito com sementes de açaí e miçangas naturais.", "Artesanato", 32, new List<string>{ Img("colar-sementes") }, ProductCondition.New, "u1", "c_arte", 17),
-        new("Renda bordada à mão (toalha)", "Toalha de mesa em renda bordada à mão, padrão floral.", "Artesanato", 48, new List<string>{ Img("renda-toalha") }, ProductCondition.New, "u11", "c_arte", 15),
-        new("Sabonete artesanal herbal (kit 4)", "Sabonetes naturais de glicerina com ervas: alecrim, lavanda, camomila e hortelã.", "Artesanato", 24, new List<string>{ Img("sabonetes") }, ProductCondition.New, "u9", "c_saude", 14),
-
-        // Mais Fotografia
-        new("Lente 50mm f/1.8 usada", "Lente prime 50mm, ótima para retratos. Vidro sem riscos.", "Fotografia", 280, new List<string>{ Img("lente-50mm") }, ProductCondition.Used, "u3", "c_foto", 16),
-        new("Bolsa para câmera à prova d'água", "Mochila resistente à água com divisórias para equipamento fotográfico.", "Fotografia", 95, new List<string>{ Img("bolsa-camera") }, ProductCondition.New, "u3", null, 12),
-        new("Polaroid e filme instantâneo", "Câmera Polaroid com 2 cartuchos de filme colorido.", "Fotografia", 130, new List<string>{ Img("polaroid") }, ProductCondition.Used, "u3", "c_foto", 10),
-
-        // Mais Arte
-        new("Aquarela botânica emoldurada", "Pintura aquarela de planta tropical, moldura de madeira inclusa.", "Arte", 150, new List<string>{ Img("aquarela") }, ProductCondition.New, "u11", "c_arte", 16),
-        new("Poster arte abstrata A2", "Poster de arte abstrata geométrica, impressão de alta qualidade.", "Arte", 35, new List<string>{ Img("poster") }, ProductCondition.New, "u7", null, 13),
-        new("Tela em branco premium (kit 3)", "3 telas para pintura em algodão, tamanhos 30x40, 40x50 e 50x70.", "Arte", 28, new List<string>{ Img("telas-kit") }, ProductCondition.New, "u11", null, 11),
-
-        // Mais Madeira
-        new("Banco rústico de tronco", "Banco feito de tronco maciço, lixado e envernizado.", "Madeira", 180, new List<string>{ Img("banco-tronco") }, ProductCondition.New, "u4", "c_madeira", 16),
-        new("Cabideiro de parede orgânico", "Cabideiro em galho natural tratado, sustenta até 15kg.", "Madeira", 65, new List<string>{ Img("cabideiro") }, ProductCondition.New, "u4", "c_madeira", 14),
-        new("Jogo de bowls de madeira", "Conjunto de 3 tigelas de madeira maciça para servir.", "Madeira", 72, new List<string>{ Img("bowls-madeira") }, ProductCondition.New, "u4", "c_madeira", 12),
-        new("Prancha de corte premium", "Tábua de corte grande em madeira de bambu com acabamento natural.", "Madeira", 38, new List<string>{ Img("prancha-corte") }, ProductCondition.New, "u13", null, 10),
-
-        // Mais Alimentação
-        new("Bombom de chocolate amargo (kit 12)", "Bombons artesanais 70% cacau, sem leite. Embalagem可持续.", "Alimentação", 32, new List<string>{ Img("bombons") }, ProductCondition.New, "u12", "c_vegano", 15),
-        new("Geleia artesanal de pimenta", "Geleia caseira de pimenta biquinho, doce e levemente picante.", "Alimentação", 18, new List<string>{ Img("geleia") }, ProductCondition.New, "u5", "c_vegano", 13),
-        new("Kombucha orgânico (1L)", "Kombucha fermentado naturalmente, sabor frutas vermelhas.", "Alimentação", 22, new List<string>{ Img("kombucha") }, ProductCondition.New, "u12", null, 10),
-
-        // Mais Jardinagem
-        new("Cactos variados (mini coleção)", "3 mini cactos diferentes em vasos de cerâmica.", "Jardinagem", 35, new List<string>{ Img("cactos") }, ProductCondition.New, "u8", "c_jardim", 16),
-        new("Vasinho de cimento decorativo (kit 3)", "3 vasos modernos de cimento queimado para suculentas.", "Jardinagem", 42, new List<string>{ Img("vasos-cimento") }, ProductCondition.New, "u13", "c_jardim", 13),
-        new("Sementes de hortaliças orgânicas", "Pacote com 8 variedades de sementes para horta caseira.", "Jardinagem", 15, new List<string>{ Img("sementes") }, ProductCondition.New, "u8", "c_jardim", 10),
-
-        // Mais Tecnologia
-        new("Headphone Bluetooth recondicionado", "Fone sem fio com cancelamento de ruído, restaurado e testado.", "Tecnologia", 180, new List<string>{ Img("headphone") }, ProductCondition.Refurbished, "u14", "c_dev", 15),
-        new("Hub USB-C 7 em 1", "Hub com HDMI 4K, USB 3.0, leitor de cartão e carregamento.", "Tecnologia", 90, new List<string>{ Img("hub-usb") }, ProductCondition.New, "u14", "c_dev", 12),
-        new("Arduino Uno + kit sensores", "Kit completo para projetos eletrônicos com 15 sensores inclusos.", "Tecnologia", 120, new List<string>{ Img("arduino") }, ProductCondition.New, "u14", "c_dev", 10),
-
-        // Mais Bem-estar
-        new("Difusor de aromas ultrassônico", "Difusor de óleos essenciais com luz LED e timer.", "Bem-estar", 55, new List<string>{ Img("difusor") }, ProductCondition.New, "u9", "c_saude", 16),
-        new("Óleos essenciais puros (kit 5)", "Lavanda, eucalipto, hortelã, tea tree e alecrim. 10ml cada.", "Bem-estar", 48, new List<string>{ Img("oleos-essenciais") }, ProductCondition.New, "u9", "c_saude", 14),
-        new("Bloco de yoga cortiça", "Bloco ecológico de cortiça natural para apoio em posturas de yoga.", "Bem-estar", 35, new List<string>{ Img("bloco-yoga") }, ProductCondition.New, "u9", "c_saude", 11),
-    };
-
-    private static readonly List<ServiceData> Services = new()
-    {
-        // Design
-        new("Criação de identidade visual", "Desenvolvo logotipo, paleta de cores e manual da marca completo para seu negócio.", "Design", 400, TimeSpan.FromHours(10), "Remoto", "u7", "c_dev", 38),
-        new("Design de stickers personalizados", "Criação de 5 stickers digitais no estilo que preferir.", "Design", 60, TimeSpan.FromHours(3), "Remoto", "u7", null, 30),
-        new("Diagramação de e-book", "Diagramo seu e-book com layout profissional e exportação em PDF.", "Design", 120, TimeSpan.FromHours(6), "Remoto", "u7", "c_dev", 26),
-
-        // Programação
-        new("Consultoria de desenvolvimento", "1 hora de mentoria em arquitetura de software, boas práticas e code review.", "Programação", 80, TimeSpan.FromHours(1), "Remoto", "u2", "c_dev", 40),
-        new("Desenvolvimento de API REST", "Crio sua API REST em .NET ou Node.js com documentação Swagger inclusa.", "Programação", 600, TimeSpan.FromHours(20), "Remoto", "u2", "c_dev", 35),
-        new("Configuração de site WordPress", "Instalo e configuro seu site WordPress com tema e plugins essenciais.", "Programação", 150, TimeSpan.FromHours(5), "Remoto", "u2", null, 28),
-
-        // Marketing
-        new("Estratégia de redes sociais", "Plano de conteúdo mensal para Instagram com calendário e copy pronto.", "Marketing", 250, TimeSpan.FromHours(8), "Remoto", "u10", null, 36),
-        new("Copywriting para landing page", "Textos persuasivos e otimizados para conversão na sua landing page.", "Marketing", 180, TimeSpan.FromHours(6), "Remoto", "u10", "c_dev", 30),
-        new("Gestão de tráfego pago", "Configuração e otimização de campanhas no Google e Meta Ads.", "Marketing", 300, TimeSpan.FromHours(10), "Remoto", "u10", null, 24),
-
-        // Escrita
-        new("Revisão de texto profissional", "Revisão ortográfica, gramatical e de estilo para artigos e e-books.", "Escrita", 50, TimeSpan.FromHours(3), "Remoto", "u10", null, 32),
-        new("Redação de artigos para blog", "Artigos de até 1500 palavras otimizados para SEO.", "Escrita", 90, TimeSpan.FromHours(4), "Remoto", "u5", "c_vegano", 25),
-
-        // Consultoria
-        new("Consultoria nutricional vegana", "Plano alimentar personalizado vegano com acompanhamento de 30 dias.", "Consultoria", 200, TimeSpan.FromHours(2), "Online", "u5", "c_vegano", 34),
-        new("Avaliação de jardim sustentável", "Visita técnica para planejar seu jardim com permacultura.", "Consultoria", 120, TimeSpan.FromHours(3), "Presencial - São Paulo", "u8", "c_jardim", 28),
-
-        // Aulas
-        new("Aula de violão popular (1h)", "Aula individual de violão para iniciantes e intermediários.", "Aulas", 45, TimeSpan.FromHours(1), "Online ou Presencial", "u6", "c_musica", 30),
-        new("Aula de cerâmica para iniciantes", "Workshop de 3h aprendendo técnicas básicas de modelagem.", "Aulas", 90, TimeSpan.FromHours(3), "Presencial - Atelier", "u1", "c_arte", 27),
-        new("Aula de yoga ao vivo", "Sessão de yoga de 1h adaptada ao seu nível, com respiração e meditação.", "Aulas", 50, TimeSpan.FromHours(1), "Online", "u9", null, 22),
-        new("Curso de fotografia básica", "4 encontros online cobrindo composição, luz e edição.", "Aulas", 160, TimeSpan.FromHours(8), "Online", "u3", "c_foto", 20),
-
-        // Fotografia
-        new("Ensaio fotográfico externo", "Ensaio de 2h em local natural, 15 fotos editadas em alta resolução.", "Fotografia", 280, TimeSpan.FromHours(2), "Presencial", "u3", "c_foto", 33),
-        new("Edição de fotos (pacote 20)", "Tratamento e color grading profissional de 20 fotos.", "Fotografia", 70, TimeSpan.FromHours(4), "Remoto", "u3", "c_foto", 26),
-
-        // Outros
-        new("Composição de jingle publicitário", "Criação de jingle de até 30 segundos para sua marca.", "Outros", 350, TimeSpan.FromHours(12), "Remoto", "u6", "c_musica", 31),
-        new("Produção de beat instrumental", "Beat original personalizado no estilo que preferir.", "Outros", 120, TimeSpan.FromHours(5), "Remoto", "u6", "c_musica", 24),
-
-        // Mais Design
-        new("Capa de livro ou e-book", "Design de capa profissional para publicação digital ou impressa.", "Design", 90, TimeSpan.FromHours(5), "Remoto", "u7", null, 16),
-        new("Logo minimalista em 24h", "Criação de logotipo minimalista com 3 propostas e revisões.", "Design", 110, TimeSpan.FromHours(4), "Remoto", "u7", "c_dev", 13),
-
-        // Mais Programação
-        new("Correção de bugs e refatoração", "Análise e correção de bugs em seu projeto existente. Por hora.", "Programação", 60, TimeSpan.FromHours(1), "Remoto", "u2", null, 14),
-        new("Bot para Discord ou Telegram", "Desenvolvimento de bot personalizado com integração de APIs.", "Programação", 250, TimeSpan.FromHours(8), "Remoto", "u14", "c_dev", 12),
-
-        // Mais Aulas
-        new("Aula particular de desenho", "Aula de desenho e observação para iniciantes, técnicas a lápis e nanquim.", "Aulas", 55, TimeSpan.FromHours(2), "Online", "u11", "c_arte", 15),
-        new("Workshop de jardinagem urbana", "Workshop de 4h sobre como montar sua horta em apartamento.", "Aulas", 70, TimeSpan.FromHours(4), "Presencial - São Paulo", "u8", "c_jardim", 13),
-        new("Aula de pão artesanal vegano", "Aula prática de fermentação natural e panificação sem glúten.", "Aulas", 65, TimeSpan.FromHours(3), "Online", "u12", "c_vegano", 11),
-
-        // Mais Consultoria
-        new("Consultoria de design de interiores", "Planejamento de espaço residencial com sugestão de materiais sustentáveis.", "Consultoria", 350, TimeSpan.FromHours(6), "Online ou Presencial", "u13", null, 14),
-        new("Avaliação de gadgets para reparo", "Diagnóstico e orçamento para reparo de equipamentos eletrônicos.", "Consultoria", 30, TimeSpan.FromHours(1), "Remoto", "u14", "c_dev", 10),
-
-        // Mais Marketing
-        new("Roteiro para vídeo institucional", "Roteiro completo para vídeo promocional ou institucional de até 3 min.", "Marketing", 120, TimeSpan.FromHours(4), "Remoto", "u10", null, 12),
-
-        // Mais Escrita
-        new("Tradução EN-PT (por página)", "Tradução profissional inglês-português para artigos e documentos.", "Escrita", 35, TimeSpan.FromHours(2), "Remoto", "u10", null, 10),
-
-        // Mais Fotografia
-        new("Edição de vídeo curto (Reels/TikTok)", "Edição de vídeo curto de até 60s com cortes, legendas e trilha.", "Fotografia", 40, TimeSpan.FromHours(2), "Remoto", "u3", "c_foto", 12),
-    };
 }

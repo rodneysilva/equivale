@@ -1,5 +1,4 @@
 using equivale.Application.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace equivale.Api.Controllers;
@@ -17,13 +16,30 @@ public class SeedController : ControllerBase
         _env = env;
     }
 
+    /// <summary>
+    /// Popula o banco com dados de teste.
+    /// POST /api/seed/run?users=20&communities=10&products=100&services=50
+    /// </summary>
     [HttpPost("run")]
-    public async Task<IActionResult> Run(CancellationToken cancellationToken)
+    public async Task<IActionResult> Run(
+        [FromQuery] int users = 14,
+        [FromQuery] int communities = 8,
+        [FromQuery] int products = 50,
+        [FromQuery] int services = 30,
+        CancellationToken cancellationToken = default)
     {
         if (!_env.IsDevelopment())
-            return Forbid("Seed disponível apenas em ambiente de Development.");
+            return Forbid("Seed disponível apenas em Development.");
 
-        var result = await _seedService.RunAsync(cancellationToken);
+        var opts = new SeedOptions
+        {
+            Users = users,
+            Communities = communities,
+            Products = products,
+            Services = services,
+        };
+
+        var result = await _seedService.RunAsync(opts, cancellationToken);
         return Ok(new
         {
             message = "Seed concluído com sucesso.",
