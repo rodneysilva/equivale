@@ -1,247 +1,112 @@
-# Equivale
+# eqüivale
 
-> Plataforma de economia colaborativa onde **comunidades são o coração** da experiência.
-> Pessoas se organizam em comunidades para trocar produtos e serviços usando **EQL**, a moeda virtual da plataforma.
+Plataforma de economia colaborativa para troca de produtos, serviços e talentos usando moeda virtual (EQL) entre comunidades.
 
----
+> Feito pra comunidade — uma alternativa ao mercado tradicional, onde pessoas trocam valor diretamente, sem intermediários corporativos.
 
-## Visao Geral
+## Stack
 
-Equivale conecta pessoas que compartilham interesses em comum — artesãos, devs, veganos, músicos, criadores — em um ambiente que valoriza a troca e a vivência comunitária. Nao é um marketplace genérico: cada comunidade tem suas próprias regras, moderadores e visibilidade.
+- **Backend**: .NET 9, MongoDB, CQRS (MediatR), AutoMapper, Serilog
+- **Frontend**: SolidJS, TailwindCSS, Vite
+- **Auth**: JWT em cookie HttpOnly (7 dias)
+- **DB**: MongoDB (local ou Atlas)
 
-### O que torna o Equivale diferente
+## Como rodar
 
-- **Comunidades como centro** — nao é uma vitrine匿名a; é um espaco de pertencimento
-- **EQL como moeda** — moeda virtual interna que facilita trocas sem complexidade financeira
-- **Controle do criador** — quem cria a comunidade define tipo de acesso, visibilidade dos produtos e gerencia moderadores
-- **Economia colaborativa** — sem dinheiro real, sem taxas, sem intermediários
+### Backend
+```bash
+cd backend
+dotnet restore
+dotnet build
+cd src/equivale.Api
+dotnet run
+# API: http://localhost:5053
+# Swagger: http://localhost:5053/scalar
+```
 
----
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+# App: http://localhost:3000
+```
 
-## Stack Tecnológica
+### Seed (dados de teste)
+```bash
+# Via curl/Postman:
+POST http://localhost:5053/api/seed/run?reset=true&users=20&communities=10&products=80&services=40
+```
 
-| Camada | Tecnologia | Versao |
-|--------|-----------|--------|
-| **Backend** | .NET (C#) | 9.0 |
-| **Banco de Dados** | MongoDB | 8.3 |
-| **Frontend** | SolidJS + TypeScript | 1.9 |
-| **Estilização** | Tailwind CSS | 4.0 |
-| **Build Frontend** | Vite | 6.0 |
-| **Autenticação** | JWT Bearer (HS256) | — |
-| **Arquitetura Backend** | Clean Architecture + DDD | — |
+**Usuário admin**: `rodneydocarmo@gmail.com` / `123Mudar!`
+**Usuários de teste**: `@equivale.test` / `Eql@2026`
 
-### Bibliotecas-chave do Backend
+## Funcionalidades
 
-- **MediatR** — CQRS (Commands e Queries separados)
-- **FluentValidation** — validação declarativa de DTOs
-- **AutoMapper** — mapeamento Entity ↔ DTO
-- **MongoDB.Driver** — driver oficial MongoDB
-- **BCrypt.Net-Next** — hash de senhas
-- **Swashbuckle.AspNetCore** — Swagger/OpenAPI (dev)
-- **Serilog** — logging estruturado
+### Marketplace
+- Produtos e serviços com categorias, tags automáticas, facets dinâmicos
+- Filtros em cascata (categoria + tags com contagem em tempo real)
+- Ordenação: mais recentes, menor preço, maior preço
+- Busca unificada com autocomplete (produtos + serviços + comunidades)
+- Paginação configurável (24/36/48/60 itens)
 
----
+### Comunidades
+- Abertas (entrada livre) ou privadas (senha única ou solicitação+aprovação)
+- Membros, moderadores e criador com permissões distintas
+- Produtos/serviços vinculados a comunidades
+- Páginas dedicadas: membros, produtos, serviços da comunidade
+
+### Transações (Escrow)
+Fluxo completo de compra com calção:
+```
+Pedido criado (valor bloqueado) → Vendedor confirma → Vendedor envia → 
+Comprador confirma entrega → Comprador avalia → Pagamento liberado
+```
+- Calção: valor reservado na criação do pedido
+- Cancelamento: estorno automático
+- Avaliação obrigatória para liberar pagamento
+
+### Painel do Usuário
+- Visão geral com stats e ações pendentes
+- Meus produtos/serviços (pausar, editar, excluir)
+- Compras e vendas com timeline completa
+- Extrato financeiro na carteira
+
+### Admin
+- Dashboard com estatísticas da plataforma
+- Gerenciar usuários (promover, banir)
+- Moderar produtos
+
+## Arquitetura
+
+Ver [ARCHITECTURE.md](docs/ARCHITECTURE.md) para detalhes de DDD, padrões e fluxos.
 
 ## Estrutura do Projeto
 
 ```
 equivale/
-├── README.md                 ← voce esta aqui
-├── BUSINESS.md               ← regras de negócio e visao de produto
-├── docs/                     ← documentação técnica detalhada
-│   ├── BACKEND.md            ← arquitetura, domínio, endpoints, padrões
-│   ├── FRONTEND.md           ← design system, páginas, componentes
-│   ├── ROADMAP.md            ← guia de continuidade e prioridades
-│   ├── CONTRIBUINDO.md       ← fluxo de trabalho com perfis Hermes
-│   └── RELATORIO_FRONTEND.md ← análise técnica exaustiva do frontend
-├── backend/                  ← .NET 9 Clean Architecture
-│   ├── equivale.sln
-│   ├── src/
-│   │   ├── equivale.Domain/         # Entidades, Value Objects, Enums, Interfaces
-│   │   ├── equivale.Application/    # CQRS, DTOs, Validators, Services, Mappings
-│   │   ├── equivale.Infrastructure/ # MongoDB, Repositories, Security, Storage
-│   │   └── equivale.Api/            # Controllers, Program.cs, Middleware, Config
-│   ├── tests/
-│   │   └── equivale.UnitTests/      # xUnit + FluentAssertions + Moq
-│   └── seed_data.json               # dataset para import manual
-└── frontend/                 ← SolidJS + Tailwind
-    ├── package.json
-    ├── vite.config.ts
-    └── src/
-        ├── pages/            # 12 páginas (rotas)
-        ├── components/       # ui/, layout/, marketplace/, community/, admin/, wallet/
-        ├── services/         # API client + mappers
-        ├── store/            # estado global (auth, theme)
-        ├── hooks/            # useAuth, useTheme, useApi
-        └── types/            # interfaces de domínio
+├── backend/
+│   └── src/
+│       ├── equivale.Domain/          # Entidades, enums, value objects, interfaces
+│       ├── equivale.Application/     # DTOs, services, commands/queries, mappings
+│       ├── equivale.Infrastructure/  # MongoDB, repositories, serializers
+│       └── equivale.Api/             # Controllers, middleware, DI, auth
+├── frontend/
+│   └── src/
+│       ├── components/               # UI reutilizável (Card, Button, grids, etc)
+│       ├── pages/                    # Páginas/rotas
+│       ├── services/                 # Clients da API + mappers
+│       ├── store/                    # Estado global (auth, theme)
+│       └── types/                    # Tipos TypeScript
+└── docs/                             # Documentação
 ```
-
----
-
-## Como Executar
-
-### Pré-requisitos
-
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
-- [Node.js 20+](https://nodejs.org/)
-- [MongoDB 8+](https://www.mongodb.com/try/download/community) rodando em `localhost:27017`
-
-### Backend
-
-```bash
-cd backend
-
-# Restaurar dependências
-dotnet restore
-
-# Build
-dotnet build
-
-# Rodar a API (Swagger em https://localhost:7080)
-cd src/equivale.Api
-dotnet run
-```
-
-**Endpoints do backend:**
-- HTTP: `http://localhost:5053`
-- HTTPS: `https://localhost:7080`
-- Swagger UI: `https://localhost:7080/swagger` (apenas em Development)
-- Health check: `https://localhost:7080/health`
-
-### Frontend
-
-```bash
-cd frontend
-
-# Instalar dependências
-npm install
-
-# Rodar em modo desenvolvimento (http://localhost:3000)
-npm run dev
-
-# Build de produção
-npm run build
-```
-
-### MongoDB
-
-O MongoDB deve estar rodando em `mongodb://localhost:27017`. A base de dados `equivale` é criada automaticamente na primeira escrita.
-
-Para popular com dados de exemplo, use o arquivo `backend/seed_data.json` (import manual via pymongo ou MongoDB Compass).
-
----
-
-## Modelo de Domínio (Resumo)
-
-```
-User ──┬── cria ──→ Community ──┬── tem ──→ Product (compra com EQL)
-       │                         └── tem ──→ Service (contrata com EQL)
-       ├── publica ──→ Product
-       ├── oferece ──→ Service
-       ├── envia ────→ Transaction (EQL entre usuários)
-       └── escreve ──→ Review (sobre produtos/serviços/usuários)
-```
-
-| Entidade | Responsabilidade |
-|----------|-----------------|
-| **User** | Usuário com carteira EQL, perfil, papel (User/Admin) |
-| **Community** | Agrupamento de usuários com regras de acesso e visibilidade |
-| **Product** | Item a venda dentro de uma comunidade (em EQL) |
-| **Service** | Serviço oferecido por um usuário (em EQL) |
-| **Transaction** | Movimentação de EQL (compra, transferência, bônus) |
-| **Review** | Avaliação (1-5 estrelas) de itens ou usuários |
-
-> **Value Objects:** `Email` (normalizado, validado) e `Money` (imutável, arredondamento bancário, nunca negativo).
-
----
-
-## Endpoints da API (Visao de Alto Nível)
-
-| Controller | Endpoints | Auth |
-|-----------|-----------|------|
-| `/api/auth` | register, login, profile | Público/🔑 |
-| `/api/users` | CRUD de usuários | 🔑 |
-| `/api/communities` | CRUD + join/leave + moderadores | Público/🔑 |
-| `/api/products` | CRUD + buy + busca por vendedor/categoria | Público/🔑 |
-| `/api/services` | CRUD + hire | Público/🔑 |
-| `/api/transactions` | criar + histórico | 🔑 |
-| `/api/reviews` | criar + por item | Público/🔑 |
-| `/api/files` | upload de imagens | 🔑 |
-| `/api/search` | busca textual (produtos/serviços) | Público |
-| `/api/admin` | moderação (aprovar/rejeitar/banir) | 👑 Admin |
-| `/health` | health check + readiness | Público |
-
-> Total: **48 endpoints**. Documentação completa em `docs/BACKEND.md`.
-
----
-
-## Perfis Hermes — Fluxo de Trabalho
-
-O projeto é desenvolvido usando perfis especializados do Hermes Agent. Cada perfil tem uma persona e responsabilidade:
-
-| Perfil | Persona | Responsabilidade |
-|--------|---------|-----------------|
-| **arquiteto** | Arquiteto de Software | Padrões de design, decisões arquiteturais, trade-offs |
-| **dev** (Codex) | Engenheiro .NET Sênior | Clean Code, SOLID, DDD, C#, testes, refatoração |
-| **front** (PixelCraft) | UX Engineer | Design system, acessibilidade, microinterações, performance |
-| **orq** (Hermes Orquestrador) | Product Manager | Visao de produto, priorização, delegação, Definition of Done |
-
-Fluxo típico: **orq** define a visao → delega para **dev** (backend) e **front** (frontend) → **arquiteto** valida padrões e trade-offs.
-
-> Detalhes em `docs/CONTRIBUINDO.md`.
-
----
-
-## Status do Projeto
-
-### MVP (Fase 1) — Completo no backend
-
-- [x] Cadastro e autenticação (JWT)
-- [x] Perfis de usuário + carteira EQL
-- [x] Comunidades (criar, listar, detalhe, join/leave)
-- [x] Tipos de acesso (aberta/privada) + códigos de convite
-- [x] Visibilidade de produtos por comunidade
-- [x] Moderadores (adicionar/remover)
-- [x] Marketplace de produtos (CRUD + compra)
-- [x] Marketplace de serviços (CRUD + contratação)
-- [x] Carteira EQL + transações atômicas
-- [x] Reviews (criar, consultar)
-- [x] Busca textual (MongoDB Text Index)
-- [x] Admin dashboard (aprovar/rejeitar)
-- [x] Upload de imagens + rate limiting
-
-### Frontend — Estado atual
-
-- [x] Auth (login/register/profile)
-- [x] Listagem (produtos/serviços/comunidades) com paginação e filtros
-- [x] Detalhe de produto/serviço/comunidade
-- [x] Criação de comunidade (modal)
-- [x] Compra de produto / contratação de serviço
-- [ ] **Criação/edição/exclusão de produto** (service pronto, sem UI)
-- [ ] **Criação/edição/exclusão de serviço** (service pronto, sem UI)
-- [ ] **Gestão de comunidade** (editar, membros, moderadores via UI)
-- [ ] Reviews (UI + service)
-- [ ] Corrigir dark mode (bug de store de tema)
-- [ ] Wallet (transferência real)
-- [ ] Admin (conectar dados reais)
-
-> Roadmap detalhado com prioridades em `docs/ROADMAP.md`.
-
----
 
 ## Documentação
 
-| Documento | Conteúdo |
-|-----------|---------|
-| [BUSINESS.md](./BUSINESS.md) | Regras de negócio, modelo de domínio, público-alvo, roadmap de produto |
-| [docs/BACKEND.md](./docs/BACKEND.md) | Arquitetura .NET, entidades, endpoints, padrões de design, testes |
-| [docs/FRONTEND.md](./docs/FRONTEND.md) | Estrutura SolidJS, design system, páginas, services, estado atual |
-| [docs/ROADMAP.md](./docs/ROADMAP.md) | Prioridades, telas a implementar, guia de continuidade |
-| [docs/CONTRIBUINDO.md](./docs/CONTRIBUINDO.md) | Fluxo de trabalho com perfis Hermes, padrões de commit, DoD |
-| [docs/RELATORIO_FRONTEND.md](./docs/RELATORIO_FRONTEND.md) | Análise técnica exaustiva do frontend (bugs, gaps, componentes) |
-
----
+- [BUSINESS.md](BUSINESS.md) — Regras de negócio
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Arquitetura técnica
+- [docs/PLANO_MASTER.md](docs/PLANO_MASTER.md) — Plano de desenvolvimento
 
 ## Licença
 
-Projeto privado. Todos os direitos reservados.
+Privado — © 2026 eqüivale

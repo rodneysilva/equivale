@@ -1,203 +1,115 @@
-# Equivale — Documento de Negócios
+# Regras de Negócio — eqüivale
 
-## Visao
+## Moeda: EQL
+- Moeda virtual interna, não conversível para moeda real
+- Usuários recebem saldo inicial ao se cadastrar (configurável no seed)
+- Saldo pode ser: **disponível** (usável) ou **bloqueado** (calção/reserva)
 
-Equivale é uma plataforma de economia colaborativa onde **comunidades sao o coração** da experiência. Pessoas se organizam em comunidades para trocar produtos e serviços usando **EQL**, a moeda virtual da plataforma.
+## Usuários
 
-O foco é conectar pessoas que compartilham interesses em comum — artesãos, devs, veganos, músicos, criadores — em um ambiente que valoriza a troca e a vivência comunitária.
+### Roles
+| Role | Permissões |
+|---|---|
+| **User** | Comprar, vender, criar comunidades, participar de comunidades |
+| **Admin** | Tudo de User + painel admin, promover/banir usuários, moderar conteúdo |
+| **Banned** | Não pode logar nem interagir |
 
-## Proposta de Valor
+### Perfil
+- Nome, bio, avatar, social links (10 tipos: GitHub, Instagram, Mastodon, etc.)
+- Avaliações visíveis publicamente (sem saldo)
+- 40 avatares temáticos disponíveis (estilos DiceBear)
 
-- **Comunidades como centro**: Nao é um marketplace genérico. Cada comunidade tem suas próprias regras, moderadores e visibilidade.
-- **EQL como moeda**: Moeda virtual interna que facilita trocas sem complexidade financeira. Sem dinheiro real, sem taxas, sem intermediários.
-- **Controle do criador**: Quem cria a comunidade define tipo de acesso (aberta ou privada), visibilidade dos produtos e gerencia moderadores.
-- **Economia colaborativa**: Foco em pertencimento, troca e cultura DIY/maker — nao em consumo.
+## Produtos
 
----
+### Campos
+- Título, descrição, categoria, preço (EQL), frete, estoque, condição
+- Imagens, tags (geradas automaticamente), comunidade vinculada (opcional)
 
-## Modelo de Domínio
+### Categorias (8)
+Artesanato, Fotografia, Arte, Madeira, Alimentação, Jardinagem, Tecnologia, Bem-estar
 
-### Entidades Principais
+### Condições
+Novo, Usado, Recondicionado
 
+## Serviços
+
+### Campos
+- Título, descrição, categoria, preço (EQL), duração, localização
+- Imagens, tags, comunidade vinculada (opcional)
+
+### Categorias (8)
+Design, Programação, Marketing, Escrita, Consultoria, Aulas, Fotografia, Outros
+
+## Comunidades
+
+### Tipos
+- **Aberta**: qualquer um entra livremente
+- **Privada**: entrada por senha única (uso único) OU solicitação + aprovação
+
+### Hierarquia
+| Role | Permissões |
+|---|---|
+| **Criador** | Tudo + excluir comunidade, gerenciar moderadores |
+| **Moderador** | Aprovar/rejeitar membros, expulsar membros, gerenciar conteúdo |
+| **Membro** | Ver conteúdo, comprar/vender dentro da comunidade |
+
+### Visibilidade de Produtos
+- Comunidade pode definir se produtos são visíveis para não-membros
+- Se privado: apenas membros veem produtos/serviços/membros
+
+## Transações (Escrow)
+
+### Fluxo de Compra
 ```
-User ──┬── cria ──→ Community ──┬── abriga ──→ Product (compra com EQL)
-       │                         └── abriga ──→ Service (contrata com EQL)
-       ├── publica ──→ Product
-       ├── oferece ──→ Service
-       ├── envia ────→ Transaction (EQL entre usuários)
-       └── escreve ──→ Review (sobre produtos/serviços)
+1. OrderPlaced      — Comprador cria pedido (valor BLOQUEADO do saldo)
+2. OrderConfirmed   — Vendedor confirma o pedido
+3. Shipped          — Vendedor envia (com código de rastreio)
+4. Delivered        — Comprador confirma recebimento
+5. Finished         — Comprador avalia → pagamento LIBERADO ao vendedor
+   Cancelled        — Cancelado a qualquer momento antes do Finished → ESTORNO
 ```
 
-| Entidade | Papel no Negócio |
-|----------|-----------------|
-| **User** | Usuário com carteira EQL, perfil público, papel (User/Admin) |
-| **Community** | Agrupamento de usuários com regras de acesso e visibilidade |
-| **Product** | Item físico a venda (novo/usado/recondicionado), precificado em EQL |
-| **Service** | Serviço oferecido por um usuário, precificado em EQL |
-| **Transaction** | Movimentação de EQL (compra, transferência, bônus) |
-| **Review** | Avaliação (1-5 estrelas) de produtos ou serviços |
+### Calção (Escrow)
+- **Na criação**: valor sai do saldo disponível → vai para bloqueado
+- **No cancelamento**: valor volta do bloqueado → disponível (estorno)
+- **Ao finalizar** (após avaliação): valor sai do bloqueado → credita vendedor
 
-### Value Objects
+### Frete
+- Definido pelo vendedor na criação do produto (0 = sem frete)
+- Incluído no total da transação
+- Serviços não têm frete
 
-| VO | Razao de Existir |
-|----|-----------------|
-| **Email** | Normalização automática (lowercase, trim), validação de formato, igualdade por valor |
-| **Money** | Moeda EQL imutável, nunca negativa, arredondamento bancário (2 casas), operadores sobrecarregados |
+### Endereço de Entrega
+- Comprador informa na criação do pedido (produtos apenas)
+- Visível apenas para o vendedor
+- Serviços não exigem endereço
 
-> O Money é a espinha dorsal do sistema financeiro. Sua imutabilidade garante que operações de crédito/débito nunca mutam saldos por engano — toda operação cria uma nova instância.
+## Avaliações
 
----
+- Obrigatórias para finalizar a transação (liberar pagamento)
+- Comprador avalia o vendedor (rating 1-5 + comentário opcional)
+- Vendedor pode avaliar o comprador
+- Visíveis no perfil público de cada usuário
+- Uma avaliação por transação por pessoa
 
-## Regras de Negócio
+## Busca
 
-### Moeda (EQL)
+- Autocomplete a partir de 2 caracteres
+- Busca por substring (regex) em título, descrição, categoria e tags
+- Resultados unificados: produtos + serviços + comunidades
+- Paginação client-side (24 por página)
 
-- **Bônus de boas-vindas**: Todo novo usuário recebe **100 EQL** ao se registrar.
-- **Saldo nunca negativo**: O sistema impede débitos que excedam o saldo disponível (exceção lançada).
-- **Crédito/Débito só aceitam valores > 0** (zero ou negativo é rejeitado).
-- **Arredondamento bancário**: Todas as operaçoes arredondam para 2 casas (MidpointRounding.ToEven).
-- **Transações atômicas**: Transferências de EQL entre usuários executam em transação MongoDB multi-documento (commit ou abort completo — nada de saldo parcial).
-- **Tipos de transação**: Compra (Purchase), Transferência (Transfer), Bônus (Bonus).
+## Tags
 
-### Comunidades
+- Geradas automaticamente no backend a partir de título + categoria + descrição
+- Stopwords em português removidas
+- Normalizadas (sem acento, minúsculas)
+- Filtro AND (cada tag selecionada refina a busca)
+- Contagens dinâmicas (facets em cascata)
 
-#### Criação
-- Qualquer usuário autenticado pode criar uma comunidade.
-- Informações obrigatórias: nome, descrição.
-- Informações opcionais: imagem, capa.
-- O criador é automaticamente membro e moderador.
+## Admin
 
-#### Tipo de Acesso
-- **Aberta** (`open`): Qualquer pessoa pode entrar e ver o conteúdo.
-- **Privada** (`private`): Acesso apenas por convite (código de 8 caracteres gerado pelo sistema).
-
-#### Visibilidade dos Produtos
-- **Pública** (`public`): Produtos da comunidade sao visíveis para qualquer pessoa na plataforma.
-- **Membros** (`members`): Produtos só sao visíveis para quem faz parte da comunidade.
-
-#### Moderadores
-- O criador da comunidade é automaticamente o dono.
-- O dono pode adicionar moderadores (por ID de usuário).
-- O criador **nao pode ser removido** da lista de moderadores (proteção de domínio).
-- Moderadores podem gerenciar conteúdo e membros.
-
-#### Convites (comunidades privadas)
-- O sistema gera automaticamente um código de 8 caracteres (maiúsculas) ao criar uma comunidade privada.
-- Novos membros inserem o código para solicitar entrada.
-- Sem código válido, a entrada é rejeitada.
-
-### Produtos
-
-- Publicados por usuários.
-- Atributos: título, descrição, preço (em EQL), categoria, condição (novo/usado/recondicionado), imagens.
-- Status: `Active` (disponível), `Inactive`, `PendingModeration`, `Rejected`.
-- **Compra direta** pelo marketplace usando saldo EQL.
-- **Auto-compra proibida**: o comprador nao pode ser o próprio vendedor.
-
-### Serviços
-
-- Publicados por usuários (podem estar vinculados a comunidades).
-- Atributos: título, descrição, preço (em EQL), categoria, duração, localizaçao, imagens.
-- Status: `Active` (disponível), `Inactive`, `PendingModeration`, `Rejected`.
-- **Contratação direta** usando saldo EQL.
-- **Auto-contratação proibida**: o cliente nao pode ser o próprio prestador.
-
-### Reviews / Avaliaçoes
-
-- Avaliaçoes de 1 a 5 estrelas.
-- Podem ser sobre produtos ou serviços.
-- **Auto-review proibido**: o avaliador nao pode avaliar a si mesmo.
-- Permitem comentário textual (ate 1000 caracteres).
-
-### Perfis de Usuário
-
-- Nome, email, bio, avatar.
-- Estatísticas: produtos publicados, transaçoes realizadas.
-- Papéis: usuário comum (`User`), administrador da plataforma (`Admin`).
-
-### Upload de Imagens
-
-- Extensões permitidas: `.jpg`, `.jpeg`, `.png`, `.gif`, `.webp`.
-- Tamanho máximo: 5 MB por arquivo.
-- Rate limiting: 10 uploads por minuto por usuário.
-- Armazenamento local com nome único (GUID), organizado por data.
-
-### Moderação (Admin)
-
-- Administradores podem aprovar ou rejeitar produtos pendentes.
-- Painel de gestao de usuários.
-- Banimento/desbanimento (stub — em implementaçao).
-
----
-
-## Público-Alvo
-
-Pessoas jovens, alternativas, que valorizam:
-- Compartilhamento e troca
-- Comunidades e pertencimento
-- Economia colaborativa
-- Cultura DIY e maker
-
----
-
-## Categorias do Marketplace
-
-### Produtos
-Artesanato, Fotografia, Arte, Madeira, Alimentaçao, Jardinagem, Tecnologia, Bem-estar
-
-### Serviços
-Design, Programaçao, Marketing, Escrita, Consultoria, Aulas, Fotografia, Outros
-
-> As categorias sao definidas no frontend (hardcoded). O backend aceita qualquer string.
-
----
-
-## Roadmap
-
-### Fase 1 — MVP (Atual)
-- [x] Cadastro e autenticação (JWT)
-- [x] Perfis de usuário + carteira EQL (bônus de 100 EQL)
-- [x] Comunidades (criar, listar, detalhe, join/leave)
-- [x] Tipos de acesso (aberta/privada) + códigos de convite
-- [x] Visibilidade de produtos por comunidade
-- [x] Moderadores (adicionar/remover)
-- [x] Marketplace de produtos e serviços (CRUD + compra/contratação)
-- [x] Transaçoes EQL atômicas
-- [x] Reviews (backend completo)
-- [x] Busca textual indexada
-- [x] Admin dashboard (aprovar/rejeitar)
-- [x] Upload de imagens + rate limiting
-
-### Fase 2 — Engajamento (Próxima)
-- [ ] Criação/edição/exclusão de produtos no frontend
-- [ ] Criação/edição/exclusão de serviços no frontend
-- [ ] Gestão completa de comunidade (membros, moderadores, ediçao)
-- [ ] Corrigir dark mode (frontend)
-- [ ] Reviews no frontend (UI + StarRating)
-- [ ] Wallet: transferência real de EQL
-- [ ] Admin: dados reais + moderaçao
-- [ ] Feed de atividade por comunidade
-- [ ] Sistema de convites com link
-- [ ] Chat entre membros
-- [ ] Notificaçoes push
-
-### Fase 3 — Crescimento
-- [ ] App mobile (PWA)
-- [ ] Integração com redes sociais
-- [ ] Programa de indicação
-- [ ] Marketplace cross-community
-- [ ] API pública para integraçoes
-
----
-
-## Tech Stack
-
-- **Backend**: .NET 9 (C#) — Clean Architecture + DDD + CQRS (MediatR)
-- **Banco de dados**: MongoDB 8.3
-- **Frontend**: SolidJS 1.9 + TypeScript + Tailwind CSS 4.0
-- **Build**: Vite 6.0
-- **Autenticação**: JWT Bearer (HS256, expiração 60 min)
-- **Documentação API**: Swagger/OpenAPI (Swagger UI em dev)
-- **Logging**: Serilog (console + arquivo com rotaçao diária)
-
-> Documentação técnica detalhada: [docs/BACKEND.md](./docs/BACKEND.md) e [docs/FRONTEND.md](./docs/FRONTEND.md).
+- Acesso apenas para role Admin
+- Dashboard: contagem de usuários, produtos, serviços, comunidades, transações
+- Promover/banir usuários
+- Remover produtos, serviços, comunidades

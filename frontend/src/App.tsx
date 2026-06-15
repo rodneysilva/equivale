@@ -13,7 +13,6 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import WalletPage from './pages/WalletPage';
-import AdminPage from './pages/AdminPage';
 import CreateProductPage from './pages/CreateProductPage';
 import CreateServicePage from './pages/CreateServicePage';
 import CreateCommunityPage from './pages/CreateCommunityPage';
@@ -42,32 +41,38 @@ const App: Component = () => {
       </div>
     )}>
       <Route path="/" component={HomePage} />
+      <Route path="/search" component={SearchPage} />
+      {/* Products — "new" antes de ":id" */}
+      <Route path="/products" component={ProductsPage} />
+      <Route path="/products/new" component={CreateProductPage} />
+      <Route path="/products/:id" component={ProductDetailPage} />
+      {/* Services — "new" antes de ":id" */}
+      <Route path="/services" component={ServicesPage} />
+      <Route path="/services/new" component={CreateServicePage} />
+      <Route path="/services/:id" component={ServiceDetailPage} />
+      {/* Communities — "new" antes de ":id" */}
       <Route path="/communities" component={CommunitiesPage} />
+      <Route path="/communities/new" component={CreateCommunityPage} />
       <Route path="/communities/:id" component={CommunityDetailPage} />
       <Route path="/communities/:id/products" component={CommunityProductsPage} />
       <Route path="/communities/:id/services" component={CommunityServicesPage} />
       <Route path="/communities/:id/members" component={CommunityMembersPage} />
-      <Route path="/products" component={ProductsPage} />
-      <Route path="/products/:id" component={ProductDetailPage} />
-      <Route path="/services" component={ServicesPage} />
-      <Route path="/services/:id" component={ServiceDetailPage} />
+      {/* Auth */}
       <Route path="/login" component={LoginPage} />
       <Route path="/register" component={RegisterPage} />
-      <Route path="/profile" component={ProfilePage} />
-      <Route path="/wallet" component={WalletPage} />
-      <Route path="/admin" component={AdminPage} />
-      <Route path="/products/new" component={CreateProductPage} />
-      <Route path="/services/new" component={CreateServicePage} />
-      <Route path="/communities/new" component={CreateCommunityPage} />
-      <Route path="/search" component={SearchPage} />
+      {/* User */}
       <Route path="/users" component={UsersListPage} />
       <Route path="/users/:id" component={UserProfilePage} />
+      <Route path="/profile" component={ProfilePage} />
+      <Route path="/dashboard" component={DashboardPage} />
+      <Route path="/wallet" component={WalletPage} />
+      {/* Transactions */}
+      <Route path="/transactions" component={TransactionsPage} />
+      <Route path="/transactions/:id" component={TransactionDetailPage} />
+      {/* Admin */}
       <Route path="/admin" component={AdminDashboardPage} />
       <Route path="/admin/users" component={AdminUsersPage} />
       <Route path="/admin/products" component={AdminProductsPage} />
-      <Route path="/transactions" component={TransactionsPage} />
-      <Route path="/dashboard" component={DashboardPage} />
-      <Route path="/transactions/:id" component={TransactionDetailPage} />
     </Router>
   );
 };
