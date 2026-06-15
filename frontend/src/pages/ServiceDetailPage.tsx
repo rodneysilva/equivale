@@ -54,6 +54,16 @@ const ServiceDetailPage: Component = () => {
       ) : service() ? (
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div class="lg:col-span-2 space-y-5">
+            {/* Image */}
+            <div class="aspect-video rounded-lg overflow-hidden" style={{ background: 'var(--color-surface-alt)' }}>
+              <Show when={service()!.imageUrl} fallback={
+                <div class="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--color-primary-light), var(--color-surface-alt))' }}>
+                  <Zap size={48} style={{ color: 'var(--color-primary)' }} />
+                </div>
+              }>
+                <img src={service()!.imageUrl} alt={service()!.title} class="w-full h-full object-cover" />
+              </Show>
+            </div>
             <div>
               <div class="flex items-center gap-2 mb-2">
                 <Badge variant="primary"><Tag size={10} class="mr-1" />{service()!.category}</Badge>

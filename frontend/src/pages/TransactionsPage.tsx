@@ -71,7 +71,7 @@ const TransactionsPage: Component = () => {
 
   return (
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <h1 class="text-xl font-bold mb-6" style={{ color: 'var(--color-text)' }}>Minhas Transações</h1>
+      <h1 class="text-xl font-bold mb-6" style={{ color: 'var(--color-text)' }}>Meus Pedidos</h1>
 
       <div class="flex items-center gap-2 mb-6">
         {(['all', 'buyer', 'seller'] as const).map(t => (
