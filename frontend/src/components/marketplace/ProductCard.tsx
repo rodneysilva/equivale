@@ -24,8 +24,8 @@ const ProductCard: Component<ProductCardProps> = (props) => {
           </div>
         )}
         {/* Condition badge */}
-        <span class="absolute top-1.5 left-1.5 text-[0.6rem] font-medium px-1.5 py-0.5 rounded" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)' }}>
-          {props.product.condition === 'new' ? 'Novo' : props.product.condition === 'used' ? 'Usado' : 'Recond.'}
+        <span class="absolute top-1.5 left-1.5 text-[0.6rem] font-medium px-1.5 py-0.5 rounded truncate max-w-[80%]" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)' }} title={props.product.category}>
+          {props.product.category}
         </span>
       </div>
       {/* Info */}

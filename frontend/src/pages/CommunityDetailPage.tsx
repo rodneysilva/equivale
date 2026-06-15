@@ -37,8 +37,27 @@ const CommunityDetailPage: Component = () => {
 
       // Check if current user is already a member
       const userId = auth.currentUser()?.id;
-      if (userId && (data.ownerId === userId || data.moderators?.includes(userId))) {
-        setIsMember(true);
+      if (userId) {
+        const isOwner = data.ownerId === userId;
+        const isMod = data.moderators?.includes(userId);
+        let isRegularMember = false;
+
+        if (!isOwner && !isMod) {
+          try {
+            const userCommunities = await communitiesService.getByMember(userId);
+            isRegularMember = userCommunities.some(c => c.id === data.id);
+          } catch { /* ignore */ }
+        }
+
+        const member = isOwner || isMod || isRegularMember;
+        setIsMember(member);
+
+        // Load members if user is a member
+        if (member) {
+          try {
+            setMembers(await communitiesService.getMembers(data.id));
+          } catch { /* ignore */ }
+        }
       }
 
       // Load products if visibility allows
@@ -46,13 +65,6 @@ const CommunityDetailPage: Component = () => {
         try {
           const res = await productsService.getAll(1, 50);
           setProducts(res.data.filter(p => p.communityId === data.id));
-        } catch { /* ignore */ }
-      }
-
-      // Load members if user is a member
-      if (isMember()) {
-        try {
-          setMembers(await communitiesService.getMembers(data.id));
         } catch { /* ignore */ }
       }
     } catch {
