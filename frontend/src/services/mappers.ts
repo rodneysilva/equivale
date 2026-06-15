@@ -37,12 +37,18 @@ export interface BackendLoginDto {
 export interface BackendProductDto {
   id: string;
   sellerId: string;
+  sellerName?: string | null;
+  sellerAvatarUrl?: string | null;
   title: string;
   description: string;
   category: string;
   priceInEquivale: number;
   images: string[];
   status: string;
+  condition: string;
+  communityId?: string | null;
+  communityName?: string | null;
+  tags?: string[] | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -54,12 +60,17 @@ export interface BackendCreateProductDto {
   category: string;
   priceInEquivale: number;
   images?: string[];
+  condition?: string;
+  communityId?: string | null;
+  tags?: string[];
 }
 
 // --- Service ---
 export interface BackendServiceDto {
   id: string;
   providerId: string;
+  providerName?: string | null;
+  providerAvatarUrl?: string | null;
   title: string;
   description: string;
   category: string;
@@ -67,6 +78,9 @@ export interface BackendServiceDto {
   duration?: string | null;
   location?: string | null;
   status: string;
+  communityId?: string | null;
+  communityName?: string | null;
+  tags?: string[] | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -79,6 +93,8 @@ export interface BackendCreateServiceDto {
   priceInEquivale: number;
   duration?: string | null;
   location?: string | null;
+  communityId?: string | null;
+  tags?: string[];
 }
 
 // --- Community ---
@@ -182,8 +198,13 @@ export function mapProduct(data: BackendProductDto): Product {
     imageUrl: data.images?.[0],
     images: data.images,
     sellerId: data.sellerId,
-    condition: 'new',
+    sellerName: data.sellerName ?? undefined,
+    sellerAvatar: data.sellerAvatarUrl ?? undefined,
+    condition: mapCondition(data.condition),
     status: mapProductStatus(data.status),
+    communityId: data.communityId ?? undefined,
+    communityName: data.communityName ?? undefined,
+    tags: data.tags ?? undefined,
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
   };
@@ -197,9 +218,14 @@ export function mapService(data: BackendServiceDto): Service {
     price: data.priceInEquivale,
     category: data.category,
     providerId: data.providerId,
+    providerName: data.providerName ?? undefined,
+    providerAvatar: data.providerAvatarUrl ?? undefined,
     status: mapServiceStatus(data.status),
     duration: data.duration ?? undefined,
     location: data.location ?? undefined,
+    communityId: data.communityId ?? undefined,
+    communityName: data.communityName ?? undefined,
+    tags: data.tags ?? undefined,
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
   };
@@ -252,6 +278,14 @@ export function mapPagedResult<TBackend, TFrontend>(
 }
 
 // Helpers
+function mapCondition(backendCondition: string): 'new' | 'used' | 'refurbished' {
+  switch (backendCondition.toLowerCase()) {
+    case 'used': return 'used';
+    case 'refurbished': return 'refurbished';
+    default: return 'new';
+  }
+}
+
 function mapProductStatus(backendStatus: string): 'available' | 'sold' | 'pending_moderation' {
   switch (backendStatus.toLowerCase()) {
     case 'active': return 'available';

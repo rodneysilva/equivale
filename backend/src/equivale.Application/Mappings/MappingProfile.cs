@@ -30,23 +30,43 @@ public class MappingProfile : Profile
         // Product mappings
         CreateMap<Product, ProductDto>()
             .ForMember(dest => dest.PriceInEquivale, opt => opt.MapFrom(src => src.PriceInEquivale.Amount))
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => src.Condition.ToString()))
+            .ForMember(dest => dest.SellerName, opt => opt.Ignore())
+            .ForMember(dest => dest.SellerAvatarUrl, opt => opt.Ignore())
+            .ForMember(dest => dest.CommunityName, opt => opt.Ignore())
+            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags))
+            .ForCtorParam("SellerName", opt => opt.MapFrom(_ => (string?)null))
+            .ForCtorParam("SellerAvatarUrl", opt => opt.MapFrom(_ => (string?)null))
+            .ForCtorParam("CommunityName", opt => opt.MapFrom(_ => (string?)null));
         CreateMap<CreateProductDto, Product>()
             .ForMember(dest => dest.PriceInEquivale, opt => opt.MapFrom(src => new Money(src.PriceInEquivale)))
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images ?? new List<string>()))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => ItemStatus.Active))
+            .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => ParseCondition(src.Condition)))
+            .ForMember(dest => dest.CommunityId, opt => opt.MapFrom(src => src.CommunityId))
+            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>()))
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
             .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
 
         // Service mappings
         CreateMap<Service, ServiceDto>()
             .ForMember(dest => dest.PriceInEquivale, opt => opt.MapFrom(src => src.PriceInEquivale.Amount))
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForMember(dest => dest.ProviderName, opt => opt.Ignore())
+            .ForMember(dest => dest.ProviderAvatarUrl, opt => opt.Ignore())
+            .ForMember(dest => dest.CommunityName, opt => opt.Ignore())
+            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags))
+            .ForCtorParam("ProviderName", opt => opt.MapFrom(_ => (string?)null))
+            .ForCtorParam("ProviderAvatarUrl", opt => opt.MapFrom(_ => (string?)null))
+            .ForCtorParam("CommunityName", opt => opt.MapFrom(_ => (string?)null));
         CreateMap<CreateServiceDto, Service>()
             .ForMember(dest => dest.PriceInEquivale, opt => opt.MapFrom(src => new Money(src.PriceInEquivale)))
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => ItemStatus.Active))
+            .ForMember(dest => dest.CommunityId, opt => opt.MapFrom(src => src.CommunityId))
+            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags ?? new List<string>()))
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
             .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
 
@@ -76,5 +96,16 @@ public class MappingProfile : Profile
         CreateMap<CreateReviewDto, Review>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
+    }
+
+    private static ProductCondition ParseCondition(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return ProductCondition.New;
+        return value.Trim().ToLowerInvariant() switch
+        {
+            "used" or "usado" => ProductCondition.Used,
+            "refurbished" or "recondicionado" => ProductCondition.Refurbished,
+            _ => ProductCondition.New
+        };
     }
 }

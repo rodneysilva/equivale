@@ -13,6 +13,9 @@ public class Product
     public Money PriceInEquivale { get; set; } = Money.Zero;
     public List<string> Images { get; set; } = [];
     public ItemStatus Status { get; set; } = ItemStatus.Active;
+    public ProductCondition Condition { get; set; } = ProductCondition.New;
+    public string? CommunityId { get; set; }
+    public List<string> Tags { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

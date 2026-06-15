@@ -83,17 +83,22 @@ public class SearchRepository
     }
 
     private static ProductDto MapProduct(Product p) => new(
-        Id: p.Id, SellerId: p.SellerId, Title: p.Title,
+        Id: p.Id, SellerId: p.SellerId, SellerName: null, SellerAvatarUrl: null, Title: p.Title,
         Description: p.Description, Category: p.Category,
         PriceInEquivale: (decimal)p.PriceInEquivale,
         Images: p.Images, Status: p.Status.ToString(),
+        Condition: p.Condition.ToString(),
+        CommunityId: p.CommunityId, CommunityName: null,
+        Tags: p.Tags,
         CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt);
 
     private static ServiceDto MapService(Service s) => new(
-        Id: s.Id, ProviderId: s.ProviderId, Title: s.Title,
+        Id: s.Id, ProviderId: s.ProviderId, ProviderName: null, ProviderAvatarUrl: null, Title: s.Title,
         Description: s.Description, Category: s.Category,
         PriceInEquivale: (decimal)s.PriceInEquivale,
         Duration: s.Duration, Location: s.Location,
         Status: s.Status.ToString(),
+        CommunityId: s.CommunityId, CommunityName: null,
+        Tags: s.Tags,
         CreatedAt: s.CreatedAt, UpdatedAt: s.UpdatedAt);
 }

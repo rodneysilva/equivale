@@ -17,10 +17,11 @@ function toBackendCreate(data: CreateProductDto, sellerId?: string): BackendCrea
 }
 
 export const productsService = {
-  async getAll(page = 1, pageSize = 12, category?: string, search?: string): Promise<PaginatedResponse<Product>> {
+  async getAll(page = 1, pageSize = 12, category?: string, search?: string, tag?: string): Promise<PaginatedResponse<Product>> {
     const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
     if (category) params.set('category', category);
     if (search) params.set('search', search);
+    if (tag) params.set('tag', tag);
     const raw = await api.get<BackendPagedResult<BackendProductDto>>(`/products?${params}`);
     return mapPagedResult(raw, mapProduct);
   },

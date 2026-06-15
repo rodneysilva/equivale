@@ -14,6 +14,8 @@ public class Service
     public TimeSpan? Duration { get; set; }
     public string? Location { get; set; }
     public ItemStatus Status { get; set; } = ItemStatus.Active;
+    public string? CommunityId { get; set; }
+    public List<string> Tags { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

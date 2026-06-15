@@ -1,5 +1,6 @@
 using AutoMapper;
 using equivale.Application.DTOs;
+using equivale.Application.Services;
 using equivale.Domain.Interfaces;
 using MediatR;
 
@@ -21,6 +22,12 @@ public class CreateServiceCommandHandler : IRequestHandler<CreateServiceCommand,
     public async Task<ServiceDto> Handle(CreateServiceCommand request, CancellationToken cancellationToken)
     {
         var service = _mapper.Map<Domain.Entities.Service>(request.Service);
+
+        if (service.Tags is null || service.Tags.Count == 0)
+        {
+            service.Tags = TagGenerator.Generate(request.Service.Title, request.Service.Category, request.Service.Description);
+        }
+
         await _serviceRepository.AddAsync(service, cancellationToken);
         return _mapper.Map<ServiceDto>(service);
     }

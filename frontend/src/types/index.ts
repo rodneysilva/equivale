@@ -46,6 +46,7 @@ export interface Product {
   status: 'available' | 'sold' | 'pending_moderation';
   communityId?: string;
   communityName?: string;
+  tags?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -75,6 +76,9 @@ export interface Service {
   duration?: string;
   location?: string;
   status: 'available' | 'completed' | 'pending_moderation';
+  communityId?: string;
+  communityName?: string;
+  tags?: string[];
   createdAt: string;
   updatedAt: string;
 }

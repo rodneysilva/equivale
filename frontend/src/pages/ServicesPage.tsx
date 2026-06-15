@@ -5,11 +5,13 @@ import { servicesService } from '../services/services.service';
 import ServiceGrid from '../components/marketplace/ServiceGrid';
 import SearchBar from '../components/marketplace/SearchBar';
 import CategoryFilter from '../components/marketplace/CategoryFilter';
+import TagFilter from '../components/marketplace/TagFilter';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import type { Service } from '../types';
 
 const categories = ['Design', 'Programação', 'Marketing', 'Escrita', 'Consultoria', 'Aulas', 'Fotografia', 'Outros'];
+const popularTags = ['design', 'programacao', 'marketing', 'escrita', 'aula', 'fotografia', 'musica', 'consultoria'];
 
 const ServicesPage: Component = () => {
   const navigate = useNavigate();
@@ -17,6 +19,7 @@ const ServicesPage: Component = () => {
   const [loading, setLoading] = createSignal(true);
   const [search, setSearch] = createSignal('');
   const [category, setCategory] = createSignal('');
+  const [tag, setTag] = createSignal('');
   const [page, setPage] = createSignal(1);
   const [totalPages, setTotalPages] = createSignal(1);
 
@@ -25,7 +28,7 @@ const ServicesPage: Component = () => {
   const loadServices = async () => {
     setLoading(true);
     try {
-      const res = await servicesService.getAll(page(), 12, category() || undefined, search() || undefined);
+      const res = await servicesService.getAll(page(), 12, category() || undefined, search() || undefined, tag() || undefined);
       setServices(res.data);
       setTotalPages(res.totalPages);
     } catch { setServices([]); }
@@ -34,6 +37,7 @@ const ServicesPage: Component = () => {
 
   const handleSearch = (value: string) => { setSearch(value); setPage(1); };
   const handleCategory = (cat: string) => { setCategory(cat); setPage(1); };
+  const handleTag = (t: string) => { setTag(t); setPage(1); };
 
   return (
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
@@ -54,6 +58,7 @@ const ServicesPage: Component = () => {
               <SearchBar value={search()} onInput={handleSearch} placeholder="Buscar serviços..." />
             </Card>
             <CategoryFilter categories={categories} selected={category()} onSelect={handleCategory} />
+            <TagFilter tags={popularTags} selected={tag()} onSelect={handleTag} />
           </div>
         </div>
         <div class="flex-1">

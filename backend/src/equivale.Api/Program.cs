@@ -55,6 +55,11 @@ builder.Services.AddScoped<IServiceService, ServiceService>();
 builder.Services.AddScoped<ICommunityService, CommunityService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<equivale.Application.Services.DtoEnricher>();
+builder.Services.AddScoped<equivale.Application.Services.SeedService>();
+
+// In-memory cache for DTO enrichment
+builder.Services.AddMemoryCache();
 
 // Health Checks - usa o IMongoClient ja registrado pelo Infrastructure
 builder.Services.AddHealthChecks()

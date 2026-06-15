@@ -28,11 +28,11 @@ public class ProductsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<PagedResult<ProductDto>>> GetAll(
         [FromQuery] int page = 1, [FromQuery] int pageSize = 20,
-        [FromQuery] string? category = null, [FromQuery] string? search = null,
+        [FromQuery] string? category = null, [FromQuery] string? search = null, [FromQuery] string? tag = null,
         CancellationToken cancellationToken = default)
     {
         var query = new Application.Queries.Products.GetAllProductsQuery(
-            new PaginationParams { Page = page, PageSize = pageSize }, search, category);
+            new PaginationParams { Page = page, PageSize = pageSize }, search, category, tag);
         var result = await _mediator.Send(query, cancellationToken);
         return Ok(result);
     }

@@ -22,6 +22,15 @@ public class BaseRepository<T> : IBaseRepository<T>, ITransactionalRepository<T>
         return await _collection.Find(filter).FirstOrDefaultAsync(cancellationToken);
     }
 
+    public virtual async Task<IReadOnlyList<T>> GetByIdsAsync(IEnumerable<string> ids, CancellationToken cancellationToken = default)
+    {
+        var idList = ids?.Where(i => !string.IsNullOrWhiteSpace(i)).Distinct().ToList() ?? new List<string>();
+        if (idList.Count == 0) return new List<T>().AsReadOnly();
+        var filter = Builders<T>.Filter.In("_id", idList);
+        var results = await _collection.Find(filter).ToListAsync(cancellationToken);
+        return results.AsReadOnly();
+    }
+
     public virtual async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var results = await _collection.Find(_ => true).ToListAsync(cancellationToken);

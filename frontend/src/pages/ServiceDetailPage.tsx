@@ -1,6 +1,6 @@
-import { type Component, createSignal, createEffect } from 'solid-js';
+import { type Component, createSignal, createEffect, For } from 'solid-js';
 import { useParams, useNavigate } from '@solidjs/router';
-import { Zap, ArrowLeft, Tag } from 'lucide-solid';
+import { Zap, ArrowLeft, Tag, Users } from 'lucide-solid';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -57,6 +57,28 @@ const ServiceDetailPage: Component = () => {
               </div>
               <h1 class="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>{service()!.title}</h1>
             </div>
+            {service()!.communityName && (
+              <button
+                onClick={() => service()!.communityId && navigate(`/communities/${service()!.communityId}`)}
+                class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full transition-colors"
+                style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}
+              >
+                <Users size={11} />
+                {service()!.communityName}
+                <span style={{ opacity: 0.6 }}>· ver comunidade</span>
+              </button>
+            )}
+            {service()!.tags && service()!.tags!.length > 0 && (
+              <div class="flex flex-wrap gap-1.5">
+                <For each={service()!.tags}>
+                  {(tag) => (
+                    <span class="text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)' }}>
+                      #{tag}
+                    </span>
+                  )}
+                </For>
+              </div>
+            )}
             <Card class="p-5">
               <h2 class="text-sm font-semibold mb-2" style={{ color: 'var(--color-text-secondary)' }}>Descrição</h2>
               <p class="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--color-text-muted)' }}>{service()!.description}</p>

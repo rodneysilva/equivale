@@ -6,4 +6,7 @@ public record CreateProductDto(
     string Description,
     string Category,
     decimal PriceInEquivale,
-    List<string>? Images = null);
+    List<string>? Images = null,
+    string? Condition = null,
+    string? CommunityId = null,
+    List<string>? Tags = null);

@@ -5,11 +5,13 @@ import { productsService } from '../services/products.service';
 import ProductGrid from '../components/marketplace/ProductGrid';
 import SearchBar from '../components/marketplace/SearchBar';
 import CategoryFilter from '../components/marketplace/CategoryFilter';
+import TagFilter from '../components/marketplace/TagFilter';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import type { Product } from '../types';
 
 const categories = ['Artesanato', 'Fotografia', 'Arte', 'Madeira', 'Alimentação', 'Jardinagem', 'Tecnologia', 'Bem-estar'];
+const popularTags = ['artesanato', 'ceramica', 'madeira', 'vegano', 'tecnologia', 'fotografia', 'yoga', 'manual'];
 
 const ProductsPage: Component = () => {
   const navigate = useNavigate();
@@ -17,6 +19,7 @@ const ProductsPage: Component = () => {
   const [loading, setLoading] = createSignal(true);
   const [search, setSearch] = createSignal('');
   const [category, setCategory] = createSignal('');
+  const [tag, setTag] = createSignal('');
   const [page, setPage] = createSignal(1);
   const [totalPages, setTotalPages] = createSignal(1);
 
@@ -25,7 +28,7 @@ const ProductsPage: Component = () => {
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const res = await productsService.getAll(page(), 12, category() || undefined, search() || undefined);
+      const res = await productsService.getAll(page(), 12, category() || undefined, search() || undefined, tag() || undefined);
       setProducts(res.data);
       setTotalPages(res.totalPages);
     } catch { setProducts([]); }
@@ -34,6 +37,7 @@ const ProductsPage: Component = () => {
 
   const handleSearch = (value: string) => { setSearch(value); setPage(1); };
   const handleCategory = (cat: string) => { setCategory(cat); setPage(1); };
+  const handleTag = (t: string) => { setTag(t); setPage(1); };
 
   return (
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
@@ -54,6 +58,7 @@ const ProductsPage: Component = () => {
               <SearchBar value={search()} onInput={handleSearch} placeholder="Buscar produtos..." />
             </Card>
             <CategoryFilter categories={categories} selected={category()} onSelect={handleCategory} />
+            <TagFilter tags={popularTags} selected={tag()} onSelect={handleTag} />
           </div>
         </div>
         <div class="flex-1">

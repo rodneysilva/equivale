@@ -7,4 +7,6 @@ public record CreateServiceDto(
     string Category,
     decimal PriceInEquivale,
     TimeSpan? Duration = null,
-    string? Location = null);
+    string? Location = null,
+    string? CommunityId = null,
+    List<string>? Tags = null);
