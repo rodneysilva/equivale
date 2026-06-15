@@ -43,8 +43,8 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
         var total = (int)await _products.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
         var sort = sortBy switch
         {
-            "price_asc" => Builders<Product>.Sort.Ascending("PriceInEquivale.Amount"),
-            "price_desc" => Builders<Product>.Sort.Descending("PriceInEquivale.Amount"),
+            "price_asc" => Builders<Product>.Sort.Ascending("PriceInEquivale"),
+            "price_desc" => Builders<Product>.Sort.Descending("PriceInEquivale"),
             _ => Builders<Product>.Sort.Descending(p => p.CreatedAt),
         };
         var items = await _products.Find(filter).Sort(sort).Skip(skip).Limit(pageSize).ToListAsync(cancellationToken);

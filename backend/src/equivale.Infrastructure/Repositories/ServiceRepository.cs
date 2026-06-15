@@ -43,8 +43,8 @@ public class ServiceRepository : BaseRepository<Service>, IServiceRepository
         var total = (int)await _services.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
         var sort = sortBy switch
         {
-            "price_asc" => Builders<Service>.Sort.Ascending("PriceInEquivale.Amount"),
-            "price_desc" => Builders<Service>.Sort.Descending("PriceInEquivale.Amount"),
+            "price_asc" => Builders<Service>.Sort.Ascending("PriceInEquivale"),
+            "price_desc" => Builders<Service>.Sort.Descending("PriceInEquivale"),
             _ => Builders<Service>.Sort.Descending(s => s.CreatedAt),
         };
         var items = await _services.Find(filter).Sort(sort).Skip(skip).Limit(pageSize).ToListAsync(cancellationToken);

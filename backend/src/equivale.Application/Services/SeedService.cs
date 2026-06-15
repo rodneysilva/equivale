@@ -318,7 +318,7 @@ public class SeedService
 
     private static readonly string[] ProductAdjectives = ["premium","artesanal","exclusivo","sustentável","vintage","natural","orgânico","handmade","edición limitada","reforçado"];
     private static readonly string[] ServiceAdjectives = ["personalizado","profissional","completo","expresso","premium","intensivo","individual","em grupo"];
-    private static readonly string[] Locations = ["Remoto","Online","Presencial - São Paulo","Presencial - Rio de Janeiro","Híbrido", null];
+    private static readonly string?[] Locations = ["Remoto","Online","Presencial - São Paulo","Presencial - Rio de Janeiro","Híbrido", null];
 
     // ===================== SEED METHODS =====================
 

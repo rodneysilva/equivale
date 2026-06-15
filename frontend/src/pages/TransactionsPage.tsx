@@ -62,7 +62,10 @@ const TransactionsPage: Component = () => {
 
   const action = async (id: string, fn: (id: string) => Promise<Transaction>) => {
     setActionLoading(id);
-    try { update(id, await fn(id)); } catch (err: any) { alert(err.message || 'Erro'); }
+    try {
+      update(id, await fn(id));
+      if (auth.refreshProfile) await auth.refreshProfile();
+    } catch (err: any) { alert(err.message || 'Erro'); }
     finally { setActionLoading(null); }
   };
 

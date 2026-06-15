@@ -67,16 +67,7 @@ public class CommunitiesController : ControllerBase
         return Ok(community);
     }
 
-    [HttpPost("{id}/join")]
-    [Authorize]
-    public async Task<IActionResult> Join(string id, [FromQuery] string? inviteCode, CancellationToken cancellationToken)
-    {
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-            ?? throw new UnauthorizedAccessException("Invalid token");
-        await _communityService.JoinAsync(id, userId, inviteCode, cancellationToken);
-        return NoContent();
-    }
+    // Old Join removed - see new Join below with password/approval support
 
     [HttpPost("{id}/leave")]
     [Authorize]
