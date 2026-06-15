@@ -31,9 +31,12 @@ const Navbar: Component = () => {
           <div class="flex items-center gap-3 h-16">
             <button
               onClick={() => handleNav('/')}
-              class="text-lg font-bold eq-brand cursor-pointer tracking-tight shrink-0 text-xl"
+              class="flex items-center gap-2 cursor-pointer shrink-0"
             >
-              equivale
+              <img src="/logo-symbol.svg" alt="eqüidade" class="w-8 h-8 logo-symbol" />
+              <span class="text-lg font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>
+                eqüidade
+              </span>
             </button>
 
             {/* Search bar with autocomplete */}

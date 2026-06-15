@@ -54,6 +54,9 @@
   .dark body, .dark {
     color-scheme: dark;
   }
+
+  /* Logo symbol adapts to theme */
+  .dark .logo-symbol { filter: hue-rotate(15deg) brightness(1.1); }
 }
 
 @layer components {
