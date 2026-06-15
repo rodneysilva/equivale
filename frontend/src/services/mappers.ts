@@ -7,7 +7,7 @@ export interface BackendAuthResponse {
   userId: string;
   email: string;
   name: string;
-  role: string;
+  role: number;
 }
 
 export interface BackendUserDto {
@@ -148,7 +148,7 @@ export function mapAuthResponse(data: BackendAuthResponse): AuthResponse {
       username: data.name,
       email: data.email,
       fullName: data.name,
-      role: data.role.toLowerCase() === 'admin' ? 'admin' : 'user',
+      role: data.role === 1 ? 'admin' : 'user',
       walletBalance: 0,
       createdAt: new Date().toISOString(),
       isBanned: false,
@@ -164,7 +164,7 @@ export function mapUser(data: BackendUserDto): User {
     fullName: data.name,
     bio: data.bio ?? undefined,
     avatarUrl: data.avatarUrl ?? undefined,
-    role: data.role.toLowerCase() === 'admin' ? 'admin' : 'user',
+    role: data.role === 'Admin' ? 'admin' : 'user',
     walletBalance: data.walletBalance,
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
