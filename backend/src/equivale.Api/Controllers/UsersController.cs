@@ -11,6 +11,7 @@ public record UserCommunityDto(string Id, string Name, string? ImageUrl, int Mem
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;

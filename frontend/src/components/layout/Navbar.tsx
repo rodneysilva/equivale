@@ -41,10 +41,13 @@ const Navbar: Component = () => {
       <nav class="fixed top-0 left-0 right-0 z-50 eq-nav">
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
           <div class="flex items-center gap-2 h-14">
-            {/* Logo */}
-            <button onClick={() => go('/')} class="flex items-center gap-1.5 shrink-0">
-              <img src="/logo.svg" alt="eqüivale" class="h-7 w-auto hidden sm:block" />
-              <img src="/favicon.svg" alt="eqüivale" class="w-7 h-7 sm:hidden" />
+            {/* Logo — desktop navega home, mobile abre menu */}
+            <button onClick={() => {
+              if (window.innerWidth < 768) { setMobileOpen(!mobileOpen()); }
+              else { go('/'); }
+            }} class="flex items-center gap-1.5 shrink-0">
+              <img src="/logo.svg" alt="eqüivale" class="h-8 w-auto hidden sm:block" />
+              <img src="/favicon.svg" alt="eqüivale" class="w-9 h-9 sm:hidden" />
             </button>
 
             {/* Search — desktop */}
@@ -170,10 +173,6 @@ const Navbar: Component = () => {
                   <button onClick={() => go('/register')} class="eq-btn eq-btn-sm">Criar conta</button>
                 </div>
               )}
-
-              <button onClick={() => setMobileOpen(!mobileOpen())} class="md:hidden p-1.5 rounded eq-btn-ghost">
-                {mobileOpen() ? <X size={18} /> : <Menu size={18} />}
-              </button>
             </div>
           </div>
         </div>
@@ -187,6 +186,7 @@ const Navbar: Component = () => {
           <div class="absolute inset-0 bg-black/40" />
           <div class="absolute top-14 left-0 right-0 eq-nav p-4 space-y-1 shadow-lg" onClick={e => e.stopPropagation()}>
             <div class="mb-3"><SearchBar /></div>
+            <button onClick={() => go('/')} class="w-full text-left px-3 py-2.5 rounded text-sm font-medium eq-btn-ghost">Início</button>
             <button onClick={() => go('/communities')} class="w-full text-left px-3 py-2.5 rounded text-sm font-medium eq-btn-ghost">Comunidades</button>
             <button onClick={() => go('/products')} class="w-full text-left px-3 py-2.5 rounded text-sm font-medium eq-btn-ghost">Produtos</button>
             <button onClick={() => go('/services')} class="w-full text-left px-3 py-2.5 rounded text-sm font-medium eq-btn-ghost">Serviços</button>

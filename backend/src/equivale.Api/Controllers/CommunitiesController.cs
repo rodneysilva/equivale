@@ -12,6 +12,7 @@ namespace equivale.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class CommunitiesController : ControllerBase
 {
     private readonly ICommunityService _communityService;

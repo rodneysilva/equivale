@@ -11,6 +11,7 @@ namespace equivale.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ServicesController : ControllerBase
 {
     private readonly IServiceService _serviceService;

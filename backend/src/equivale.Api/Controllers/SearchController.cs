@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
 using equivale.Infrastructure.Repositories;
@@ -7,6 +8,7 @@ namespace equivale.Api.Controllers;
 
 [ApiController]
 [Route("api/search")]
+[Authorize]
 public class SearchController : ControllerBase
 {
     private readonly SearchRepository _searchRepository;
