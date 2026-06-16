@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using equivale.Api.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
@@ -23,10 +24,7 @@ public class PostsController : ControllerBase
         _activityService = activityService;
     }
 
-    private string GetUserId() =>
-        User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-        ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-        ?? throw new UnauthorizedAccessException("Token inválido.");
+    private string GetUserId() => User.GetUserIdOrThrow();
 
     [HttpGet]
     public async Task<ActionResult> GetAll(string communityId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)

@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using equivale.Api.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
@@ -155,10 +156,7 @@ public class CommunitiesController : ControllerBase
         return Ok(result);
     }
 
-    private string GetUserId() =>
-        User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-        ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-        ?? throw new UnauthorizedAccessException("Token inválido.");
+    private string GetUserId() => User.GetUserIdOrThrow();
 
     /// <summary>
     /// Determina se uma comunidade privada deve ser ocultada do chamador atual.

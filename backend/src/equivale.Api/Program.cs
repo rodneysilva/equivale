@@ -223,6 +223,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+// Garante índices do MongoDB (idempotente) antes de iniciar.
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<equivale.Infrastructure.Persistence.MongoDbContext>();
+    await dbContext.EnsureIndexesAsync();
+}
+
 try
 {
     Log.Information("Starting Equivale API v{Version}", typeof(Program).Assembly.GetName().Version?.ToString() ?? "1.0.0");

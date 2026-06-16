@@ -39,6 +39,18 @@ public sealed class MongoDbContext
     public IMongoCollection<Transaction> Transactions => Database.GetCollection<Transaction>("transactions");
     public IMongoCollection<Review> Reviews => Database.GetCollection<Review>("reviews");
 
+    /// <summary>
+    /// Cria índices essenciais (idempotente). Chamado uma vez no startup.
+    /// Status indexa o aggregation de stats (admin) e filtros por estado da transação.
+    /// </summary>
+    public async Task EnsureIndexesAsync(CancellationToken cancellationToken = default)
+    {
+        var statusKeys = Builders<Transaction>.IndexKeys.Ascending(t => t.Status);
+        await Transactions.Indexes.CreateOneAsync(
+            new CreateIndexModel<Transaction>(statusKeys, new CreateIndexOptions { Background = true }),
+            cancellationToken: cancellationToken);
+    }
+
     private static int _serializersRegistered = 0;
 
     private static void RegisterValueObjectSerializers()

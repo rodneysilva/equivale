@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using equivale.Api.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
@@ -24,10 +25,7 @@ public class CommentsController : ControllerBase
         _notifications = notifications;
     }
 
-    private string GetUserId() =>
-        User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-        ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-        ?? throw new UnauthorizedAccessException("Token inválido.");
+    private string GetUserId() => User.GetUserIdOrThrow();
 
     [HttpGet]
     public async Task<ActionResult<List<CommentDto>>> GetAll(string communityId, string postId, CancellationToken ct)
