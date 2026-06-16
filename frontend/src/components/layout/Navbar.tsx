@@ -122,6 +122,9 @@ const Navbar: Component = () => {
               )}
             </div>
 
+            {/* Spacer — empurra right side no mobile (onde search esta oculta) */}
+            <div class="flex-1 sm:hidden" />
+
             {/* Right side */}
             <div class="flex items-center gap-1 shrink-0">
               <ThemeToggle />
