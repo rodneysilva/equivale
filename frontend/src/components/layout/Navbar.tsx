@@ -47,7 +47,8 @@ const Navbar: Component = () => {
               else { go('/'); }
             }} class="flex items-center gap-1.5 shrink-0">
               <img src="/logo.svg" alt="eqüivale" class="h-8 w-auto hidden sm:block" />
-              <img src="/favicon.svg" alt="eqüivale" class="w-9 h-9 sm:hidden" />
+              <img src="/favicon.svg" alt="eqüivale" class="w-11 h-11 sm:hidden" />
+              <span class="text-base font-bold tracking-tight eq-display sm:hidden">eqüivale</span>
             </button>
 
             {/* Search — desktop */}
