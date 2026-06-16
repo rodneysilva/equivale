@@ -147,7 +147,7 @@ const HomePage: Component = () => {
             {/* Prova social */}
             <div class="mt-10 grid grid-cols-3 gap-4 sm:gap-8 max-w-lg">
               <HeroStat label="Comunidades ativas" value={formatStat(stats().communities)} accent="var(--color-community)" />
-              <HeroStat label="Em circulação" value={formatStat(stats().products)} accent="var(--color-product)" suffix="itens" />
+              <HeroStat label="em circulação" value={formatStat(stats().products)} accent="var(--color-product)" suffix="itens" />
               <HeroStat label="EQL transacionados" value={formatStat(stats().eqlVolume)} accent="var(--color-service)" />
             </div>
           </div>
@@ -186,14 +186,9 @@ const HeroStat: Component<{ label: string; value: string; accent: string; suffix
   <div>
     <div class="eq-display text-2xl sm:text-3xl font-bold leading-none" style={{ color: props.accent }}>
       {props.value}
-      {props.suffix && (
-        <span class="text-xs sm:text-sm font-medium ml-1" style={{ color: 'var(--color-text-muted)' }}>
-          {props.suffix}
-        </span>
-      )}
     </div>
-    <div class="mt-1.5 text-xs sm:text-sm leading-tight" style={{ color: 'var(--color-text-muted)' }}>
-      {props.label}
+    <div class="mt-1.5 text-xs sm:text-sm font-medium leading-tight" style={{ color: 'var(--color-text-secondary)' }}>
+      {props.suffix ? `${props.suffix} ` : ''}{props.label}
     </div>
   </div>
 );

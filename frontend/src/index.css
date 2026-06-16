@@ -202,6 +202,8 @@
     letter-spacing: -0.01em;
   }
   .eq-btn-outline:hover { border-color: var(--color-primary); color: var(--color-primary); }
+  .dark .eq-btn-outline { border-color: var(--color-border); color: var(--color-text); }
+  .dark .eq-btn-outline:hover { border-color: var(--color-accent); color: var(--color-accent); }
 
   .eq-btn-ghost {
     display: inline-flex;
