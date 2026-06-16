@@ -10,6 +10,8 @@ export interface AdminStats {
   communities: number;
   transactions: number;
   completedTransactions: number;
+  totalFeesCollected: number;
+  totalVolume: number;
 }
 
 export const adminService = {

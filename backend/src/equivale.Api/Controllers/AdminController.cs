@@ -46,7 +46,9 @@ public class AdminController : ControllerBase
             Services: services.Count,
             Communities: communities.Count,
             Transactions: transactions.Count,
-            CompletedTransactions: transactions.Count(t => t.Status == Domain.Enums.TransactionStatus.Finished)
+            CompletedTransactions: transactions.Count(t => t.Status == Domain.Enums.TransactionStatus.Finished),
+            TotalFeesCollected: transactions.Where(t => t.Status == Domain.Enums.TransactionStatus.Finished).Sum(t => t.FeeAmount),
+            TotalVolume: transactions.Where(t => t.Status == Domain.Enums.TransactionStatus.Finished).Sum(t => t.TotalPrice.Amount)
         ));
     }
 
@@ -105,4 +107,6 @@ public record AdminStatsDto(
     int Services,
     int Communities,
     int Transactions,
-    int CompletedTransactions);
+    int CompletedTransactions,
+    decimal TotalFeesCollected,
+    decimal TotalVolume);

@@ -1,6 +1,6 @@
 import { type Component, createSignal, onMount, For, Show } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { Users, Package, Zap, Globe, TrendingUp, Shield, Clock, ChevronRight } from 'lucide-solid';
+import { Users, Package, Zap, Globe, TrendingUp, Shield, Clock, ChevronRight, Coins, BarChart3 } from 'lucide-solid';
 import Card from '../../components/ui/Card';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { adminService, type AdminStats } from '../../services/admin.service';
@@ -60,7 +60,7 @@ const AdminDashboardPage: Component = () => {
 
       {loading() ? <LoadingSpinner class="py-20" /> : (
         <>
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
             <For each={statCards()}>
               {(stat) => (
                 <Card hover class="p-4 cursor-pointer" onClick={() => navigate(stat.link)}>
@@ -71,6 +71,37 @@ const AdminDashboardPage: Component = () => {
               )}
             </For>
           </div>
+
+          <Show when={stats()}>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+              <Card class="p-5 col-span-1 sm:col-span-1" style={{ background: 'var(--color-primary-light)' }}>
+                <div class="flex items-center gap-2 mb-2">
+                  <Coins size={18} style={{ color: 'var(--color-primary)' }} />
+                  <span class="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-primary)' }}>Faturamento em Taxas</span>
+                </div>
+                <p class="text-3xl font-bold eq-display" style={{ color: 'var(--color-primary)' }}>{stats()!.totalFeesCollected.toFixed(2)}</p>
+                <p class="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>EQL arrecadados ({stats()!.completedTransactions} transações)</p>
+              </Card>
+              <Card class="p-5">
+                <div class="flex items-center gap-2 mb-2">
+                  <BarChart3 size={18} style={{ color: 'var(--color-accent)' }} />
+                  <span class="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-accent)' }}>Volume Total</span>
+                </div>
+                <p class="text-3xl font-bold eq-display" style={{ color: 'var(--color-accent)' }}>{stats()!.totalVolume.toFixed(2)}</p>
+                <p class="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>EQL circulados na plataforma</p>
+              </Card>
+              <Card class="p-5">
+                <div class="flex items-center gap-2 mb-2">
+                  <TrendingUp size={18} style={{ color: 'var(--color-success)' }} />
+                  <span class="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-success)' }}>Taxa Média</span>
+                </div>
+                <p class="text-3xl font-bold eq-display" style={{ color: 'var(--color-success)' }}>
+                  {stats()!.totalVolume > 0 ? ((stats()!.totalFeesCollected / stats()!.totalVolume) * 100).toFixed(2) : '0.00'}%
+                </p>
+                <p class="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>Sobre o volume transacionado</p>
+              </Card>
+            </div>
+          </Show>
 
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Card hover class="p-5 cursor-pointer" onClick={() => navigate('/admin/users')}>
