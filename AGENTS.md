@@ -218,12 +218,17 @@ cd frontend; npm run test:e2e:ui
 - [x] Polimento visual/código (cores→tokens CSS, código morto removido, toasts consistentes)
 - [x] Testes do fluxo financeiro (17 unit tests do TransactionService + e2e two-actor completo)
 - [x] Bug crítico da tesouraria corrigido (finalização com taxa quebrava o escrow)
+- [x] Moderação de conteúdo (admin: ocultar/excluir posts e comentários)
+- [x] Demurrage real do EQL (serviço + ledger + gatilho admin)
 
 ### Dívida técnica remanescente (registrar)
-- [ ] Onda C — feature de produto a definir: moderação admin (posts/comentários), demurrage real, ou Pix on/off-ramp
+- [ ] **Pix on/off-ramp — BLOQUEADO**: exige escolher provedor (Mercado Pago/Gerencianet/Asaas), chaves de API, webhooks e KYC. Não implementar "cego" (seria código morto). Decisão de produto.
+- [ ] Demurrage sem scheduler (Hangfire/Quartz): `ApplyAsync` é acionado manualmente pelo admin (1x/mês)
 - [ ] `productsService.getByCategory()` suspeito de órfão (confirmar antes de remover)
 - [ ] `AdminDashboardPage` stat cards com cores ciano/violeta (#0891b2/#7c3aed) sem token (acentos intencionais)
 - [ ] Index único em `users.Email` (a tesouraria é auto-provisionada; corrida no 1º finish pode duplicar)
+- [ ] DI duplicada: `IBaseRepository<Post>` registrado como `BaseRepository<Post>` genérico além de `IPostRepository`→`PostRepository` (dois singletons sobre a mesma coleção)
+- [ ] Moderação: comentário pai ocultado deixa replies órfãos como raízes na árvore pública
 - [ ] ~35 erros TS pré-existentes no frontend (boxShadow/borderColor em CSSProperties, `items` em PaginatedResponse, etc.) — sem gate de typecheck
 - [ ] Chat sem paginação/marcação de leitura; polling fixo 5s sem backoff
 - [ ] `AdminStatsDto` casts long→int (seguro até <2bi)
@@ -231,4 +236,4 @@ cd frontend; npm run test:e2e:ui
 ---
 
 *Última atualização: 16/06/2026*
-*Commit atual: 34d9850*
+*Commit atual: 5cec921*
