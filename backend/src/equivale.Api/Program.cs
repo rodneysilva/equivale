@@ -63,6 +63,9 @@ builder.Services.AddScoped<equivale.Application.Services.DtoEnricher>();
 builder.Services.AddScoped<equivale.Application.Services.SeedService>();
 builder.Services.AddScoped<equivale.Application.Services.TransactionService>();
 
+// Config options
+builder.Services.Configure<equivale.Application.Configuration.TransactionFeeOptions>(builder.Configuration.GetSection(equivale.Application.Configuration.TransactionFeeOptions.SectionName));
+
 // Domain repositories
 builder.Services.AddScoped<equivale.Domain.Interfaces.ITransactionRepository, equivale.Infrastructure.Repositories.TransactionRepository>();
 builder.Services.AddScoped(typeof(equivale.Domain.Interfaces.IBaseRepository<equivale.Domain.Entities.Review>), sp =>

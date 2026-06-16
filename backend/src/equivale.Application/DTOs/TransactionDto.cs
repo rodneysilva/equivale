@@ -13,6 +13,7 @@ public record TransactionDto(
     decimal UnitPrice,
     decimal ShippingCost,
     decimal TotalPrice,
+    decimal FeeAmount,
     string Status,
     string? TrackingInfo,
     string? DeliveryAddress,

@@ -61,6 +61,9 @@ public class SeedService
         // Promote known admin user
         await PromoteAdminAsync(ct);
 
+        // Ensure treasury user exists for fee collection
+        await EnsureTreasuryUserAsync(ct);
+
         // Get admin user to include in seed data
         var adminUser = await _userRepository.GetByEmailAsync(new Email("rodneydocarmo@gmail.com"), ct);
 
@@ -113,6 +116,24 @@ public class SeedService
             admin.Credit(10000);
             await _userRepository.AddAsync(admin, ct);
         }
+    }
+
+    private async Task EnsureTreasuryUserAsync(CancellationToken ct)
+    {
+        var treasuryEmail = new Email("tesouraria@equivale");
+        var existing = await _userRepository.GetByEmailAsync(treasuryEmail, ct);
+        if (existing is not null) return;
+        var treasury = new User
+        {
+            Name = "Tesouraria Eqüivale",
+            Email = treasuryEmail,
+            PasswordHash = _passwordHash,
+            Bio = "Conta da tesouraria para arrecadação de taxas da plataforma.",
+            Role = UserRole.Admin,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        };
+        await _userRepository.AddAsync(treasury, ct);
     }
 
     private async Task<int> SeedTransactionsAsync(Dictionary<string, User> users, CancellationToken ct)

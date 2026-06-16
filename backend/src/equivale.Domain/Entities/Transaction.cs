@@ -15,6 +15,7 @@ public class Transaction
     public Money UnitPrice { get; set; } = Money.Zero;
     public decimal ShippingCost { get; set; } = 0;
     public Money TotalPrice { get; set; } = Money.Zero; // (UnitPrice * Qty) + ShippingCost
+    public decimal FeeAmount { get; set; } // taxa descontada do vendedor ao finalizar
 
     public TransactionStatus Status { get; set; } = TransactionStatus.OrderPlaced;
 

@@ -6,6 +6,8 @@ using equivale.Domain.Enums;
 using equivale.Domain.Exceptions;
 using equivale.Domain.Interfaces;
 using equivale.Domain.ValueObjects;
+using equivale.Application.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace equivale.Application.Services;
 
@@ -28,11 +30,15 @@ public class TransactionService : ITransactionService
     private readonly IServiceRepository _serviceRepo;
     private readonly IUserRepository _userRepo;
     private readonly IMapper _mapper;
+    private readonly TransactionFeeOptions _feeOptions;
 
     public TransactionService(ITransactionRepository repo, IProductRepository productRepo,
-        IServiceRepository serviceRepo, IUserRepository userRepo, IMapper mapper)
+        IServiceRepository serviceRepo, IUserRepository userRepo, IMapper mapper,
+        IOptions<TransactionFeeOptions> feeOptions)
     {
-        _repo = repo; _productRepo = productRepo; _serviceRepo = serviceRepo; _userRepo = userRepo; _mapper = mapper;
+        _repo = repo; _productRepo = productRepo; _serviceRepo = serviceRepo;
+        _userRepo = userRepo; _mapper = mapper;
+        _feeOptions = feeOptions.Value;
     }
 
     public async Task<TransactionDto> CreateAsync(string buyerId, CreateTransactionDto dto, CancellationToken ct = default)
@@ -59,20 +65,12 @@ public class TransactionService : ITransactionService
         var itemTotal = unitPrice * dto.Quantity;
         var total = itemTotal + shipping;
 
-        // Verifica saldo ANTES de bloquear
         if (buyer.WalletBalance.Amount < total)
-            throw new InvalidOperationException($"Saldo insuficiente. Você tem {buyer.WalletBalance.Amount} EQL mas precisa de {total} EQL (produto + frete).");
+            throw new InvalidOperationException($"Saldo insuficiente. Você tem {buyer.WalletBalance.Amount} EQL mas precisa de {total} EQL.");
 
-        // BLOQUEIA imediatamente (calção)
         buyer.Block(total);
-        try
-        {
-            await _userRepo.UpdateAsync(buyer, ct);
-        }
-        catch (ConcurrencyException)
-        {
-            throw new InvalidOperationException("Saldo alterado por outra operação, tente novamente.");
-        }
+        try { await _userRepo.UpdateAsync(buyer, ct); }
+        catch (ConcurrencyException) { throw new InvalidOperationException("Saldo alterado por outra operação, tente novamente."); }
 
         var tx = new Transaction
         {
@@ -135,30 +133,17 @@ public class TransactionService : ITransactionService
         var t = await _repo.GetByIdAsync(id, ct);
         if (t is null || (t.BuyerId != userId && t.SellerId != userId)) return null;
 
-        // Estorna o calção de volta ao comprador (se houver saldo bloqueado)
         var buyer = await _userRepo.GetByIdAsync(t.BuyerId, ct);
         if (buyer is not null && buyer.BlockedBalance.Amount >= t.TotalPrice.Amount)
         {
             buyer.Unblock(t.TotalPrice.Amount);
-            try
-            {
-                await _userRepo.UpdateAsync(buyer, ct);
-            }
-            catch (ConcurrencyException)
-            {
-                throw new InvalidOperationException("Erro de concorrência ao estornar saldo. Tente novamente.");
-            }
+            try { await _userRepo.UpdateAsync(buyer, ct); }
+            catch (ConcurrencyException) { throw new InvalidOperationException("Erro de concorrência ao estornar saldo. Tente novamente."); }
         }
 
         t.Cancel();
-        try
-        {
-            await _repo.UpdateAsync(t, ct);
-        }
-        catch (ConcurrencyException)
-        {
-            throw new InvalidOperationException("Erro de concorrência ao cancelar transação. Tente novamente.");
-        }
+        try { await _repo.UpdateAsync(t, ct); }
+        catch (ConcurrencyException) { throw new InvalidOperationException("Erro de concorrência ao cancelar transação. Tente novamente."); }
         return await EnrichAsync(t, ct);
     }
 
@@ -167,36 +152,43 @@ public class TransactionService : ITransactionService
         var t = await _repo.GetByIdAsync(transactionId, ct) ?? throw new InvalidOperationException("Transação não encontrada.");
         if (!t.CanFinish) throw new InvalidOperationException("A entrega precisa estar confirmada.");
 
-        // Libera: remove do bloqueado do comprador + credita vendedor
+        // Libera bloqueado do comprador
         var buyer = await _userRepo.GetByIdAsync(t.BuyerId, ct);
         var seller = await _userRepo.GetByIdAsync(t.SellerId, ct);
 
         // TODO: Envolver operações multi-documento em transação MongoDB para atomicidade
-        if (buyer is not null)
+        if (buyer is not null && buyer.BlockedBalance.Amount >= t.TotalPrice.Amount)
         {
-            // Só remove do bloqueado se houver saldo bloqueado (seed transactions podem não ter)
-            if (buyer.BlockedBalance.Amount >= t.TotalPrice.Amount)
-                buyer.ReleaseBlocked(t.TotalPrice.Amount);
-            try
-            {
-                await _userRepo.UpdateAsync(buyer, ct);
-            }
-            catch (ConcurrencyException)
-            {
-                throw new InvalidOperationException("Erro de concorrência ao liberar saldo do comprador. Tente novamente.");
-            }
+            buyer.ReleaseBlocked(t.TotalPrice.Amount);
+            try { await _userRepo.UpdateAsync(buyer, ct); }
+            catch (ConcurrencyException) { throw new InvalidOperationException("Concorrência ao liberar saldo do comprador. Tente novamente."); }
         }
+
+        // Calcula e aplica taxa de transação
+        var feeRate = _feeOptions.Percent / 100m;
+        var feeAmount = Math.Round(t.TotalPrice.Amount * feeRate, 2);
+        var sellerPayout = t.TotalPrice.Amount - feeAmount;
+
         if (seller is not null)
         {
-            seller.Credit(t.TotalPrice.Amount);
+            seller.Credit(sellerPayout);
+            try { await _userRepo.UpdateAsync(seller, ct); }
+            catch (ConcurrencyException) { throw new InvalidOperationException("Concorrência ao creditar vendedor. Tente novamente."); }
+        }
+
+        // Credita a taxa na tesouraria (ignora falha — não deve bloquear a finalização)
+        if (feeAmount > 0)
+        {
             try
             {
-                await _userRepo.UpdateAsync(seller, ct);
+                var treasury = await EnsureTreasuryUserAsync(ct);
+                if (treasury is not null)
+                {
+                    treasury.Credit(feeAmount);
+                    await _userRepo.UpdateAsync(treasury, ct);
+                }
             }
-            catch (ConcurrencyException)
-            {
-                throw new InvalidOperationException("Erro de concorrência ao creditar vendedor. Tente novamente.");
-            }
+            catch { /* taxa não crítica para o fluxo principal */ }
         }
 
         // Decrementa estoque
@@ -207,26 +199,24 @@ public class TransactionService : ITransactionService
             {
                 product.Stock = Math.Max(0, product.Stock - t.Quantity);
                 if (product.Stock == 0) product.Status = ItemStatus.Sold;
-                try
-                {
-                    await _productRepo.UpdateAsync(product, ct);
-                }
-                catch (ConcurrencyException)
-                {
-                    throw new InvalidOperationException("Erro de concorrência ao atualizar estoque. Tente novamente.");
-                }
+                try { await _productRepo.UpdateAsync(product, ct); }
+                catch (ConcurrencyException) { throw new InvalidOperationException("Concorrência ao atualizar estoque. Tente novamente."); }
             }
         }
 
+        t.FeeAmount = feeAmount;
         t.Finish();
-        try
-        {
-            await _repo.UpdateAsync(t, ct);
-        }
-        catch (ConcurrencyException)
-        {
-            throw new InvalidOperationException("Erro de concorrência ao finalizar transação. Tente novamente.");
-        }
+        try { await _repo.UpdateAsync(t, ct); }
+        catch (ConcurrencyException) { throw new InvalidOperationException("Concorrência ao finalizar transação. Tente novamente."); }
+    }
+
+    private User? _treasuryUser;
+    private async Task<User?> EnsureTreasuryUserAsync(CancellationToken ct)
+    {
+        if (_treasuryUser is not null) return _treasuryUser;
+        var email = new Email(_feeOptions.TreasuryUserEmail);
+        _treasuryUser = await _userRepo.GetByEmailAsync(email, ct);
+        return _treasuryUser;
     }
 
     private async Task<TransactionDto> EnrichAsync(Transaction t, CancellationToken ct)
