@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
 using equivale.Application.Interfaces.Services;
+using equivale.Domain.Enums;
 using equivale.Domain.Interfaces;
 using MediatR;
 
@@ -15,12 +16,14 @@ public class ProductsController : ControllerBase
     private readonly IProductService _productService;
     private readonly IProductRepository _productRepository;
     private readonly IMediator _mediator;
+    private readonly IUserActivityService _activityService;
 
-    public ProductsController(IProductService productService, IProductRepository productRepository, IMediator mediator)
+    public ProductsController(IProductService productService, IProductRepository productRepository, IMediator mediator, IUserActivityService activityService)
     {
         _productService = productService;
         _productRepository = productRepository;
         _mediator = mediator;
+        _activityService = activityService;
     }
 
     [HttpGet]
@@ -48,6 +51,7 @@ public class ProductsController : ControllerBase
     public async Task<ActionResult<ProductDto>> Create([FromBody] CreateProductDto dto, CancellationToken cancellationToken)
     {
         var product = await _productService.CreateAsync(dto, cancellationToken);
+        _ = _activityService.LogAsync(dto.SellerId, ActivityType.ProductPublished, "Product", product.Id, product.Title, "publicou um produto", cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
     }
 

@@ -6,4 +6,6 @@ export type { Community, CreateCommunityDto } from './community';
 export type { Transaction } from './transaction';
 export type { Review } from './review';
 export type { Post, CreatePostDto } from './post';
+export type { Comment } from './comment';
+export type { UserActivity } from './activity';
 export type { PaginatedResponse } from './common';

@@ -2,7 +2,9 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
+using equivale.Application.Interfaces.Services;
 using equivale.Application.Services;
+using equivale.Domain.Enums;
 
 namespace equivale.Api.Controllers;
 
@@ -12,7 +14,13 @@ namespace equivale.Api.Controllers;
 public class TransactionsController : ControllerBase
 {
     private readonly ITransactionService _svc;
-    public TransactionsController(ITransactionService svc) => _svc = svc;
+    private readonly IUserActivityService _activityService;
+
+    public TransactionsController(ITransactionService svc, IUserActivityService activityService)
+    {
+        _svc = svc;
+        _activityService = activityService;
+    }
 
     private string GetUserId() =>
         User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
@@ -22,7 +30,13 @@ public class TransactionsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<TransactionDto>> Create([FromBody] CreateTransactionDto dto, CancellationToken ct)
     {
-        try { return Ok(await _svc.CreateAsync(GetUserId(), dto, ct)); }
+        try
+        {
+            var transaction = await _svc.CreateAsync(GetUserId(), dto, ct);
+            _ = _activityService.LogAsync(transaction.BuyerId, ActivityType.Purchase, "Transaction", transaction.Id, transaction.ItemTitle, "fez uma compra", ct);
+            _ = _activityService.LogAsync(transaction.SellerId, ActivityType.Sale, "Transaction", transaction.Id, transaction.ItemTitle, "fez uma venda", ct);
+            return Ok(transaction);
+        }
         catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
     }
 

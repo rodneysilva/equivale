@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using equivale.Application.Interfaces.Services;
 using equivale.Domain.Entities;
+using equivale.Domain.Enums;
 using equivale.Domain.Interfaces;
 using equivale.Application.Services;
 
@@ -14,17 +16,20 @@ public class ReviewsController : ControllerBase
     private readonly IUserRepository _userRepository;
     private readonly ITransactionRepository _transactionRepository;
     private readonly ITransactionService _transactionService;
+    private readonly IUserActivityService _activityService;
 
     public ReviewsController(
         IBaseRepository<Review> reviewRepository,
         IUserRepository userRepository,
         ITransactionRepository transactionRepository,
-        ITransactionService transactionService)
+        ITransactionService transactionService,
+        IUserActivityService activityService)
     {
         _reviewRepository = reviewRepository;
         _userRepository = userRepository;
         _transactionRepository = transactionRepository;
         _transactionService = transactionService;
+        _activityService = activityService;
     }
 
     [HttpGet("user/{userId}")]
@@ -114,6 +119,8 @@ public class ReviewsController : ControllerBase
             };
 
             await _reviewRepository.AddAsync(review, ct);
+
+            _ = _activityService.LogAsync(userId, ActivityType.ReviewGiven, "Review", review.Id, transaction.ItemTitle, "avaliou uma transação", ct);
 
             // If buyer is reviewing and transaction is Delivered, finish it (libera pagamento)
             if (transaction.BuyerId == userId && transaction.Status == Domain.Enums.TransactionStatus.Delivered)

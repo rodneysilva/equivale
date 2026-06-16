@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
 using equivale.Application.Interfaces.Services;
 using equivale.Domain.Entities;
+using equivale.Domain.Enums;
 using equivale.Domain.Interfaces;
 using MediatR;
 
@@ -18,15 +19,17 @@ public class CommunitiesController : ControllerBase
     private readonly IUserRepository _userRepository;
     private readonly IBaseRepository<JoinRequest> _joinRequestRepo;
     private readonly IMediator _mediator;
+    private readonly IUserActivityService _activityService;
 
     public CommunitiesController(ICommunityService communityService, ICommunityRepository communityRepository,
-        IUserRepository userRepository, IBaseRepository<JoinRequest> joinRequestRepo, IMediator mediator)
+        IUserRepository userRepository, IBaseRepository<JoinRequest> joinRequestRepo, IMediator mediator, IUserActivityService activityService)
     {
         _communityService = communityService;
         _communityRepository = communityRepository;
         _userRepository = userRepository;
         _joinRequestRepo = joinRequestRepo;
         _mediator = mediator;
+        _activityService = activityService;
     }
 
     [HttpGet]
@@ -71,6 +74,7 @@ public class CommunitiesController : ControllerBase
             ?? throw new UnauthorizedAccessException("Invalid token");
         dto = dto with { CreatorId = userId };
         var community = await _communityService.CreateAsync(dto, cancellationToken);
+        _ = _activityService.LogAsync(userId, ActivityType.CommunityCreated, "Community", community.Id, community.Name, "criou uma comunidade", cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = community.Id }, community);
     }
 
@@ -173,6 +177,7 @@ public class CommunitiesController : ControllerBase
         {
             community.Members.Add(userId);
             await _communityRepository.UpdateAsync(community, ct);
+            _ = _activityService.LogAsync(userId, ActivityType.CommunityJoined, "Community", community.Id, community.Name, "entrou na comunidade", ct);
             return Ok(new { joined = true, mode = "open" });
         }
 
@@ -191,6 +196,7 @@ public class CommunitiesController : ControllerBase
             community.Members.Add(userId);
             community.OneTimePassword = null; // Desativa após uso
             await _communityRepository.UpdateAsync(community, ct);
+            _ = _activityService.LogAsync(userId, ActivityType.CommunityJoined, "Community", community.Id, community.Name, "entrou na comunidade", ct);
             return Ok(new { joined = true, mode = "password" });
         }
 

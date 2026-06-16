@@ -17,13 +17,15 @@ public class UsersController : ControllerBase
     private readonly IUserRepository _userRepository;
     private readonly ICommunityRepository _communityRepository;
     private readonly IMediator _mediator;
+    private readonly IUserActivityService _activityService;
 
-    public UsersController(IUserService userService, IUserRepository userRepository, ICommunityRepository communityRepository, IMediator mediator)
+    public UsersController(IUserService userService, IUserRepository userRepository, ICommunityRepository communityRepository, IMediator mediator, IUserActivityService activityService)
     {
         _userService = userService;
         _userRepository = userRepository;
         _communityRepository = communityRepository;
         _mediator = mediator;
+        _activityService = activityService;
     }
 
     [HttpGet]
@@ -56,6 +58,14 @@ public class UsersController : ControllerBase
             .ToList();
 
         return Ok(userCommunities);
+    }
+
+    [HttpGet("{id}/activities")]
+    public async Task<ActionResult<PagedResult<UserActivityDto>>> GetActivities(
+        string id, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
+    {
+        var result = await _activityService.GetByUserIdAsync(id, page, pageSize, cancellationToken);
+        return Ok(result);
     }
 
     [HttpPut("{id}")]

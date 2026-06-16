@@ -1,6 +1,9 @@
 import { type Component, createSignal, onMount, For, Show } from 'solid-js';
 import { useParams, useNavigate } from '@solidjs/router';
-import { ArrowLeft, Package, Zap, Users as UsersIcon, ExternalLink, Star, TrendingUp } from 'lucide-solid';
+import {
+  ArrowLeft, Package, Zap, Users as UsersIcon, ExternalLink, Star, TrendingUp,
+  Globe, ShoppingCart, MessageCircle, User as UserIcon,
+} from 'lucide-solid';
 import Card from '../components/ui/Card';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import ProductGrid from '../components/marketplace/ProductGrid';
@@ -9,8 +12,63 @@ import { usersService } from '../services/users.service';
 import { productsService } from '../services/products.service';
 import { servicesService } from '../services/services.service';
 import { reviewsService } from '../services/transactions.service';
+import { activitiesService } from '../services/activities.service';
 import { getSocialLinkIcon, getSocialLinkLabel } from '../data/avatars';
-import type { User, Product, Service, UserCommunity, Review } from '../types';
+import type { User, Product, Service, UserCommunity, Review, UserActivity } from '../types';
+
+const ACTIVITY_META: Record<string, { icon: any; label: string }> = {
+  ProductPublished: { icon: Package, label: 'publicou um produto' },
+  ServicePublished: { icon: Zap, label: 'ofereceu um serviço' },
+  CommunityCreated: { icon: Globe, label: 'criou uma comunidade' },
+  CommunityJoined: { icon: UsersIcon, label: 'entrou na comunidade' },
+  Purchase: { icon: ShoppingCart, label: 'fez uma compra' },
+  Sale: { icon: TrendingUp, label: 'fez uma venda' },
+  ReviewGiven: { icon: Star, label: 'avaliou uma transação' },
+  PostCreated: { icon: MessageCircle, label: 'publicou na comunidade' },
+  ProfileUpdated: { icon: UserIcon, label: 'atualizou o perfil' },
+};
+
+function activityIcon(type: string) {
+  return ACTIVITY_META[type]?.icon ?? Package;
+}
+
+function activityLabel(activity: UserActivity): string {
+  if (activity.description) {
+    return activity.entityTitle
+      ? `${activity.description}: ${activity.entityTitle}`
+      : activity.description;
+  }
+  return ACTIVITY_META[activity.type]?.label ?? activity.type;
+}
+
+function formatRelativeTime(date: string | Date): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const now = Date.now();
+  const diffMs = now - d.getTime();
+  const sec = Math.floor(diffMs / 1000);
+  const min = Math.floor(sec / 60);
+  const hour = Math.floor(min / 60);
+  const day = Math.floor(hour / 24);
+
+  if (sec < 60) return 'agora mesmo';
+  if (min < 60) return `há ${min} ${min === 1 ? 'minuto' : 'minutos'}`;
+  if (hour < 24) return `há ${hour} ${hour === 1 ? 'hora' : 'horas'}`;
+  if (day === 1) return 'ontem';
+  if (day < 7) return `há ${day} dias`;
+  if (day < 30) return `há ${Math.floor(day / 7)} ${Math.floor(day / 7) === 1 ? 'semana' : 'semanas'}`;
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function activityTarget(activity: UserActivity): string | null {
+  if (!activity.entityId || !activity.entityType) return null;
+  switch (activity.entityType) {
+    case 'Product': return `/products/${activity.entityId}`;
+    case 'Service': return `/services/${activity.entityId}`;
+    case 'Community': return `/communities/${activity.entityId}`;
+    case 'Post': return activity.entityId ? `/communities` : null;
+    default: return null;
+  }
+}
 
 const UserProfilePage: Component = () => {
   const params = useParams<{ id: string }>();
@@ -21,22 +79,25 @@ const UserProfilePage: Component = () => {
   const [services, setServices] = createSignal<Service[]>([]);
   const [communities, setCommunities] = createSignal<UserCommunity[]>([]);
   const [reviews, setReviews] = createSignal<Review[]>([]);
+  const [activities, setActivities] = createSignal<UserActivity[]>([]);
   const [loading, setLoading] = createSignal(true);
 
   onMount(async () => {
     try {
-      const [u, p, s, c, r] = await Promise.all([
+      const [u, p, s, c, r, a] = await Promise.all([
         usersService.getById(params.id),
         productsService.getAll(1, 100, undefined, undefined, undefined, params.id),
         servicesService.getAll(1, 100, undefined, undefined, undefined, params.id),
         usersService.getCommunities(params.id),
         reviewsService.getByUser(params.id),
+        activitiesService.getByUser(params.id, 1, 20).catch(() => null),
       ]);
       setUser(u);
       setProducts(p.data);
       setServices(s.data);
       setCommunities(c);
       setReviews(r);
+      if (a) setActivities(a.data);
     } catch (e) {
       console.error('Erro ao carregar perfil:', e);
     } finally {
@@ -189,8 +250,69 @@ const UserProfilePage: Component = () => {
             </section>
           </Show>
 
+          {/* Recent activity timeline */}
+          <Show when={activities().length > 0}>
+            <section>
+              <h2 class="flex items-center gap-2 text-lg font-bold mb-3" style={{ color: 'var(--color-text)' }}>
+                <TrendingUp size={18} class="eq-brand" /> Atividade Recente
+              </h2>
+              <Card class="p-4 sm:p-6">
+                <div class="relative">
+                  {/* vertical connector line */}
+                  <div
+                    class="absolute left-[15px] top-2 bottom-2 w-0.5"
+                    style={{ background: 'var(--color-primary-light)' }}
+                  />
+                  <ul class="space-y-4">
+                    <For each={activities()}>
+                      {(activity) => {
+                        const Icon = activityIcon(activity.type);
+                        const target = activityTarget(activity);
+                        const clickable = !!target;
+                        return (
+                          <li class="relative flex items-start gap-3">
+                            <div
+                              class="relative z-10 shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                              style={{
+                                background: 'var(--color-primary-light)',
+                                color: 'var(--color-primary, #2563eb)',
+                              }}
+                            >
+                              <Icon size={15} />
+                            </div>
+                            <div class="flex-1 min-w-0 pt-0.5">
+                              <Show
+                                when={clickable}
+                                fallback={
+                                  <p class="text-sm" style={{ color: 'var(--color-text)' }}>
+                                    {activityLabel(activity)}
+                                  </p>
+                                }
+                              >
+                                <button
+                                  type="button"
+                                  class="text-sm text-left eq-link cursor-pointer hover:underline"
+                                  onClick={() => navigate(target!)}
+                                >
+                                  {activityLabel(activity)}
+                                </button>
+                              </Show>
+                              <p class="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                                {formatRelativeTime(activity.createdAt)}
+                              </p>
+                            </div>
+                          </li>
+                        );
+                      }}
+                    </For>
+                  </ul>
+                </div>
+              </Card>
+            </section>
+          </Show>
+
           {/* Empty state */}
-          <Show when={products().length === 0 && services().length === 0 && communities().length === 0}>
+          <Show when={products().length === 0 && services().length === 0 && communities().length === 0 && activities().length === 0}>
             <Card class="p-8 text-center">
               <p style={{ color: 'var(--color-text-muted)' }}>Este usuário ainda não publicou conteúdo.</p>
             </Card>

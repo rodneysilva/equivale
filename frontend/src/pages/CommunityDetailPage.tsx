@@ -6,6 +6,7 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Modal from '../components/ui/Modal';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import CommentSection from '../components/community/CommentSection';
 import ProductGrid from '../components/marketplace/ProductGrid';
 import ServiceGrid from '../components/marketplace/ServiceGrid';
 import { api } from '../services/api';
@@ -424,6 +425,9 @@ const CommunityDetailPage: Component = () => {
                               <span class="text-xs eq-text-muted">{new Date(post.createdAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
                             <p class="text-sm eq-text whitespace-pre-wrap break-words">{post.content}</p>
+                            <div class="mt-3" style={{ 'border-top': '1px solid var(--color-border)', 'padding-top': '12px' }}>
+                              <CommentSection communityId={params.id} postId={post.id} />
+                            </div>
                           </div>
                         </div>
                       </Card>

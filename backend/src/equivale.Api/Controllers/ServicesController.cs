@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
 using equivale.Application.Interfaces.Services;
+using equivale.Domain.Enums;
 using equivale.Domain.Interfaces;
 using MediatR;
 
@@ -15,12 +16,14 @@ public class ServicesController : ControllerBase
     private readonly IServiceService _serviceService;
     private readonly IServiceRepository _serviceRepository;
     private readonly IMediator _mediator;
+    private readonly IUserActivityService _activityService;
 
-    public ServicesController(IServiceService serviceService, IServiceRepository serviceRepository, IMediator mediator)
+    public ServicesController(IServiceService serviceService, IServiceRepository serviceRepository, IMediator mediator, IUserActivityService activityService)
     {
         _serviceService = serviceService;
         _serviceRepository = serviceRepository;
         _mediator = mediator;
+        _activityService = activityService;
     }
 
     [HttpGet]
@@ -48,6 +51,7 @@ public class ServicesController : ControllerBase
     public async Task<ActionResult<ServiceDto>> Create([FromBody] CreateServiceDto dto, CancellationToken cancellationToken)
     {
         var service = await _serviceService.CreateAsync(dto, cancellationToken);
+        _ = _activityService.LogAsync(dto.ProviderId, ActivityType.ServicePublished, "Service", service.Id, service.Title, "ofereceu um serviço", cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = service.Id }, service);
     }
 

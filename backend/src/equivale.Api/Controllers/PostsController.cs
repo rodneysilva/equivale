@@ -2,6 +2,8 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
+using equivale.Application.Interfaces.Services;
+using equivale.Domain.Enums;
 using equivale.Domain.Interfaces;
 
 namespace equivale.Api.Controllers;
@@ -12,11 +14,13 @@ public class PostsController : ControllerBase
 {
     private readonly IPostRepository _postRepo;
     private readonly IUserRepository _userRepo;
+    private readonly IUserActivityService _activityService;
 
-    public PostsController(IPostRepository postRepo, IUserRepository userRepo)
+    public PostsController(IPostRepository postRepo, IUserRepository userRepo, IUserActivityService activityService)
     {
         _postRepo = postRepo;
         _userRepo = userRepo;
+        _activityService = activityService;
     }
 
     private string GetUserId() =>
@@ -58,6 +62,8 @@ public class PostsController : ControllerBase
         };
 
         await _postRepo.AddAsync(post, ct);
+
+        _ = _activityService.LogAsync(userId, ActivityType.PostCreated, "Post", post.Id, null, "publicou na comunidade", ct);
 
         var user = await _userRepo.GetByIdAsync(userId, ct);
         return CreatedAtAction(nameof(GetAll), new { communityId }, new PostDto(
