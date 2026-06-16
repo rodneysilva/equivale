@@ -10,7 +10,6 @@ namespace equivale.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public class ReviewsController : ControllerBase
 {
     private readonly IBaseRepository<Review> _reviewRepository;

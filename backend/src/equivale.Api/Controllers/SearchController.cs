@@ -8,7 +8,6 @@ namespace equivale.Api.Controllers;
 
 [ApiController]
 [Route("api/search")]
-[Authorize]
 public class SearchController : ControllerBase
 {
     private readonly SearchRepository _searchRepository;

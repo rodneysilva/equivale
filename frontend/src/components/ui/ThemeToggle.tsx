@@ -7,12 +7,17 @@ const ThemeToggle: Component = () => {
     <button
       onClick={toggleTheme}
       class="p-2 rounded eq-btn-ghost"
-      aria-label="Toggle theme"
+      aria-label="Alternar tema"
     >
       {isDark() ? (
-        <Sun size={18} class="eq-brand" />
+        <Sun size={22} class="eq-brand hidden sm:block" />
       ) : (
-        <Moon size={18} class="eq-brand" />
+        <Moon size={22} class="eq-brand hidden sm:block" />
+      )}
+      {isDark() ? (
+        <Sun size={18} class="eq-brand sm:hidden" />
+      ) : (
+        <Moon size={18} class="eq-brand sm:hidden" />
       )}
     </button>
   );

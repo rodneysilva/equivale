@@ -1,4 +1,4 @@
-import { type Component, createSignal, createEffect, For, Show } from 'solid-js';
+import { type Component, createSignal, onMount, For } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { ArrowRight } from 'lucide-solid';
 import CommunityCard from '../components/community/CommunityCard';
@@ -8,23 +8,17 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { productsService } from '../services/products.service';
 import { servicesService } from '../services/services.service';
 import { communitiesService } from '../services/communities.service';
-import { useAuth } from '../store/auth';
 import type { Product, Service, Community } from '../types';
 
 const HomePage: Component = () => {
   const navigate = useNavigate();
-  const auth = useAuth();
 
   const [products, setProducts] = createSignal<Product[]>([]);
   const [services, setServices] = createSignal<Service[]>([]);
   const [communities, setCommunities] = createSignal<Community[]>([]);
   const [loading, setLoading] = createSignal(true);
 
-  createEffect(() => {
-    if (auth.isLoading()) return;
-    if (!auth.isAuthenticated()) { navigate('/login'); return; }
-    loadFeatured();
-  });
+  onMount(() => { loadFeatured(); });
 
   const loadFeatured = async () => {
     try {

@@ -1,6 +1,6 @@
 import { createSignal, type Component } from 'solid-js';
 import { useNavigate, useLocation } from '@solidjs/router';
-import { Menu, X, Wallet, User, LogOut, Shield, Plus, Users, Package, Zap, Moon, Sun } from 'lucide-solid';
+import { Menu, X, Wallet, User, LogOut, Shield, Users, Package, Zap, Moon, Sun } from 'lucide-solid';
 import { useAuth } from '../../store/auth';
 import { isDark, toggleTheme } from '../../store/theme';
 import ThemeToggle from '../ui/ThemeToggle';
@@ -9,7 +9,6 @@ import SearchBar from './SearchBar';
 const Navbar: Component = () => {
   const [mobileOpen, setMobileOpen] = createSignal(false);
   const [dropdownOpen, setDropdownOpen] = createSignal(false);
-  const [announceOpen, setAnnounceOpen] = createSignal(false);
   const auth = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -18,7 +17,6 @@ const Navbar: Component = () => {
     navigate(path);
     setMobileOpen(false);
     setDropdownOpen(false);
-    setAnnounceOpen(false);
   };
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
@@ -64,51 +62,6 @@ const Navbar: Component = () => {
 
               {auth.isAuthenticated() && (
                 <>
-                  {/* Criar dropdown */}
-                  <div class="relative">
-                    <button
-                      onClick={() => setAnnounceOpen(!announceOpen())}
-                      class="eq-btn eq-btn-sm flex items-center gap-1.5"
-                    >
-                      <Plus size={14} />
-                      Criar
-                    </button>
-                    {announceOpen() && (
-                      <>
-                        <div class="fixed inset-0 z-40" onClick={() => setAnnounceOpen(false)} />
-                        <div class="absolute right-0 top-full mt-1 w-56 eq-card p-1.5 z-50" style={{ boxShadow: 'var(--shadow-lg)' }}>
-                          <button onClick={() => go('/communities/new')} class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-sm text-left eq-btn-ghost">
-                            <div class="w-8 h-8 rounded-lg eq-gradient-community flex items-center justify-center">
-                              <Users size={14} class="text-white" />
-                            </div>
-                            <div>
-                              <p class="font-medium eq-text">Nova comunidade</p>
-                              <p class="text-xs eq-text-muted">Reúna pessoas em torno de um interesse</p>
-                            </div>
-                          </button>
-                          <button onClick={() => go('/products/new')} class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-sm text-left eq-btn-ghost">
-                            <div class="w-8 h-8 rounded-lg eq-gradient-product flex items-center justify-center">
-                              <Package size={14} class="text-white" />
-                            </div>
-                            <div>
-                              <p class="font-medium eq-text">Compartilhar produto</p>
-                              <p class="text-xs eq-text-muted">Coloque um item em circulação</p>
-                            </div>
-                          </button>
-                          <button onClick={() => go('/services/new')} class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-sm text-left eq-btn-ghost">
-                            <div class="w-8 h-8 rounded-lg eq-gradient-service flex items-center justify-center">
-                              <Zap size={14} class="text-white" />
-                            </div>
-                            <div>
-                              <p class="font-medium eq-text">Oferecer serviço</p>
-                              <p class="text-xs eq-text-muted">Compartilhe seu talento</p>
-                            </div>
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-
                   {navItem('/dashboard', 'Painel')}
                   {navItem('/wallet', 'Carteira')}
                 </>
