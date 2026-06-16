@@ -213,6 +213,20 @@ public class TransactionService : ITransactionService
         if (_treasuryUser is not null) return _treasuryUser;
         var email = new Email(_feeOptions.TreasuryUserEmail);
         _treasuryUser = await _userRepo.GetByEmailAsync(email, ct);
+        if (_treasuryUser is null)
+        {
+            // Auto-provisiona a conta tesouraria se ainda não existir (idempotente).
+            _treasuryUser = new User
+            {
+                Name = "Tesouraria",
+                Email = email,
+                Role = UserRole.Admin,
+                PasswordHash = "!", // conta de sistema — nunca faz login por senha
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+            await _userRepo.AddAsync(_treasuryUser, ct);
+        }
         return _treasuryUser;
     }
 

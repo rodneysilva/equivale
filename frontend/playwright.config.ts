@@ -5,7 +5,9 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // 1 worker: testes autenticados mutam a carteira do admin (Block/Credit);
+  // paralelismo causa ConcurrencyException por optimistic locking concorrente.
+  workers: 1,
   reporter: 'html',
   use: {
     baseURL: 'http://localhost:3000',
@@ -25,10 +27,15 @@ export default defineConfig({
       testIgnore: [/\/authenticated\//, /.*\.setup\.ts/],
     },
     // 3. Testes autenticados — reusam o storageState salvo pelo projeto "setup".
+    //    fullyParallel:false + retries:1: esses testes mutam a carteira do admin
+    //    (Block/Credit), então rodar em série evita ConcurrencyException por
+    //    optimistic locking concorrente no mesmo usuário.
     {
       name: 'chromium-authenticated',
       testDir: './e2e/authenticated',
+      fullyParallel: false,
       dependencies: ['setup'],
+      retries: process.env.CI ? 2 : 1,
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'e2e/.auth/user.json',
