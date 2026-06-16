@@ -94,3 +94,7 @@ pnpm-debug.log*
 # Large binary files
 *.msi
 *.exe
+
+# Test artifacts
+test-results/
+playwright-report/
