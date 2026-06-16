@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using equivale.Application.DTOs;
@@ -73,6 +74,8 @@ public class UsersController : ControllerBase
     [Authorize]
     public async Task<ActionResult<UserDto>> Update(string id, [FromBody] UpdateUserDto dto, CancellationToken cancellationToken)
     {
+        var userId = GetUserId();
+        if (id != userId && !User.IsInRole("Admin")) return Forbid();
         var user = await _userService.UpdateAsync(id, dto, cancellationToken);
         if (user is null) return NotFound();
         return Ok(user);
@@ -82,10 +85,18 @@ public class UsersController : ControllerBase
     [Authorize]
     public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
     {
+        var userId = GetUserId();
+        if (id != userId && !User.IsInRole("Admin")) return Forbid();
+
         var existing = await _userRepository.GetByIdAsync(id, cancellationToken);
         if (existing is null) return NotFound();
 
         await _userRepository.DeleteAsync(id, cancellationToken);
         return NoContent();
     }
+
+    private string GetUserId() =>
+        User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+        ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+        ?? throw new UnauthorizedAccessException("Token inválido.");
 }

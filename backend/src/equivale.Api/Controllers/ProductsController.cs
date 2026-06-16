@@ -50,8 +50,11 @@ public class ProductsController : ControllerBase
     [Authorize]
     public async Task<ActionResult<ProductDto>> Create([FromBody] CreateProductDto dto, CancellationToken cancellationToken)
     {
-        var product = await _productService.CreateAsync(dto, cancellationToken);
-        _ = _activityService.LogAsync(dto.SellerId, ActivityType.ProductPublished, "Product", product.Id, product.Title, "publicou um produto", cancellationToken);
+        var userId = GetUserId();
+        // O vendedor é sempre o usuário autenticado — ignora SellerId do body (anti-impersonação).
+        var safeDto = dto with { SellerId = userId };
+        var product = await _productService.CreateAsync(safeDto, cancellationToken);
+        _ = _activityService.LogAsync(userId, ActivityType.ProductPublished, "Product", product.Id, product.Title, "publicou um produto", cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
     }
 
@@ -59,8 +62,13 @@ public class ProductsController : ControllerBase
     [Authorize]
     public async Task<ActionResult<ProductDto>> Update(string id, [FromBody] CreateProductDto dto, CancellationToken cancellationToken)
     {
-        var product = await _productService.UpdateAsync(id, dto, cancellationToken);
-        if (product is null) return NotFound();
+        var userId = GetUserId();
+        var existing = await _productService.GetByIdAsync(id, cancellationToken);
+        if (existing is null) return NotFound();
+        if (existing.SellerId != userId && !User.IsInRole("Admin")) return Forbid();
+        // Preserva o dono original — não permite reatribuir via body.
+        var safeDto = dto with { SellerId = existing.SellerId };
+        var product = await _productService.UpdateAsync(id, safeDto, cancellationToken);
         return Ok(product);
     }
 
@@ -68,6 +76,10 @@ public class ProductsController : ControllerBase
     [Authorize]
     public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
     {
+        var userId = GetUserId();
+        var existing = await _productService.GetByIdAsync(id, cancellationToken);
+        if (existing is null) return NotFound();
+        if (existing.SellerId != userId && !User.IsInRole("Admin")) return Forbid();
         await _productService.DeleteAsync(id, cancellationToken);
         return NoContent();
     }
@@ -85,4 +97,9 @@ public class ProductsController : ControllerBase
         var products = await _productRepository.GetByCategoryAsync(category, cancellationToken);
         return Ok(products);
     }
+
+    private string GetUserId() =>
+        User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+        ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+        ?? throw new UnauthorizedAccessException("Token inválido.");
 }

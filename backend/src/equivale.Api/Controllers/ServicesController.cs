@@ -50,8 +50,11 @@ public class ServicesController : ControllerBase
     [Authorize]
     public async Task<ActionResult<ServiceDto>> Create([FromBody] CreateServiceDto dto, CancellationToken cancellationToken)
     {
-        var service = await _serviceService.CreateAsync(dto, cancellationToken);
-        _ = _activityService.LogAsync(dto.ProviderId, ActivityType.ServicePublished, "Service", service.Id, service.Title, "ofereceu um serviço", cancellationToken);
+        var userId = GetUserId();
+        // O provedor é sempre o usuário autenticado — ignora ProviderId do body (anti-impersonação).
+        var safeDto = dto with { ProviderId = userId };
+        var service = await _serviceService.CreateAsync(safeDto, cancellationToken);
+        _ = _activityService.LogAsync(userId, ActivityType.ServicePublished, "Service", service.Id, service.Title, "ofereceu um serviço", cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = service.Id }, service);
     }
 
@@ -59,8 +62,13 @@ public class ServicesController : ControllerBase
     [Authorize]
     public async Task<ActionResult<ServiceDto>> Update(string id, [FromBody] CreateServiceDto dto, CancellationToken cancellationToken)
     {
-        var service = await _serviceService.UpdateAsync(id, dto, cancellationToken);
-        if (service is null) return NotFound();
+        var userId = GetUserId();
+        var existing = await _serviceService.GetByIdAsync(id, cancellationToken);
+        if (existing is null) return NotFound();
+        if (existing.ProviderId != userId && !User.IsInRole("Admin")) return Forbid();
+        // Preserva o dono original — não permite reatribuir via body.
+        var safeDto = dto with { ProviderId = existing.ProviderId };
+        var service = await _serviceService.UpdateAsync(id, safeDto, cancellationToken);
         return Ok(service);
     }
 
@@ -68,6 +76,10 @@ public class ServicesController : ControllerBase
     [Authorize]
     public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
     {
+        var userId = GetUserId();
+        var existing = await _serviceService.GetByIdAsync(id, cancellationToken);
+        if (existing is null) return NotFound();
+        if (existing.ProviderId != userId && !User.IsInRole("Admin")) return Forbid();
         await _serviceService.DeleteAsync(id, cancellationToken);
         return NoContent();
     }
@@ -78,4 +90,9 @@ public class ServicesController : ControllerBase
         var services = await _serviceService.GetByProviderAsync(providerId, cancellationToken);
         return Ok(services);
     }
+
+    private string GetUserId() =>
+        User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+        ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+        ?? throw new UnauthorizedAccessException("Token inválido.");
 }
