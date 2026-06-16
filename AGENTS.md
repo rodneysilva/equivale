@@ -8,10 +8,11 @@
 
 ## Stack
 
-- **Backend:** .NET 9, MongoDB (sem transações ACID ainda), DDD (Domain/Application/Infrastructure/Api), CQRS leve (sem MediatR em produção por licença)
+- **Backend:** .NET 9, MongoDB, DDD (Domain/Application/Infrastructure/Api), CQRS com MediatR 14.x (licença Apache-2.0)
 - **Frontend:** SolidJS, TailwindCSS v4 (CSS-first, sem tailwind.config), Vite 6
 - **Auth:** JWT em cookie HttpOnly (via proxy Vite), claim `sub` mapeada para NameIdentifier
-- **BD:** MongoDB local (sem Docker), database name em appsettings.json
+- **BD:** MongoDB local (serviço Windows) ou Docker (replica set rs0); database name em appsettings.json
+- **Transações ACID:** `IUnitOfWork.ExecuteInTransactionAsync` envolve apenas `FinishTransactionAsync` (libera pagamento). Demais writes (create/cancel) usam optimistic locking + escrow, não ACID.
 
 ---
 
@@ -148,11 +149,11 @@ OrderPlaced → (vendedor) OrderConfirmed → (vendedor) Shipped → (comprador)
 
 1. **`$pid` é reservado no PowerShell** — use `$productId` ou outro nome.
 2. **CRLF/LF warnings** no git — harmless, ignorar.
-3. **MediatR sem licença** — warning no startup, harmless em dev.
-4. **`CreatePostDto` tem campos opcionais** (CommunityId/AuthorId nullable) — o controller pega do token/rota.
-5. **Comunidades privadas** requerem inviteCode ou oneTimePassword no join.
-6. **Stock decrementa** apenas para Products (não Services) na finalização.
-7. **Delete de comunidade** só pelo criador (endpoint no CommunitiesController) ou admin (AdminController).
+3. **`CreatePostDto` tem campos opcionais** (CommunityId/AuthorId nullable) — o controller pega do token/rota.
+4. **Comunidades privadas** requerem `{password}` no body do join (POST `/communities/{id}/join`).
+5. **Stock decrementa** apenas para Products (não Services) na finalização.
+6. **Delete de comunidade** só pelo criador (endpoint no CommunitiesController) ou admin (AdminController).
+7. **Ownership:** Products/Services/Users CRUD validam dono (ou admin) no controller; SellerId/ProviderId vêm do token, não do body.
 
 ---
 
@@ -194,7 +195,7 @@ cd frontend; npm run test:e2e:ui
 
 ## Próximos Passos (Roadmap)
 
-- [x] Demurrage do EQL (anti-inflação — documentar no BUSINESS.md)
+- [x] Demurrage do EQL (documentado no BUSINESS.md — implementação pendente)
 - [x] Onboarding guiado (wizard de boas-vindas)
 - [x] Hero da home mais emocional
 - [x] Notificações (badge na navbar)
