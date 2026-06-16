@@ -70,7 +70,7 @@ public class ChatController : ControllerBase
 
             return Ok(messages.Select(ToDto).ToList());
         }
-        catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+        catch (UnauthorizedAccessException ex) { return StatusCode(403, new { error = ex.Message }); }
         catch (KeyNotFoundException ex) { return NotFound(new { error = ex.Message }); }
     }
 
@@ -118,9 +118,9 @@ public class ChatController : ControllerBase
                 message.Content,
                 message.CreatedAt);
 
-            return Ok(result);
+            return StatusCode(StatusCodes.Status201Created, result);
         }
-        catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+        catch (UnauthorizedAccessException ex) { return StatusCode(403, new { error = ex.Message }); }
         catch (KeyNotFoundException ex) { return NotFound(new { error = ex.Message }); }
     }
 }
