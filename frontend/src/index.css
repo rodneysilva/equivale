@@ -343,6 +343,9 @@
       radial-gradient(120% 140% at 85% 20%, color-mix(in srgb, var(--color-accent) 18%, transparent) 0%, transparent 55%),
       radial-gradient(140% 120% at 50% 110%, color-mix(in srgb, var(--color-product) 14%, transparent) 0%, transparent 60%),
       var(--color-surface);
+    /* Esmaecer na base — transição suave para o fundo da página */
+    mask-image: linear-gradient(to bottom, black 75%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 75%, transparent 100%);
   }
 
   .eq-hero-blob {
@@ -414,4 +417,14 @@
 /* Cursor pointer global em links e botoes */
 a, button, [role="button"], [type="submit"], [type="reset"] {
   cursor: pointer;
+}
+
+/* Seções da Home — bordas e cores alternadas */
+.home-section {
+  border-top: 1px solid var(--color-border-light);
+}
+.home-section-alt {
+  background: var(--color-surface-alt);
+  border-top: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--color-border-light);
 }

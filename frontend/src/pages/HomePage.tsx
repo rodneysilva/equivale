@@ -14,6 +14,7 @@ import type { Product, Service, Community } from '../types';
 interface HeroStats {
   communities: number | null;
   products: number | null;
+  services: number | null;
   eqlVolume: number | null;
 }
 
@@ -28,6 +29,7 @@ const HomePage: Component = () => {
   const [stats, setStats] = createSignal<HeroStats>({
     communities: null,
     products: null,
+    services: null,
     eqlVolume: null,
   });
 
@@ -48,7 +50,7 @@ const HomePage: Component = () => {
   };
 
   const loadHeroStats = async () => {
-    const result: HeroStats = { communities: null, products: null, eqlVolume: null };
+    const result: HeroStats = { communities: null, products: null, services: null, eqlVolume: null };
     try {
       const commRes = await communitiesService.getAll(1, 1);
       result.communities = commRes.total;
@@ -56,6 +58,10 @@ const HomePage: Component = () => {
     try {
       const prodRes = await productsService.getAll(1, 1);
       result.products = prodRes.total;
+    } catch { /* keep null */ }
+    try {
+      const svcRes = await servicesService.getAll(1, 1);
+      result.services = svcRes.total;
     } catch { /* keep null */ }
     try {
       const adminStats = await adminService.getStats();
@@ -145,37 +151,44 @@ const HomePage: Component = () => {
             </div>
 
             {/* Prova social */}
-            <div class="mt-10 grid grid-cols-3 gap-4 sm:gap-8 max-w-lg">
+            <div class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 max-w-2xl">
               <HeroStat label="Comunidades ativas" value={formatStat(stats().communities)} accent="var(--color-community)" />
-              <HeroStat label="em circulação" value={formatStat(stats().products)} accent="var(--color-product)" suffix="itens" />
-              <HeroStat label="EQL transacionados" value={formatStat(stats().eqlVolume)} accent="var(--color-service)" />
+              <HeroStat label="Produtos ativos" value={formatStat(stats().products)} accent="var(--color-product)" />
+              <HeroStat label="Serviços ativos" value={formatStat(stats().services)} accent="var(--color-service)" />
+              <HeroStat label="EQL transacionados" value={formatStat(stats().eqlVolume)} accent="var(--color-accent)" />
             </div>
           </div>
         </div>
       </section>
 
       {/* ====================== CONTEÚDO EXISTENTE ====================== */}
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <div>
         {/* Comunidades */}
-        <section>
+        <section class="home-section py-8 px-4 sm:px-6">
+          <div class="max-w-7xl mx-auto">
           {sectionHeader('Comunidades em destaque', 'Encontre seu grupo', '/communities')}
           {loading() ? <LoadingSpinner class="py-8" /> : (
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <For each={communities()}>{(c) => <CommunityCard community={c} />}</For>
             </div>
           )}
+          </div>
         </section>
 
         {/* Produtos recentes */}
-        <section>
+        <section class="home-section-alt py-8 px-4 sm:px-6">
+          <div class="max-w-7xl mx-auto">
           {sectionHeader('Produtos recentes', 'Últimos adicionados', '/products')}
           {loading() ? <LoadingSpinner class="py-8" /> : <ProductGrid products={products()} />}
+          </div>
         </section>
 
         {/* Serviços recentes */}
-        <section>
+        <section class="home-section py-8 px-4 sm:px-6">
+          <div class="max-w-7xl mx-auto">
           {sectionHeader('Serviços recentes', 'Talentos disponíveis', '/services')}
           {loading() ? <LoadingSpinner class="py-8" /> : <ServiceGrid services={services()} />}
+          </div>
         </section>
       </div>
     </div>
