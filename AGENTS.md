@@ -1,8 +1,8 @@
 # AGENTS.md — Memória do Projeto eqüivale
 
-> Este arquivo é a **memória persistente** do projeto. Toda decisão técnica importante,
-> workaround, padrão e armadilha deve ser registrada aqui para que qualquer agente
-> (ou humano) saiba o contexto sem redescobrir.
+> **Memória específica do projeto eqüivale.** O AGENTS.md global
+> (`~/.config/kilo/AGENTS.md`) contém padrões universais (PowerShell, MongoDB,
+> PWA, cloudflared, etc). Este arquivo complementa com o que é ÚNICO deste projeto.
 
 ---
 
@@ -17,51 +17,8 @@
 
 ## Padrões e Convenções IMPORTANTES
 
-### MongoDB
-- **NÃO há convenção camelCase** no driver. Os campos são serializados em **PascalCase** (ex: `Version`, não `version`).
-- Filtros manuais no `BaseRepository` devem usar `"Version"` (PascalCase), nunca `"version"`.
-- O campo `_id` é a exceção (underscore é padrão do MongoDB).
-- Documentos legados (criados antes de uma mudança de schema) podem **não ter** campos novos. O `BaseRepository.BuildOptimisticLockFilter` trata isso com `$or` + `$exists: false`.
-
-### Optimistic Locking
-- Todas as entidades têm `public long Version { get; set; }`.
-- `BaseRepository.UpdateAsync` filtra por `_id + Version == expectedVersion`.
-- Se `MatchedCount == 0`, lança `ConcurrencyException`.
-- Documentos sem o campo `Version` (legados) são tratados: quando `expectedVersion == 0`, o filtro aceita `Version == 0` OU `Version` inexistente.
-
-### PowerShell (Shell do projeto)
-- O ambiente usa **PowerShell 5.1** (não 7+). `&&` **NÃO funciona** — use `;` ou `cmd /c`.
-- `$pid`, `$host`, `$input` são variáveis reservadas — NUNCA use como nome de variável.
-- Aspas duplas em `cmd /c` com JSON dão conflito — use arquivos temporários (`-d @arquivo.json`) ou `Invoke-RestMethod`.
-- Para commits com `%` na mensagem: use `git -C <dir> commit -m "msg sem %"`. O `%` quebra o cmd.
-
-### Backend — Rebuild
-- O processo `equivale.Api` **bloqueia as DLLs**. Sempre faça `taskkill /F /IM equivale.Api` ANTES de `dotnet build`.
-- Ou pare o background process primeiro.
-
-### Frontend — Vite
-- `vite.config.ts` tem `server.host: '0.0.0.0'` para acesso LAN.
-- O proxy `/api` → `http://localhost:5053` resolve CORS automaticamente (o browser vê mesma origem).
-- **NÃO use `@vitejs/plugin-basic-ssl`** — certificado auto-assinado não funciona para PWA no Android.
-
-### PWA no Android + Domínio Próprio
-- Chrome Android **NÃO instala PWA com certificado auto-assinado** (só aceita HTTPS confiável).
-- **Domínio do projeto:** `app.rodney.website` (Cloudflare gerencia DNS).
-- **Solução:** Cloudflare Named Tunnel. Binário em `C:\Users\rodne\AppData\Local\Temp\kilo\cloudflared.exe`.
-- Comando para iniciar: `cloudflared.exe tunnel run --token <TOKEN>` (token em `.env.cloudflare`, gitignored).
-- Tunnel ID: `7dd51b4b-0537-48ad-ba30-d1981a03fefe` (permanente, não muda).
-- DNS CNAME: `app.rodney.website` → tunnel (configurado via API Cloudflare).
-- IP dinâmico não é problema: cloudflared conecta **outbound** (saída), não precisa de IP fixo nem port forwarding.
-- localtunnel (`npx localtunnel`) é instável e mostra página de senha — **NÃO usar**.
-- `@vitejs/plugin-basic-ssl` (cert auto-assinado) **NÃO funciona para PWA no Android**.
-- Traefik gera SSL via Let's Encrypt, **mas precisa de domínio público**. Para LAN sem domínio, cloudflared é a resposta.
-- `vite.config.ts` tem `server.allowedHosts: true` para aceitar qualquer host (necessário para túneis).
-
-### CORS
-- Configurado em `appsettings.json` → `AllowedOrigins`.
-- Origens atuais: localhost:3000, 192.168.15.63:3000 (HTTP e HTTPS).
-- Ao mudar o IP da máquina (DHCP), atualizar `AllowedOrigins`.
-- IP atual da LAN: `192.168.15.63` / IP público: `177.197.66.141`
+> Padrões universais (PowerShell 5.1, rebuild .NET, MongoDB PascalCase, optimistic locking)
+> estão no AGENTS.md global (`~/.config/kilo/AGENTS.md`). Abaixo apenas o específico do projeto.
 
 ---
 
@@ -153,8 +110,28 @@ OrderPlaced → (vendedor) OrderConfirmed → (vendedor) Shipped → (comprador)
 
 - **Backend:** `dotnet run --urls "http://localhost:5053"` (porta 5053)
 - **Frontend:** `npm run dev` (porta 3000, host 0.0.0.0, allowedHosts: true)
-- **Túnel Cloudflare:** `cloudflared.exe tunnel run --token <TOKEN>` → `https://app.rodney.website` (Tunnel ID permanente: 7dd51b4b-0537-48ad-ba30-d1981a03fefe)
+- **Túnel Cloudflare:** `cloudflared.exe tunnel run --token <TOKEN>` → `https://app.rodney.website`
+  - Tunnel ID permanente: `7dd51b4b-0537-48ad-ba30-d1981a03fefe`
+  - Token de conexão em `.env.cloudflare` (gitignored)
+  - Binário: `C:\Users\rodne\AppData\Local\Temp\kilo\cloudflared.exe`
 - **MongoDB:** serviço local padrão
+
+---
+
+## Infra — Específico do Projeto
+
+### Domínio e HTTPS
+- **Domínio:** `app.rodney.website` (Cloudflare gerencia DNS)
+- Tunnel roteia `app.rodney.website` → `http://localhost:3000` (Vite)
+- Vite proxy roteia `/api/*` → `http://localhost:5053` (backend)
+- IP atual da LAN: `192.168.15.63` (DHCP — pode mudar)
+
+### CORS (appsettings.json → AllowedOrigins)
+- `http://localhost:3000`
+- `https://localhost:3000`
+- `http://192.168.15.63:3000`
+- `https://192.168.15.63:3000`
+- Ao mudar o IP (DHCP), adicionar o novo IP aqui.
 
 ---
 
