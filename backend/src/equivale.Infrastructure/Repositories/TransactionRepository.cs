@@ -71,4 +71,21 @@ public class TransactionRepository : BaseRepository<Transaction>, ITransactionRe
         var fees = doc.Contains("fees") ? doc["fees"].ToDecimal() : 0m;
         return (completed, volume, fees);
     }
+
+    public async Task<bool> WasUserActiveSinceAsync(string userId, DateTime sinceUtc, CancellationToken cancellationToken = default)
+    {
+        // Usuário ativo = aparece como BuyerId OU SellerId em transação com
+        // CreatedAt OU UpdatedAt >= sinceUtc. CountDocumentsAsync (com Limit 1 via
+        //FirstOrDefault atalho) evita carregar documentos.
+        var byUser = Builders<Transaction>.Filter.Or(
+            Builders<Transaction>.Filter.Eq(t => t.BuyerId, userId),
+            Builders<Transaction>.Filter.Eq(t => t.SellerId, userId));
+        var since = Builders<Transaction>.Filter.Or(
+            Builders<Transaction>.Filter.Gte(t => t.CreatedAt, sinceUtc),
+            Builders<Transaction>.Filter.Gte(t => t.UpdatedAt, sinceUtc));
+        var filter = Builders<Transaction>.Filter.And(byUser, since);
+
+        var count = await _transactions.CountDocumentsAsync(filter, new CountOptions { Limit = 1 }, cancellationToken);
+        return count > 0;
+    }
 }

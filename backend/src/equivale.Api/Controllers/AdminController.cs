@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using equivale.Application.Services;
 using equivale.Domain.Enums;
 using equivale.Domain.Interfaces;
 
@@ -16,19 +17,21 @@ public class AdminController : ControllerBase
     private readonly IServiceRepository _serviceRepository;
     private readonly ICommunityRepository _communityRepository;
     private readonly ITransactionRepository _transactionRepository;
-
+    private readonly IDemurrageService _demurrageService;
     public AdminController(
         IUserRepository userRepository,
         IProductRepository productRepository,
         IServiceRepository serviceRepository,
         ICommunityRepository communityRepository,
-        ITransactionRepository transactionRepository)
+        ITransactionRepository transactionRepository,
+        IDemurrageService demurrageService)
     {
         _userRepository = userRepository;
         _productRepository = productRepository;
         _serviceRepository = serviceRepository;
         _communityRepository = communityRepository;
         _transactionRepository = transactionRepository;
+        _demurrageService = demurrageService;
     }
 
     [HttpGet("stats")]
@@ -104,6 +107,21 @@ public class AdminController : ControllerBase
         await _communityRepository.DeleteAsync(id, ct);
         return NoContent();
     }
+
+    // -------------------- Demurrage --------------------
+
+    /// <summary>Dry-run: lista quem seria taxado e quanto, sem debitar nada.</summary>
+    [HttpGet("demurrage/preview")]
+    public async Task<ActionResult<equivale.Application.Services.DemurragePreviewResult>> DemurragePreview(CancellationToken ct)
+        => Ok(await _demurrageService.PreviewAsync(ct));
+
+    /// <summary>
+    /// EXECUTA o demurrage: debita 0,5% do saldo disponível ocioso dos usuários
+    /// elegíveis (queima o valor). Operação DESTRUTIVA — chamar uma vez por mês.
+    /// </summary>
+    [HttpPost("demurrage/run")]
+    public async Task<ActionResult<equivale.Application.Services.DemurrageApplyResult>> DemurrageRun(CancellationToken ct)
+        => Ok(await _demurrageService.ApplyAsync(ct));
 }
 
 public record AdminStatsDto(

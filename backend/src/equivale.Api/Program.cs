@@ -62,12 +62,14 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<equivale.Application.Services.DtoEnricher>();
 builder.Services.AddScoped<equivale.Application.Services.SeedService>();
 builder.Services.AddScoped<equivale.Application.Services.TransactionService>();
+builder.Services.AddScoped<equivale.Application.Services.IDemurrageService, equivale.Application.Services.DemurrageService>();
 builder.Services.AddScoped<equivale.Domain.Interfaces.IUserActivityRepository, equivale.Infrastructure.Repositories.UserActivityRepository>();
 builder.Services.AddScoped<equivale.Application.Interfaces.Services.IUserActivityService, equivale.Application.Services.UserActivityService>();
 builder.Services.AddScoped<equivale.Domain.Interfaces.INotificationRepository, equivale.Infrastructure.Repositories.NotificationRepository>();
 
 // Config options
 builder.Services.Configure<equivale.Application.Configuration.TransactionFeeOptions>(builder.Configuration.GetSection(equivale.Application.Configuration.TransactionFeeOptions.SectionName));
+builder.Services.Configure<equivale.Application.Configuration.DemurrageOptions>(builder.Configuration.GetSection(equivale.Application.Configuration.DemurrageOptions.SectionName));
 
 // Domain repositories
 builder.Services.AddScoped<equivale.Domain.Interfaces.ITransactionRepository, equivale.Infrastructure.Repositories.TransactionRepository>();
@@ -85,6 +87,11 @@ builder.Services.AddScoped(typeof(equivale.Domain.Interfaces.IBaseRepository<equ
 {
     var ctx = sp.GetRequiredService<equivale.Infrastructure.Persistence.MongoDbContext>();
     return new equivale.Infrastructure.Repositories.BaseRepository<equivale.Domain.Entities.Post>(ctx);
+});
+builder.Services.AddScoped(typeof(equivale.Domain.Interfaces.IBaseRepository<equivale.Domain.Entities.DemurrageEntry>), sp =>
+{
+    var ctx = sp.GetRequiredService<equivale.Infrastructure.Persistence.MongoDbContext>();
+    return new equivale.Infrastructure.Repositories.BaseRepository<equivale.Domain.Entities.DemurrageEntry>(ctx);
 });
 builder.Services.AddScoped<equivale.Domain.Interfaces.ICommentRepository, equivale.Infrastructure.Repositories.CommentRepository>();
 builder.Services.AddScoped<equivale.Domain.Interfaces.IChatMessageRepository, equivale.Infrastructure.Repositories.ChatMessageRepository>();

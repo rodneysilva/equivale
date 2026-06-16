@@ -17,4 +17,11 @@ public interface ITransactionRepository : IBaseRepository<Transaction>, ITransac
     /// </summary>
     Task<(long CompletedTransactions, decimal TotalVolume, decimal TotalFeesCollected)> GetFinishedStatsAsync(
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Indica se o usuário participou (como comprador OU vendedor) de alguma
+    /// transação com CreatedAt/UpdatedAt >= sinceUtc. Usado pela isenção de
+    /// atividade do demurrage.
+    /// </summary>
+    Task<bool> WasUserActiveSinceAsync(string userId, DateTime sinceUtc, CancellationToken cancellationToken = default);
 }
