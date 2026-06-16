@@ -1,7 +1,8 @@
 import { createSignal, type Component } from 'solid-js';
 import { useNavigate, useLocation } from '@solidjs/router';
-import { Menu, X, Wallet, User, LogOut, Shield, Plus, Users, Package, Zap } from 'lucide-solid';
+import { Menu, X, Wallet, User, LogOut, Shield, Plus, Users, Package, Zap, Moon, Sun } from 'lucide-solid';
 import { useAuth } from '../../store/auth';
+import { isDark, toggleTheme } from '../../store/theme';
 import ThemeToggle from '../ui/ThemeToggle';
 import SearchBar from './SearchBar';
 
@@ -191,10 +192,15 @@ const Navbar: Component = () => {
             <button onClick={() => go('/services')} class="w-full text-left px-3 py-2.5 rounded text-sm font-medium eq-btn-ghost">Serviços</button>
             <hr class="my-1 eq-divider" />
             {!auth.isAuthenticated() ? (
-              <div class="flex gap-2 pt-1">
-                <button onClick={() => go('/login')} class="flex-1 eq-btn-outline eq-btn-sm">Entrar</button>
-                <button onClick={() => go('/register')} class="flex-1 eq-btn eq-btn-sm">Criar conta</button>
-              </div>
+              <>
+                <button onClick={() => toggleTheme()} class="w-full text-left px-3 py-2.5 rounded text-sm eq-btn-ghost flex items-center gap-2">
+                  {isDark() ? <Sun size={14} /> : <Moon size={14} />} {isDark() ? 'Modo claro' : 'Modo escuro'}
+                </button>
+                <div class="flex gap-2 pt-1">
+                  <button onClick={() => go('/login')} class="flex-1 eq-btn-outline eq-btn-sm">Entrar</button>
+                  <button onClick={() => go('/register')} class="flex-1 eq-btn eq-btn-sm">Criar conta</button>
+                </div>
+              </>
             ) : (
               <>
                 <button onClick={() => go('/communities/new')} class="w-full text-left px-3 py-2.5 rounded text-sm eq-btn-ghost flex items-center gap-2">
@@ -222,6 +228,9 @@ const Navbar: Component = () => {
                   </button>
                 )}
                 <hr class="my-1 eq-divider" />
+                <button onClick={() => { toggleTheme(); }} class="w-full text-left px-3 py-2.5 rounded text-sm eq-btn-ghost flex items-center gap-2">
+                  {isDark() ? <Sun size={14} /> : <Moon size={14} />} {isDark() ? 'Modo claro' : 'Modo escuro'}
+                </button>
                 <button onClick={() => { auth.logout(); setMobileOpen(false); }} class="w-full text-left px-3 py-2.5 rounded text-sm eq-btn-ghost flex items-center gap-2 eq-text-danger">
                   <LogOut size={14} /> Sair
                 </button>

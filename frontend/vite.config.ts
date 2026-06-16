@@ -2,12 +2,14 @@ import { defineConfig } from 'vite'
 import solidPlugin from 'vite-plugin-solid'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import basicSsl from '@vitejs/plugin-basic-ssl'
 import path from 'path'
 
 export default defineConfig({
   plugins: [
     solidPlugin(),
     tailwindcss(),
+    basicSsl(),
     VitePWA({
       strategies: 'generateSW',
       registerType: 'autoUpdate',

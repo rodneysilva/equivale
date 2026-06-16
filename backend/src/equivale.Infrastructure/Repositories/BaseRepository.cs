@@ -116,7 +116,21 @@ public class BaseRepository<T> : IBaseRepository<T>, ITransactionalRepository<T>
         var newVersion = expectedVersion + 1;
 
         var idFilter = Builders<T>.Filter.Eq("_id", idValue);
-        var versionFilter = Builders<T>.Filter.Eq("version", expectedVersion);
+
+        // Para documentos legados (sem campo Version), aceita Version==0 OU campo inexistente
+        FilterDefinition<T> versionFilter;
+        if (expectedVersion == 0)
+        {
+            versionFilter = Builders<T>.Filter.Or(
+                Builders<T>.Filter.Eq("Version", 0L),
+                Builders<T>.Filter.Exists("Version", false)
+            );
+        }
+        else
+        {
+            versionFilter = Builders<T>.Filter.Eq("Version", expectedVersion);
+        }
+
         return (idFilter, versionFilter, newVersion);
     }
 
