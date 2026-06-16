@@ -188,13 +188,18 @@ cd frontend; npm run test:e2e:ui
 
 ### Cobertura atual
 - `auth.spec.ts` — login válido/inválido, navegação register→login
-- `marketplace.spec.ts`, `navigation.spec.ts`, `community.spec.ts` — smoke anônimo
+- `marketplace.spec.ts`, `navigation.spec.ts`, `community.spec.ts` — smoke anônimo (+ listagem exclui Sold/sem-estoque)
 - `authenticated/create-product.spec.ts` — publicar produto e vê-lo na lista
 - `authenticated/purchase.spec.ts` — checkout completo (comprar → ver pedido)
+- `authenticated/transaction-flow.spec.ts` — fluxo two-actor completo (compra→confirma→envia→entrega→avalia→Finished, com taxa + estoque) e cancel
+- `authenticated/chat.spec.ts` — chat two-actor (buyer envia pela UI, seller responde via API, buyer vê via polling)
+- `authenticated/community-crud.spec.ts`, `onboarding.spec.ts`, `notifications.spec.ts`
 
 ### Padrões
 - Login é feito via **API** no setup (não pela UI) para velocidade; o cookie HttpOnly é reusado.
 - Não use `getByLabel` para o componente `Input` (label e input são siblings sem `for`/`id`) — use `placeholder` ou `data-testid`.
+- **workers: 1** (config) — testes autenticados mutam a carteira do admin (Block/Credit); paralelismo causa `ConcurrencyException` por optimistic locking concorrente. Não rodar e2e autenticados em paralelo.
+- **Two-actor**: para fluxos buyer↔seller, crie um contexto API isolado pro seller via `import { request as pwRequest } from 'playwright'`; sellers seed logam com `Eql@2026`.
 
 ---
 
@@ -208,10 +213,22 @@ cd frontend; npm run test:e2e:ui
 - [x] Transações MongoDB ACID para FinishTransactionAsync
 - [x] Limpeza de código morto (src/UI/, componentes órfãos)
 - [x] Testes e2e com Playwright (auth setup, create-product, purchase, login)
-- [ ] Chat comprador/vendedor (já implementado, falta testar)
-- [ ] CreatorName legacy fallback (já implementado, falta testar)
+- [x] Chat comprador/vendedor (two-actor e2e)
+- [x] CreatorName legacy fallback (estabilizado + backfill de dados)
+- [x] Polimento visual/código (cores→tokens CSS, código morto removido, toasts consistentes)
+- [x] Testes do fluxo financeiro (17 unit tests do TransactionService + e2e two-actor completo)
+- [x] Bug crítico da tesouraria corrigido (finalização com taxa quebrava o escrow)
+
+### Dívida técnica remanescente (registrar)
+- [ ] Onda C — feature de produto a definir: moderação admin (posts/comentários), demurrage real, ou Pix on/off-ramp
+- [ ] `productsService.getByCategory()` suspeito de órfão (confirmar antes de remover)
+- [ ] `AdminDashboardPage` stat cards com cores ciano/violeta (#0891b2/#7c3aed) sem token (acentos intencionais)
+- [ ] Index único em `users.Email` (a tesouraria é auto-provisionada; corrida no 1º finish pode duplicar)
+- [ ] ~35 erros TS pré-existentes no frontend (boxShadow/borderColor em CSSProperties, `items` em PaginatedResponse, etc.) — sem gate de typecheck
+- [ ] Chat sem paginação/marcação de leitura; polling fixo 5s sem backoff
+- [ ] `AdminStatsDto` casts long→int (seguro até <2bi)
 
 ---
 
 *Última atualização: 16/06/2026*
-*Commit atual: aaa85cb*
+*Commit atual: 34d9850*
