@@ -9,10 +9,12 @@ public record RemoveModeratorCommand(string CommunityId, string UserId) : IReque
 public class RemoveModeratorCommandHandler : IRequestHandler<RemoveModeratorCommand>
 {
     private readonly ICommunityRepository _communityRepository;
+    private readonly IUserRepository _userRepository;
 
-    public RemoveModeratorCommandHandler(ICommunityRepository communityRepository)
+    public RemoveModeratorCommandHandler(ICommunityRepository communityRepository, IUserRepository userRepository)
     {
         _communityRepository = communityRepository;
+        _userRepository = userRepository;
     }
 
     public async Task Handle(RemoveModeratorCommand request, CancellationToken cancellationToken)
@@ -24,6 +26,11 @@ public class RemoveModeratorCommandHandler : IRequestHandler<RemoveModeratorComm
             throw new InvalidOperationException("Cannot remove the community creator as moderator");
 
         community.Moderators.Remove(request.UserId);
+
+        var removedUser = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
+        if (removedUser is not null)
+            community.ModeratorNames.Remove(removedUser.Name);
+
         community.UpdatedAt = DateTime.UtcNow;
         await _communityRepository.UpdateAsync(community, cancellationToken);
     }

@@ -607,6 +607,10 @@ public class SeedService
             if (!moderators.Contains(creator.Id)) moderators.Add(creator.Id);
             var members = userList.OrderBy(_ => _rng.Next()).Take(_rng.Next(3, Math.Min(8, userList.Count))).Select(u => u.Id).Union(moderators).Distinct().ToList();
 
+            // Map moderator Ids to Names (deduped, preserving order)
+            var modUserMap = userList.Where(u => moderators.Contains(u.Id)).ToDictionary(u => u.Id);
+            var moderatorNames = moderators.Where(id => modUserMap.ContainsKey(id)).Select(id => modUserMap[id].Name).Distinct().ToList();
+
             var seed = UniqueId();
             var daysAgo = _rng.Next(1, 80);
             var community = new Community
@@ -616,8 +620,10 @@ public class SeedService
                 ImageUrl = Img($"com-{seed}"),
                 CoverUrl = Cover($"cover-{seed}"),
                 CreatorId = creator.Id,
+                CreatorName = creator.Name,
                 Members = members,
                 Moderators = moderators,
+                ModeratorNames = moderatorNames,
                 Type = _rng.NextDouble() > 0.8 ? "private" : "open",
                 ProductVisibility = "public",
                 CreatedAt = DateTime.UtcNow.AddDays(-daysAgo),

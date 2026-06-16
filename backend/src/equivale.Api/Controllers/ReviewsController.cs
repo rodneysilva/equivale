@@ -17,19 +17,22 @@ public class ReviewsController : ControllerBase
     private readonly ITransactionRepository _transactionRepository;
     private readonly ITransactionService _transactionService;
     private readonly IUserActivityService _activityService;
+    private readonly INotificationRepository _notifications;
 
     public ReviewsController(
         IBaseRepository<Review> reviewRepository,
         IUserRepository userRepository,
         ITransactionRepository transactionRepository,
         ITransactionService transactionService,
-        IUserActivityService activityService)
+        IUserActivityService activityService,
+        INotificationRepository notifications)
     {
         _reviewRepository = reviewRepository;
         _userRepository = userRepository;
         _transactionRepository = transactionRepository;
         _transactionService = transactionService;
         _activityService = activityService;
+        _notifications = notifications;
     }
 
     [HttpGet("user/{userId}")]
@@ -121,6 +124,21 @@ public class ReviewsController : ControllerBase
             await _reviewRepository.AddAsync(review, ct);
 
             _ = _activityService.LogAsync(userId, ActivityType.ReviewGiven, "Review", review.Id, transaction.ItemTitle, "avaliou uma transação", ct);
+
+            if (!string.Equals(targetId, userId, StringComparison.Ordinal))
+            {
+                var reviewer = await _userRepository.GetByIdAsync(userId, ct);
+                _ = _notifications.AddAsync(new Notification
+                {
+                    UserId = targetId,
+                    Type = "Review",
+                    EntityType = "Review",
+                    EntityId = review.Id,
+                    Description = $"{reviewer?.Name ?? "Alguém"} te avaliou ({req.Rating}★) em \"{transaction.ItemTitle}\"",
+                    Read = false,
+                    CreatedAt = DateTime.UtcNow,
+                }, ct);
+            }
 
             // If buyer is reviewing and transaction is Delivered, finish it (libera pagamento)
             if (transaction.BuyerId == userId && transaction.Status == Domain.Enums.TransactionStatus.Delivered)

@@ -8,8 +8,10 @@ public class Community
     public string? ImageUrl { get; set; }
     public string? CoverUrl { get; set; }
     public string CreatorId { get; set; } = string.Empty;
+    public string? CreatorName { get; set; }
     public List<string> Members { get; set; } = [];
     public List<string> Moderators { get; set; } = [];
+    public List<string> ModeratorNames { get; set; } = [];
     public string Type { get; set; } = "open";
     public string ProductVisibility { get; set; } = "public";
     public string? InviteCode { get; set; }

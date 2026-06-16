@@ -330,6 +330,72 @@
   .eq-fade-in {
     animation: eq-fade-in 0.3s ease-out;
   }
+
+  /* ==================== HERO ==================== */
+  .eq-hero {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    background:
+      radial-gradient(120% 140% at 18% 12%, color-mix(in srgb, var(--color-community) 16%, transparent) 0%, transparent 55%),
+      radial-gradient(120% 140% at 85% 20%, color-mix(in srgb, var(--color-accent) 18%, transparent) 0%, transparent 55%),
+      radial-gradient(140% 120% at 50% 110%, color-mix(in srgb, var(--color-product) 14%, transparent) 0%, transparent 60%),
+      var(--color-surface);
+  }
+
+  .eq-hero-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(2px);
+    pointer-events: none;
+    will-change: transform;
+  }
+
+  .eq-hero-blob--comm {
+    width: 26rem; height: 26rem;
+    top: -8rem; left: -6rem;
+    background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--color-community) 32%, transparent), transparent 70%);
+    animation: eq-float 14s ease-in-out infinite;
+  }
+
+  .eq-hero-blob--gold {
+    width: 22rem; height: 22rem;
+    top: -4rem; right: -5rem;
+    background: radial-gradient(circle at 60% 40%, color-mix(in srgb, var(--color-accent) 34%, transparent), transparent 70%);
+    animation: eq-float 18s ease-in-out infinite reverse;
+  }
+
+  .eq-hero-blob--terr {
+    width: 20rem; height: 20rem;
+    bottom: -8rem; right: 12%;
+    background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--color-product) 24%, transparent), transparent 70%);
+    animation: eq-float 16s ease-in-out infinite;
+  }
+
+  .eq-hero-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1.5px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+    pointer-events: none;
+    opacity: 0.55;
+  }
+
+  .eq-hero-symbol {
+    position: absolute;
+    opacity: 0.12;
+    color: var(--color-primary);
+    pointer-events: none;
+    animation: eq-spin-slow 60s linear infinite;
+  }
+
+  @keyframes eq-float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(8px, -10px) scale(1.04); }
+  }
+
+  @keyframes eq-spin-slow {
+    to { transform: rotate(360deg); }
+  }
 }
 
 @layer utilities {

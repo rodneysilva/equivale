@@ -4,6 +4,7 @@ import { Menu, X, Wallet, User, LogOut, Shield, Users, Package, Zap, Moon, Sun }
 import { useAuth } from '../../store/auth';
 import { isDark, toggleTheme } from '../../store/theme';
 import ThemeToggle from '../ui/ThemeToggle';
+import NotificationBell from './NotificationBell';
 import SearchBar from './SearchBar';
 
 const Navbar: Component = () => {
@@ -44,9 +45,9 @@ const Navbar: Component = () => {
               if (window.innerWidth < 768) { setMobileOpen(!mobileOpen()); }
               else { go('/'); }
             }} class="flex items-center gap-1.5 shrink-0">
-              <img src="/logo.svg" alt="eqüivale" class="h-8 w-auto hidden sm:block" />
-              <img src="/favicon.svg" alt="eqüivale" class="w-11 h-11 sm:hidden" />
-              <span class="text-base font-bold tracking-tight eq-display sm:hidden">eqüivale</span>
+              <img src="/logo.svg" alt="eqüivale" class="h-10 w-auto hidden sm:block" />
+              <img src="/favicon.svg" alt="eqüivale" class="w-9 h-9 sm:hidden" />
+              <span class="text-lg font-bold tracking-tight eq-display sm:hidden">eqüivale</span>
             </button>
 
             {/* Search — desktop */}
@@ -80,6 +81,7 @@ const Navbar: Component = () => {
 
             {/* Right side */}
             <div class="flex items-center gap-1 shrink-0">
+              {auth.isAuthenticated() && <NotificationBell />}
               <ThemeToggle />
 
               {auth.isAuthenticated() ? (

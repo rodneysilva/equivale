@@ -9,10 +9,12 @@ public record AddModeratorCommand(string CommunityId, string UserId) : IRequest;
 public class AddModeratorCommandHandler : IRequestHandler<AddModeratorCommand>
 {
     private readonly ICommunityRepository _communityRepository;
+    private readonly IUserRepository _userRepository;
 
-    public AddModeratorCommandHandler(ICommunityRepository communityRepository)
+    public AddModeratorCommandHandler(ICommunityRepository communityRepository, IUserRepository userRepository)
     {
         _communityRepository = communityRepository;
+        _userRepository = userRepository;
     }
 
     public async Task Handle(AddModeratorCommand request, CancellationToken cancellationToken)
@@ -23,6 +25,11 @@ public class AddModeratorCommandHandler : IRequestHandler<AddModeratorCommand>
         if (!community.Moderators.Contains(request.UserId))
         {
             community.Moderators.Add(request.UserId);
+
+            var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
+            if (user is not null && !community.ModeratorNames.Contains(user.Name))
+                community.ModeratorNames.Add(user.Name);
+
             community.UpdatedAt = DateTime.UtcNow;
             await _communityRepository.UpdateAsync(community, cancellationToken);
         }

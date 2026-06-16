@@ -64,6 +64,7 @@ builder.Services.AddScoped<equivale.Application.Services.SeedService>();
 builder.Services.AddScoped<equivale.Application.Services.TransactionService>();
 builder.Services.AddScoped<equivale.Domain.Interfaces.IUserActivityRepository, equivale.Infrastructure.Repositories.UserActivityRepository>();
 builder.Services.AddScoped<equivale.Application.Interfaces.Services.IUserActivityService, equivale.Application.Services.UserActivityService>();
+builder.Services.AddScoped<equivale.Domain.Interfaces.INotificationRepository, equivale.Infrastructure.Repositories.NotificationRepository>();
 
 // Config options
 builder.Services.Configure<equivale.Application.Configuration.TransactionFeeOptions>(builder.Configuration.GetSection(equivale.Application.Configuration.TransactionFeeOptions.SectionName));

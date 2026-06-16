@@ -17,5 +17,8 @@
     "glob": "allow",
     "grep": "allow",
     "task": "allow"
+  },
+  "commit_message": {
+    "prompt": ""
   }
 }

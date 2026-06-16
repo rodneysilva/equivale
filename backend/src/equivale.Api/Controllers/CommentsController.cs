@@ -14,12 +14,14 @@ public class CommentsController : ControllerBase
     private readonly ICommentRepository _commentRepo;
     private readonly IPostRepository _postRepo;
     private readonly IUserRepository _userRepo;
+    private readonly INotificationRepository _notifications;
 
-    public CommentsController(ICommentRepository commentRepo, IPostRepository postRepo, IUserRepository userRepo)
+    public CommentsController(ICommentRepository commentRepo, IPostRepository postRepo, IUserRepository userRepo, INotificationRepository notifications)
     {
         _commentRepo = commentRepo;
         _postRepo = postRepo;
         _userRepo = userRepo;
+        _notifications = notifications;
     }
 
     private string GetUserId() =>
@@ -101,6 +103,20 @@ public class CommentsController : ControllerBase
             comment.Id, comment.PostId, comment.AuthorId,
             user?.Name, user?.AvatarUrl,
             comment.ParentCommentId, comment.Content, comment.CreatedAt, new List<CommentDto>());
+
+        if (!string.Equals(post.AuthorId, userId, StringComparison.Ordinal))
+        {
+            _ = _notifications.AddAsync(new Notification
+            {
+                UserId = post.AuthorId,
+                Type = "Comment",
+                EntityType = "Post",
+                EntityId = postId,
+                Description = $"{user?.Name ?? "Alguém"} comentou no seu post",
+                Read = false,
+                CreatedAt = DateTime.UtcNow,
+            }, ct);
+        }
 
         return Ok(result);
     }

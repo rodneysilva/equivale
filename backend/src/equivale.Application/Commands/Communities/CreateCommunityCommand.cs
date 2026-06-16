@@ -10,11 +10,13 @@ public record CreateCommunityCommand(CreateCommunityDto Community) : IRequest<Co
 public class CreateCommunityCommandHandler : IRequestHandler<CreateCommunityCommand, CommunityDto>
 {
     private readonly ICommunityRepository _communityRepository;
+    private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
 
-    public CreateCommunityCommandHandler(ICommunityRepository communityRepository, IMapper mapper)
+    public CreateCommunityCommandHandler(ICommunityRepository communityRepository, IUserRepository userRepository, IMapper mapper)
     {
         _communityRepository = communityRepository;
+        _userRepository = userRepository;
         _mapper = mapper;
     }
 
@@ -23,6 +25,14 @@ public class CreateCommunityCommandHandler : IRequestHandler<CreateCommunityComm
         var community = _mapper.Map<Domain.Entities.Community>(request.Community);
         community.Members.Add(request.Community.CreatorId);
         community.Moderators.Add(request.Community.CreatorId);
+
+        var creator = await _userRepository.GetByIdAsync(request.Community.CreatorId, cancellationToken);
+        if (creator is not null)
+        {
+            community.CreatorName = creator.Name;
+            if (!community.ModeratorNames.Contains(creator.Name))
+                community.ModeratorNames.Add(creator.Name);
+        }
 
         if (community.Type == "private")
         {
