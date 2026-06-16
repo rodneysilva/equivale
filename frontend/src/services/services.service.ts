@@ -55,9 +55,4 @@ export const servicesService = {
     const raw = await api.get<BackendServiceDto[]>(`/services/provider/${providerId}`);
     return raw.map(mapService);
   },
-
-  async hire(serviceId: string): Promise<{ id: string; amount: number }> {
-    const raw = await api.post<{ id: string; amount: number }>(`/services/${serviceId}/hire`);
-    return raw;
-  },
 };

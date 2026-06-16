@@ -72,13 +72,13 @@ const WalletPage: Component = () => {
               <p class="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>Saldo disponível (EQL)</p>
             </Card>
             <Card class="p-5">
-              <ArrowDownLeft size={20} class="mb-2" style={{ color: '#059669' }} />
-              <p class="text-3xl font-bold" style={{ color: '#059669' }}>+{totalIn()}</p>
+              <ArrowDownLeft size={20} class="mb-2" style={{ color: 'var(--color-success)' }} />
+              <p class="text-3xl font-bold" style={{ color: 'var(--color-success)' }}>+{totalIn()}</p>
               <p class="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>Total recebido (EQL)</p>
             </Card>
             <Card class="p-5">
-              <ArrowUpRight size={20} class="mb-2" style={{ color: '#dc2626' }} />
-              <p class="text-3xl font-bold" style={{ color: '#dc2626' }}>-{totalOut()}</p>
+              <ArrowUpRight size={20} class="mb-2" style={{ color: 'var(--color-danger)' }} />
+              <p class="text-3xl font-bold" style={{ color: 'var(--color-danger)' }}>-{totalOut()}</p>
               <p class="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>Total gasto (EQL)</p>
             </Card>
           </div>
@@ -91,8 +91,8 @@ const WalletPage: Component = () => {
             }>
               <For each={entries()}>{(e) => (
                 <div class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-[var(--color-surface-alt)]" style={{ 'border-bottom': '1px solid var(--color-border)' }} onClick={() => navigate(`/transactions/${e.tx.id}`)}>
-                  <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: e.isBuyer ? '#fee2e2' : '#dcfce7' }}>
-                    {e.isBuyer ? <ArrowUpRight size={15} style={{ color: '#dc2626' }} /> : <ArrowDownLeft size={15} style={{ color: '#059669' }} />}
+                  <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: e.isBuyer ? 'var(--color-danger-bg)' : 'var(--color-success-bg)' }}>
+                    {e.isBuyer ? <ArrowUpRight size={15} style={{ color: 'var(--color-danger)' }} /> : <ArrowDownLeft size={15} style={{ color: 'var(--color-success)' }} />}
                   </div>
                   <div class="flex-1 min-w-0">
                     <p class="text-sm truncate" style={{ color: 'var(--color-text)' }}>{e.tx.itemTitle}</p>
@@ -101,7 +101,7 @@ const WalletPage: Component = () => {
                     </p>
                   </div>
                   <span class={`eq-badge ${txColor[e.tx.status]} shrink-0`}>{txLabel[e.tx.status]}</span>
-                  <span class="text-sm font-bold shrink-0" style={{ color: e.isBuyer ? '#dc2626' : '#059669' }}>
+                  <span class="text-sm font-bold shrink-0" style={{ color: e.isBuyer ? 'var(--color-danger)' : 'var(--color-success)' }}>
                     {e.isBuyer ? '-' : '+'}{e.amount} EQL
                   </span>
                 </div>

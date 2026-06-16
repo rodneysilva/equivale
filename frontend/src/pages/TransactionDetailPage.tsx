@@ -8,6 +8,7 @@ import StarRating from '../components/ui/StarRating';
 import { transactionsService, reviewsService } from '../services/transactions.service';
 import { api } from '../services/api';
 import { useAuth } from '../store/auth';
+import { useToast } from '../store/toast';
 import type { Transaction } from '../types';
 
 const statusLabel: Record<string, string> = {
@@ -31,6 +32,7 @@ const TransactionDetailPage: Component = () => {
   const params = useParams<{ id: string }>();
   const navigate = useNavigate();
   const auth = useAuth();
+  const toast = useToast();
   const [tx, setTx] = createSignal<Transaction | null>(null);
   const [loading, setLoading] = createSignal(true);
   const [error, setError] = createSignal('');
@@ -91,7 +93,7 @@ const TransactionDetailPage: Component = () => {
       });
       setReviewSubmitted(true);
     } catch (err: any) {
-      console.error('Review error:', err);
+      toast.error(err?.message || 'Não foi possível enviar a avaliação.');
     } finally {
       setReviewSubmitting(false);
     }
@@ -263,7 +265,7 @@ const TransactionDetailPage: Component = () => {
                       </Button>
                     </Show>
                   </Show>
-                  <Button variant="outline" class="w-full" size="sm" onClick={() => action(() => transactionsService.cancel(params.id))} disabled={actionLoading()} style={{ color: '#dc2626' }}>
+                  <Button variant="outline" class="w-full" size="sm" onClick={() => action(() => transactionsService.cancel(params.id))} disabled={actionLoading()} style={{ color: 'var(--color-danger)' }}>
                     <X size={14} class="mr-1" /> Cancelar
                   </Button>
                 </div>
@@ -283,7 +285,7 @@ const TransactionDetailPage: Component = () => {
                   <Show when={tx()!.status === 'OrderPlaced' || tx()!.status === 'OrderConfirmed'}>
                     <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>Aguardando o vendedor processar o pedido...</p>
                   </Show>
-                  <Button variant="outline" class="w-full" size="sm" onClick={() => action(() => transactionsService.cancel(params.id))} disabled={actionLoading()} style={{ color: '#dc2626' }}>
+                  <Button variant="outline" class="w-full" size="sm" onClick={() => action(() => transactionsService.cancel(params.id))} disabled={actionLoading()} style={{ color: 'var(--color-danger)' }}>
                     <X size={14} class="mr-1" /> Cancelar
                   </Button>
                 </div>
@@ -297,13 +299,13 @@ const TransactionDetailPage: Component = () => {
                   <Star size={14} class="eq-brand" /> Avaliar e finalizar
                 </h3>
                 <Show when={!reviewed() && tx()!.status !== 'Finished'} fallback={
-                  <div class="text-center py-3"><CheckCircle size={24} class="mx-auto mb-2" style={{ color: '#059669' }} /><p class="text-sm" style={{ color: 'var(--color-text-muted)' }}>Avaliação enviada! Pagamento liberado.</p></div>
+                  <div class="text-center py-3"><CheckCircle size={24} class="mx-auto mb-2" style={{ color: 'var(--color-success)' }} /><p class="text-sm" style={{ color: 'var(--color-text-muted)' }}>Avaliação enviada! Pagamento liberado.</p></div>
                 }>
                   <p class="text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>A avaliação libera o pagamento ao vendedor.</p>
                   <div class="flex items-center gap-1 mb-3 justify-center">
                     <For each={[1, 2, 3, 4, 5]}>{(n) => (
                       <button onClick={() => setRating(n)} class="cursor-pointer p-0.5">
-                        <Star size={24} style={{ color: n <= rating() ? '#f59e0b' : 'var(--color-border)' }} fill={n <= rating() ? '#f59e0b' : 'none'} />
+                        <Star size={24} style={{ color: n <= rating() ? 'var(--color-warning)' : 'var(--color-border)' }} fill={n <= rating() ? 'var(--color-warning)' : 'none'} />
                       </button>
                     )}</For>
                   </div>
@@ -318,7 +320,7 @@ const TransactionDetailPage: Component = () => {
             {/* Finished info */}
             <Show when={tx()!.status === 'Finished'}>
               <Card class="p-5 text-center">
-                <CheckCircle size={28} class="mx-auto mb-2" style={{ color: '#059669' }} />
+                <CheckCircle size={28} class="mx-auto mb-2" style={{ color: 'var(--color-success)' }} />
                 <p class="text-sm font-medium" style={{ color: 'var(--color-text)' }}>Transação finalizada</p>
                 <p class="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>Pagamento liberado ao vendedor</p>
               </Card>
@@ -327,13 +329,13 @@ const TransactionDetailPage: Component = () => {
             {/* Cancelled info */}
             <Show when={tx()!.status === 'Cancelled'}>
               <Card class="p-5 text-center">
-                <X size={28} class="mx-auto mb-2" style={{ color: '#dc2626' }} />
+                <X size={28} class="mx-auto mb-2" style={{ color: 'var(--color-danger)' }} />
                 <p class="text-sm font-medium" style={{ color: 'var(--color-text)' }}>Transação cancelada</p>
                 <p class="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>Valor estornado ao comprador</p>
               </Card>
             </Show>
 
-            {error() && <div class="p-3 rounded text-sm" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>{error()}</div>}
+            {error() && <div class="p-3 rounded text-sm" style={{ background: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: '1px solid var(--color-danger)' }}>{error()}</div>}
           </div>
         </div>
       ) : null}

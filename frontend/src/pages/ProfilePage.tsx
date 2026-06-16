@@ -95,10 +95,10 @@ const ProfilePage: Component = () => {
       </div>
 
       {success() && (
-        <div class="mb-4 p-2.5 rounded text-xs" style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0' }}>{success()}</div>
+        <div class="mb-4 p-2.5 rounded text-xs" style={{ background: 'var(--color-success-bg)', color: 'var(--color-success)', border: '1px solid var(--color-success)' }}>{success()}</div>
       )}
       {error() && (
-        <div class="mb-4 p-2.5 rounded text-xs" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>{error()}</div>
+        <div class="mb-4 p-2.5 rounded text-xs" style={{ background: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: '1px solid var(--color-danger)' }}>{error()}</div>
       )}
 
       {/* Avatar + Info */}
@@ -182,7 +182,7 @@ const ProfilePage: Component = () => {
                         placeholder="https://..."
                         class="eq-input text-xs flex-1 py-1"
                       />
-                      <button onClick={() => removeSocialLink(i())} class="p-1" style={{ color: '#dc2626' }}>
+                      <button onClick={() => removeSocialLink(i())} class="p-1" style={{ color: 'var(--color-danger)' }}>
                         <Trash2 size={14} />
                       </button>
                     </div>

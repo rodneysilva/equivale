@@ -35,7 +35,7 @@ const LoginPage: Component = () => {
         </div>
         <form onSubmit={handleSubmit} class="space-y-4">
           {error() && (
-            <div class="p-2.5 rounded text-xs" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>{error()}</div>
+            <div class="p-2.5 rounded text-xs" style={{ background: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: '1px solid var(--color-danger)' }}>{error()}</div>
           )}
           <div class="relative">
             <Mail size={16} class="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-muted)' }} />

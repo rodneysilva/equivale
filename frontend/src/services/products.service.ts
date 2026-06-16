@@ -59,9 +59,4 @@ export const productsService = {
     const raw = await api.get<BackendProductDto[]>(`/products/category/${category}`);
     return raw.map(mapProduct);
   },
-
-  async buy(productId: string): Promise<{ id: string; amount: number }> {
-    const raw = await api.post<{ id: string; amount: number }>(`/products/${productId}/buy`);
-    return raw;
-  },
 };

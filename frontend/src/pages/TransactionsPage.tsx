@@ -76,7 +76,7 @@ const TransactionsPage: Component = () => {
       <div class="flex items-center gap-2 mb-6">
         {(['all', 'buyer', 'seller'] as const).map(t => (
           <button onClick={() => setTab(t)} class="px-3 py-1.5 rounded text-sm font-medium transition-colors"
-            style={tab() === t ? { background: 'var(--color-primary)', color: '#fff' } : { background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}>
+            style={tab() === t ? { background: 'var(--color-primary)', color: 'var(--color-surface)' } : { background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}>
             {t === 'all' ? 'Todas' : t === 'buyer' ? 'Compras' : 'Vendas'}
           </button>
         ))}
@@ -164,7 +164,7 @@ const TransactionsPage: Component = () => {
 
                         {/* Cancel (ambos, antes de Delivered) */}
                         <Show when={t.status !== 'Finished' && t.status !== 'Cancelled' && t.status !== 'Delivered'}>
-                          <Button variant="outline" size="sm" onClick={() => action(t.id, transactionsService.cancel)} disabled={actionLoading() === t.id} style={{ color: '#dc2626' }}>
+                          <Button variant="outline" size="sm" onClick={() => action(t.id, transactionsService.cancel)} disabled={actionLoading() === t.id} style={{ color: 'var(--color-danger)' }}>
                             <X size={12} class="mr-1" /> Cancelar
                           </Button>
                         </Show>

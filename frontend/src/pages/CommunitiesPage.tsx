@@ -109,7 +109,7 @@ const CommunitiesPage: Component = () => {
       >
         <form onSubmit={handleCreate} class="space-y-4">
           {createError() && (
-            <div class="p-3 rounded text-sm" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>
+            <div class="p-3 rounded text-sm" style={{ background: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: '1px solid var(--color-danger)' }}>
               {createError()}
             </div>
           )}

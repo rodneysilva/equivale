@@ -49,8 +49,8 @@ const AdminDashboardPage: Component = () => {
       { label: 'Produtos', value: s.products, icon: Package, link: '/admin/products', color: 'var(--color-accent)' },
       { label: 'Serviços', value: s.services, icon: Zap, link: '/admin/services', color: '#0891b2' },
       { label: 'Comunidades', value: s.communities, icon: Globe, link: '/admin/communities', color: '#7c3aed' },
-      { label: 'Transações', value: s.transactions, icon: TrendingUp, link: '/admin/transactions', color: '#059669' },
-      { label: 'Concluídas', value: s.completedTransactions, icon: Shield, link: '/admin/transactions', color: '#dc2626' },
+      { label: 'Transações', value: s.transactions, icon: TrendingUp, link: '/admin/transactions', color: 'var(--color-success)' },
+      { label: 'Concluídas', value: s.completedTransactions, icon: Shield, link: '/admin/transactions', color: 'var(--color-danger)' },
     ];
   };
 

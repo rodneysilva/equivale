@@ -130,7 +130,7 @@ const ProductDetailPage: Component = () => {
                 </Badge>
                 <Badge variant="primary"><Tag size={10} class="mr-1" />{product()!.category}</Badge>
                 <Show when={product()!.stock !== undefined}>
-                  <span class="text-xs" style={{ color: product()!.stock! > 0 ? 'var(--color-text-muted)' : '#dc2626' }}>
+                  <span class="text-xs" style={{ color: product()!.stock! > 0 ? 'var(--color-text-muted)' : 'var(--color-danger)' }}>
                     {product()!.stock! > 0 ? `${product()!.stock} em estoque` : 'Esgotado'}
                   </span>
                 </Show>
@@ -216,7 +216,7 @@ const ProductDetailPage: Component = () => {
                   <Button variant="outline" class="flex-1" onClick={() => navigate(`/products/${product()!.id}/edit`)}>
                     <PenLine size={14} class="mr-2" /> Editar
                   </Button>
-                  <Button variant="outline" class="flex-1" onClick={() => setShowDeleteConfirm(true)} style={{ color: '#dc2626', 'border-color': '#dc2626' }}>
+                  <Button variant="outline" class="flex-1" onClick={() => setShowDeleteConfirm(true)} style={{ color: 'var(--color-danger)', 'border-color': 'var(--color-danger)' }}>
                     <Trash2 size={14} class="mr-2" /> Excluir
                   </Button>
                 </div>
@@ -278,7 +278,7 @@ const ProductDetailPage: Component = () => {
         <p class="text-sm eq-text-secondary mb-4">Tem certeza que deseja excluir "{product()?.title}"? Esta ação não pode ser desfeita.</p>
         <div class="flex gap-2">
           <Button variant="ghost" onClick={() => setShowDeleteConfirm(false)}>Cancelar</Button>
-          <Button onClick={handleDelete} style={{ background: '#dc2626' }}>Excluir</Button>
+          <Button onClick={handleDelete} style={{ background: 'var(--color-danger)' }}>Excluir</Button>
         </div>
       </Modal>
     </div>

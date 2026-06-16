@@ -78,7 +78,7 @@ const AdminUsersPage: Component = () => {
                     </Button>
                   </Show>
                   <Show when={user.role !== 'admin' && !user.isBanned}>
-                    <Button variant="ghost" size="sm" onClick={() => ban(user.id)} disabled={actionLoading() === user.id} style={{ color: '#dc2626' }}>
+                    <Button variant="ghost" size="sm" onClick={() => ban(user.id)} disabled={actionLoading() === user.id} style={{ color: 'var(--color-danger)' }}>
                       <Ban size={12} />
                     </Button>
                   </Show>

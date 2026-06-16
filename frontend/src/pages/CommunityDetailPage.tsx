@@ -269,7 +269,7 @@ const CommunityDetailPage: Component = () => {
                   <span class={`eq-badge ${community()!.type === 'private' ? 'eq-badge-warning' : 'eq-badge-primary'}`}>
                     {community()!.type === 'private' ? (<><Lock size={10} class="mr-1" /> Privada</>) : (<><Globe size={10} class="mr-1" /> Aberta</>)}
                   </span>
-                  <span class="eq-badge" style={{ background: 'rgba(0,0,0,0.3)', color: '#fff' }}>
+                  <span class="eq-badge" style={{ background: 'rgba(0,0,0,0.3)', color: 'var(--color-surface)' }}>
                     <Users size={10} class="mr-1" /> {community()!.membersCount}
                   </span>
                 </div>
@@ -504,7 +504,7 @@ const CommunityDetailPage: Component = () => {
           <Modal open={showEditModal()} onClose={() => setShowEditModal(false)} title="Editar comunidade" size="lg">
             <form onSubmit={handleEditSubmit} class="space-y-4">
               {editError() && (
-                <div class="p-3 rounded text-sm" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>{editError()}</div>
+                <div class="p-3 rounded text-sm" style={{ background: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: '1px solid var(--color-danger)' }}>{editError()}</div>
               )}
               <Input label="Nome" value={editName()} onInput={(e) => setEditName(e.currentTarget.value)} placeholder="Nome da comunidade" required />
               <div>
@@ -555,7 +555,7 @@ const CommunityDetailPage: Component = () => {
           </Modal>
 
           {error() && (
-            <div class="p-3 rounded text-sm" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>{error()}</div>
+            <div class="p-3 rounded text-sm" style={{ background: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: '1px solid var(--color-danger)' }}>{error()}</div>
           )}
         </div>
       ) : null}

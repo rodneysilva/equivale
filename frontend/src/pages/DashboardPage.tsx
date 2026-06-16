@@ -145,9 +145,9 @@ const DashboardPage: Component = () => {
 
       {/* Pending actions */}
       <Show when={dataLoaded() && pendingActions().length > 0}>
-        <Card class="p-4 mb-6" style={{ 'border-color': '#f59e0b', 'border-width': '2px' }}>
+        <Card class="p-4 mb-6" style={{ 'border-color': 'var(--color-warning)', 'border-width': '2px' }}>
           <div class="flex items-center gap-2 mb-3">
-            <AlertCircle size={18} style={{ color: '#f59e0b' }} />
+            <AlertCircle size={18} style={{ color: 'var(--color-warning)' }} />
             <h3 class="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>
               Ações pendentes ({pendingActions().length})
             </h3>
@@ -229,7 +229,7 @@ const DashboardPage: Component = () => {
               <div class="space-y-2"><For each={buys().slice(0, 4)}>{(t) => (
                 <Card hover class="p-3 flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/transactions/${t.id}`)}>
                   <div class="flex-1 min-w-0"><p class="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{t.itemTitle}</p><p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>{t.sellerName} · {fmtDate(t.createdAt)}</p></div>
-                  <span class={`eq-badge ${orderColor[t.status]}`}>{orderLabel[t.status]}</span><span class="text-sm font-bold" style={{ color: '#dc2626' }}>-{t.totalPrice}</span>
+                  <span class={`eq-badge ${orderColor[t.status]}`}>{orderLabel[t.status]}</span><span class="text-sm font-bold" style={{ color: 'var(--color-danger)' }}>-{t.totalPrice}</span>
                 </Card>
               )}</For></div>
             </Show>
@@ -245,11 +245,11 @@ const DashboardPage: Component = () => {
                 <Show when={p.imageUrl}><img src={p.imageUrl} class="w-full h-full object-cover" /></Show>
               </div>
               <div class="flex-1 min-w-0"><p class="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{p.title}</p><p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>{p.category} · {p.price} EQL · Stock: {p.stock ?? 1}</p></div>
-              <span class="eq-badge shrink-0" style={{ background: p.status === 'available' ? '#dcfce7' : '#fee2e2', color: p.status === 'available' ? '#166534' : '#991b1b' }}>{p.status === 'available' ? 'Ativo' : 'Inativo'}</span>
+              <span class="eq-badge shrink-0" style={{ background: p.status === 'available' ? 'var(--color-success-bg)' : 'var(--color-danger-bg)', color: p.status === 'available' ? 'var(--color-success)' : 'var(--color-danger)' }}>{p.status === 'available' ? 'Ativo' : 'Inativo'}</span>
               <div class="flex items-center gap-1 shrink-0">
                 <button onClick={() => toggleProductStatus(p)} class="eq-btn-ghost p-1.5 rounded cursor-pointer"><StatusIcon active={p.status === 'available'} /></button>
                 <button onClick={() => navigate(`/products/${p.id}`)} class="eq-btn-ghost p-1.5 rounded cursor-pointer"><Edit size={14} /></button>
-                <button onClick={() => deleteProduct(p.id)} class="eq-btn-ghost p-1.5 rounded cursor-pointer" style={{ color: '#dc2626' }}><Trash2 size={14} /></button>
+                <button onClick={() => deleteProduct(p.id)} class="eq-btn-ghost p-1.5 rounded cursor-pointer" style={{ color: 'var(--color-danger)' }}><Trash2 size={14} /></button>
               </div>
             </Card>
           )}</For></div>
@@ -264,11 +264,11 @@ const DashboardPage: Component = () => {
                 <Show when={svc.imageUrl}><img src={svc.imageUrl} class="w-full h-full object-cover" /></Show>
               </div>
               <div class="flex-1 min-w-0"><p class="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{svc.title}</p><p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>{svc.category} · {svc.price} EQL</p></div>
-              <span class="eq-badge shrink-0" style={{ background: svc.status === 'available' ? '#dcfce7' : '#fee2e2', color: svc.status === 'available' ? '#166534' : '#991b1b' }}>{svc.status === 'available' ? 'Ativo' : 'Inativo'}</span>
+              <span class="eq-badge shrink-0" style={{ background: svc.status === 'available' ? 'var(--color-success-bg)' : 'var(--color-danger-bg)', color: svc.status === 'available' ? 'var(--color-success)' : 'var(--color-danger)' }}>{svc.status === 'available' ? 'Ativo' : 'Inativo'}</span>
               <div class="flex items-center gap-1 shrink-0">
                 <button onClick={() => toggleServiceStatus(svc)} class="eq-btn-ghost p-1.5 rounded cursor-pointer"><StatusIcon active={svc.status === 'available'} /></button>
                 <button onClick={() => navigate(`/services/${svc.id}`)} class="eq-btn-ghost p-1.5 rounded cursor-pointer"><Edit size={14} /></button>
-                <button onClick={() => deleteService(svc.id)} class="eq-btn-ghost p-1.5 rounded cursor-pointer" style={{ color: '#dc2626' }}><Trash2 size={14} /></button>
+                <button onClick={() => deleteService(svc.id)} class="eq-btn-ghost p-1.5 rounded cursor-pointer" style={{ color: 'var(--color-danger)' }}><Trash2 size={14} /></button>
               </div>
             </Card>
           )}</For></div>
@@ -281,7 +281,7 @@ const DashboardPage: Component = () => {
             <Card hover class="p-3 flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/transactions/${t.id}`)}>
               <div class="w-10 h-10 rounded flex items-center justify-center shrink-0" style={{ background: 'var(--color-surface-alt)' }}><ShoppingCart size={14} style={{ color: 'var(--color-text-muted)' }} /></div>
               <div class="flex-1 min-w-0"><p class="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{t.itemTitle}</p><p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>De: {t.sellerName} · {fmtDate(t.createdAt)}</p></div>
-              <span class={`eq-badge ${orderColor[t.status]}`}>{orderLabel[t.status]}</span><span class="text-sm font-bold" style={{ color: '#dc2626' }}>-{t.totalPrice}</span>
+              <span class={`eq-badge ${orderColor[t.status]}`}>{orderLabel[t.status]}</span><span class="text-sm font-bold" style={{ color: 'var(--color-danger)' }}>-{t.totalPrice}</span>
             </Card>
           )}</For></div>
         </Show>

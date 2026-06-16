@@ -172,7 +172,7 @@ const ChatPage: Component = () => {
                   <div
                     class="px-3 py-2 rounded-lg text-sm break-words"
                     style={isMine(m)
-                      ? { background: 'var(--color-primary)', color: '#fff', 'border-bottom-right-radius': '2px' }
+                      ? { background: 'var(--color-primary)', color: 'var(--color-surface)', 'border-bottom-right-radius': '2px' }
                       : { background: 'var(--color-surface)', color: 'var(--color-text)', border: '1px solid var(--color-border)', 'border-bottom-left-radius': '2px' }}
                   >
                     {m.content}

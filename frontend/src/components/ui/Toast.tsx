@@ -13,7 +13,7 @@ const colorMap: Record<ToastItem['type'], string> = {
   success: 'var(--color-success)',
   error: 'var(--color-danger)',
   info: 'var(--color-primary)',
-  warning: '#f59e0b',
+  warning: 'var(--color-warning)',
 };
 
 interface ToastBarProps {

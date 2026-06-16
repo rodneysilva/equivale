@@ -63,7 +63,7 @@ const AdminCommunitiesPage: Component = () => {
                   </p>
                 </div>
                 <div class="flex items-center gap-1 shrink-0">
-                  <Button variant="ghost" size="sm" onClick={() => remove(community.id)} style={{ color: '#dc2626' }}>
+                  <Button variant="ghost" size="sm" onClick={() => remove(community.id)} style={{ color: 'var(--color-danger)' }}>
                     <Trash2 size={14} />
                   </Button>
                 </div>

@@ -13,6 +13,7 @@ import { productsService } from '../services/products.service';
 import { servicesService } from '../services/services.service';
 import { reviewsService } from '../services/transactions.service';
 import { activitiesService } from '../services/activities.service';
+import { useToast } from '../store/toast';
 import { getSocialLinkIcon, getSocialLinkLabel } from '../data/avatars';
 import type { User, Product, Service, UserCommunity, Review, UserActivity } from '../types';
 
@@ -73,6 +74,7 @@ function activityTarget(activity: UserActivity): string | null {
 const UserProfilePage: Component = () => {
   const params = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [user, setUser] = createSignal<User | null>(null);
   const [products, setProducts] = createSignal<Product[]>([]);
@@ -98,8 +100,8 @@ const UserProfilePage: Component = () => {
       setCommunities(c);
       setReviews(r);
       if (a) setActivities(a.data);
-    } catch (e) {
-      console.error('Erro ao carregar perfil:', e);
+    } catch (e: any) {
+      toast.error(e?.message || 'Não foi possível carregar este perfil.');
     } finally {
       setLoading(false);
     }
@@ -235,7 +237,7 @@ const UserProfilePage: Component = () => {
                           <span class="text-sm font-medium" style={{ color: 'var(--color-text)' }}>{review.reviewerName ?? 'Anônimo'}</span>
                           <div class="flex items-center gap-0.5">
                             <For each={Array.from({ length: 5 })}>{(_, i) => (
-                              <Star size={10} style={{ color: i() < review.rating ? '#f59e0b' : 'var(--color-border)' }} fill={i() < review.rating ? '#f59e0b' : 'none'} />
+                              <Star size={10} style={{ color: i() < review.rating ? 'var(--color-warning)' : 'var(--color-border)' }} fill={i() < review.rating ? 'var(--color-warning)' : 'none'} />
                             )}</For>
                           </div>
                         </div>
