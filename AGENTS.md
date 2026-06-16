@@ -204,7 +204,6 @@ cd frontend; npm run test:e2e:ui
 - [x] Testes e2e com Playwright (auth setup, create-product, purchase, login)
 - [ ] Chat comprador/vendedor (já implementado, falta testar)
 - [ ] CreatorName legacy fallback (já implementado, falta testar)
-- [ ] CI/CD pipeline
 
 ---
 
