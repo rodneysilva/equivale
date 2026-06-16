@@ -17,6 +17,7 @@ public class User
     public Money BlockedBalance { get; private set; } = Money.Zero;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public long Version { get; set; }
 
     public void Credit(decimal amount)
     {

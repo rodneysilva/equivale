@@ -1,11 +1,16 @@
 import { type Component, For, Show } from 'solid-js';
+import { Zap } from 'lucide-solid';
 import type { Service } from '../../types';
 import ServiceCard from './ServiceCard';
+import EmptyState from '../ui/EmptyState';
 
 interface ServiceGridProps {
   services: Service[];
   isLoading?: boolean;
-  emptyMessage?: string;
+  emptyTitle?: string;
+  emptyDescription?: string;
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
 const ServiceGrid: Component<ServiceGridProps> = (props) => {
@@ -31,9 +36,13 @@ const ServiceGrid: Component<ServiceGridProps> = (props) => {
       <Show
         when={props.services && props.services.length > 0}
         fallback={
-          <div class="text-center py-12">
-            <p style={{ color: 'var(--color-text-muted)' }}>{props.emptyMessage || 'Nenhum serviço encontrado'}</p>
-          </div>
+          <EmptyState
+            icon={Zap}
+            title={props.emptyTitle || 'Nenhum serviço encontrado'}
+            description={props.emptyDescription}
+            actionLabel={props.actionLabel}
+            onAction={props.onAction}
+          />
         }
       >
         <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">

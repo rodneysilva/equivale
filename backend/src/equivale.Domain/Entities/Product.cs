@@ -17,7 +17,11 @@ public class Product
     public ProductCondition Condition { get; set; } = ProductCondition.New;
     public int Stock { get; set; } = 1;
     public string? CommunityId { get; set; }
+    public string? SellerName { get; set; }
+    public string? SellerAvatarUrl { get; set; }
+    public string? CommunityName { get; set; }
     public List<string> Tags { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public long Version { get; set; }
 }

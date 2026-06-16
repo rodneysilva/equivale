@@ -9,11 +9,13 @@ import CategoryFilter from '../components/marketplace/CategoryFilter';
 import TagFilter from '../components/marketplace/TagFilter';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import { useToast } from '../store/toast';
 import type { Product } from '../types';
 
 const ProductsPage: Component = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const toast = useToast();
   const [products, setProducts] = createSignal<Product[]>([]);
   const [loading, setLoading] = createSignal(true);
   const [search, setSearch] = createSignal((searchParams.search as string) || '');
@@ -32,8 +34,8 @@ const ProductsPage: Component = () => {
       const res = await productsService.getAll(page(), pageSize(), category() || undefined, search() || undefined, tags().length > 0 ? tags() : undefined, undefined, communityId, sortBy());
       setProducts(res.data);
       setTotalPages(res.totalPages);
-    } catch (e) {
-      console.error('Erro ao carregar produtos:', e);
+    } catch {
+      toast.error('Não foi possível carregar os produtos.');
       setProducts([]);
     } finally {
       setLoading(false);

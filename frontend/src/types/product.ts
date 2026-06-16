@@ -29,4 +29,6 @@ export interface CreateProductDto {
   images?: string[];
   condition?: 'new' | 'used' | 'refurbished';
   communityId?: string;
+  stock?: number;
+  tags?: string[];
 }

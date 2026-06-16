@@ -18,7 +18,7 @@ const Input: Component<InputProps> = (props) => {
         class={`eq-input ${props.class || ''}`}
       />
       {props.error && (
-        <p class="text-sm mt-1" style={{ color: '#dc2626' }}>{props.error}</p>
+        <p class="text-sm mt-1" style={{ color: 'var(--color-danger)' }}>{props.error}</p>
       )}
     </div>
   );

@@ -5,6 +5,7 @@ import Card from '../components/ui/Card';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { transactionsService } from '../services/transactions.service';
 import { useAuth } from '../store/auth';
+import { useToast } from '../store/toast';
 import type { Transaction } from '../types';
 
 const txLabel: Record<string, string> = { Pending: 'Pendente', ConfirmedByBuyer: 'Comprador confirmou', ConfirmedBySeller: 'Vendedor confirmou', Completed: 'Concluída', Cancelled: 'Cancelada' };
@@ -13,6 +14,7 @@ const txColor: Record<string, string> = { Pending: 'eq-badge-warning', Confirmed
 const WalletPage: Component = () => {
   const navigate = useNavigate();
   const auth = useAuth();
+  const toast = useToast();
   const [transactions, setTransactions] = createSignal<Transaction[]>([]);
   const [loading, setLoading] = createSignal(true);
   let loaded = false;
@@ -33,7 +35,7 @@ const WalletPage: Component = () => {
     try {
       const res = await transactionsService.getAll(undefined, 1, 100);
       setTransactions(res.data);
-    } catch (e) { console.error('Wallet load error:', e); }
+    } catch { toast.error('Não foi possível carregar sua carteira.'); }
     finally { setLoading(false); }
   };
 

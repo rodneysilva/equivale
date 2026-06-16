@@ -1,11 +1,13 @@
-import { type Component, createEffect, createSignal } from 'solid-js';
+import { type Component, createEffect, createSignal, onMount } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { ArrowLeft, BriefcaseBusiness } from 'lucide-solid';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import ImageUpload from '../components/ui/ImageUpload';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { servicesService } from '../services/services.service';
+import { communitiesService } from '../services/communities.service';
 import { useAuth } from '../store/auth';
 import type { CreateServiceDto } from '../types';
 
@@ -24,10 +26,22 @@ const CreateServicePage: Component = () => {
   const [imageUrl, setImageUrl] = createSignal('');
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal('');
+  const [communities, setCommunities] = createSignal<any[]>([]);
+  const [communityId, setCommunityId] = createSignal('');
+  const [tagsStr, setTagsStr] = createSignal('');
 
   createEffect(() => {
     if (!auth.isLoading() && !auth.isAuthenticated()) {
       navigate('/login', { replace: true });
+    }
+  });
+
+  onMount(async () => {
+    if (auth.isAuthenticated()) {
+      try {
+        const res = await communitiesService.getByMember(auth.currentUser()!.id);
+        setCommunities(res);
+      } catch {}
     }
   });
 
@@ -47,6 +61,8 @@ const CreateServicePage: Component = () => {
       return;
     }
 
+    const tags = tagsStr().split(',').map(s => s.trim()).filter(Boolean);
+
     const payload: CreateServiceDto = {
       title: title().trim(),
       description: description().trim(),
@@ -55,6 +71,8 @@ const CreateServicePage: Component = () => {
       imageUrl: imageUrl().trim() || undefined,
       duration: duration().trim() || undefined,
       location: location().trim() || undefined,
+      communityId: communityId() || undefined,
+      tags: tags.length > 0 ? tags : undefined,
     };
 
     setLoading(true);
@@ -153,11 +171,26 @@ const CreateServicePage: Component = () => {
             placeholder="Remoto ou cidade"
           />
 
+          <div class="w-full">
+            <label class="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>Imagem</label>
+            <ImageUpload onUpload={(urls) => setImageUrl(urls.join(','))} />
+          </div>
+
+          <div class="w-full">
+            <label class="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>Comunidade</label>
+            <select value={communityId()} onChange={(e) => setCommunityId(e.currentTarget.value)} class="eq-input">
+              <option value="">Nenhuma</option>
+              {communities().map((c) => (
+                <option value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+
           <Input
-            label="URL da imagem (opcional)"
-            value={imageUrl()}
-            onInput={(e) => setImageUrl(e.currentTarget.value)}
-            placeholder="https://..."
+            label="Tags (separadas por vírgula)"
+            value={tagsStr()}
+            onInput={(e) => setTagsStr(e.currentTarget.value)}
+            placeholder="logo, identidade visual, branding"
           />
 
           <div class="flex gap-2 pt-2">

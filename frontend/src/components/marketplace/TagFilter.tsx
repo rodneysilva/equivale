@@ -30,7 +30,7 @@ const TagFilter: Component<TagFilterProps> = (props) => {
                 class="text-xs px-2 py-1 rounded-full transition-colors flex items-center gap-1 cursor-pointer"
                 style={
                   isActive()
-                    ? { background: 'var(--color-primary)', color: '#fff' }
+                    ? { background: 'var(--color-primary)', color: 'var(--color-surface)' }
                     : { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)' }
                 }
               >

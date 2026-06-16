@@ -3,6 +3,7 @@ using equivale.Application.DTOs;
 using equivale.Application.Services;
 using equivale.Domain.Entities;
 using equivale.Domain.Enums;
+using equivale.Domain.Exceptions;
 using equivale.Domain.Interfaces;
 using equivale.Domain.ValueObjects;
 
@@ -64,7 +65,14 @@ public class TransactionService : ITransactionService
 
         // BLOQUEIA imediatamente (calção)
         buyer.Block(total);
-        await _userRepo.UpdateAsync(buyer, ct);
+        try
+        {
+            await _userRepo.UpdateAsync(buyer, ct);
+        }
+        catch (ConcurrencyException)
+        {
+            throw new InvalidOperationException("Saldo alterado por outra operação, tente novamente.");
+        }
 
         var tx = new Transaction
         {
@@ -132,11 +140,25 @@ public class TransactionService : ITransactionService
         if (buyer is not null && buyer.BlockedBalance.Amount >= t.TotalPrice.Amount)
         {
             buyer.Unblock(t.TotalPrice.Amount);
-            await _userRepo.UpdateAsync(buyer, ct);
+            try
+            {
+                await _userRepo.UpdateAsync(buyer, ct);
+            }
+            catch (ConcurrencyException)
+            {
+                throw new InvalidOperationException("Erro de concorrência ao estornar saldo. Tente novamente.");
+            }
         }
 
         t.Cancel();
-        await _repo.UpdateAsync(t, ct);
+        try
+        {
+            await _repo.UpdateAsync(t, ct);
+        }
+        catch (ConcurrencyException)
+        {
+            throw new InvalidOperationException("Erro de concorrência ao cancelar transação. Tente novamente.");
+        }
         return await EnrichAsync(t, ct);
     }
 
@@ -149,17 +171,32 @@ public class TransactionService : ITransactionService
         var buyer = await _userRepo.GetByIdAsync(t.BuyerId, ct);
         var seller = await _userRepo.GetByIdAsync(t.SellerId, ct);
 
+        // TODO: Envolver operações multi-documento em transação MongoDB para atomicidade
         if (buyer is not null)
         {
             // Só remove do bloqueado se houver saldo bloqueado (seed transactions podem não ter)
             if (buyer.BlockedBalance.Amount >= t.TotalPrice.Amount)
                 buyer.ReleaseBlocked(t.TotalPrice.Amount);
-            await _userRepo.UpdateAsync(buyer, ct);
+            try
+            {
+                await _userRepo.UpdateAsync(buyer, ct);
+            }
+            catch (ConcurrencyException)
+            {
+                throw new InvalidOperationException("Erro de concorrência ao liberar saldo do comprador. Tente novamente.");
+            }
         }
         if (seller is not null)
         {
             seller.Credit(t.TotalPrice.Amount);
-            await _userRepo.UpdateAsync(seller, ct);
+            try
+            {
+                await _userRepo.UpdateAsync(seller, ct);
+            }
+            catch (ConcurrencyException)
+            {
+                throw new InvalidOperationException("Erro de concorrência ao creditar vendedor. Tente novamente.");
+            }
         }
 
         // Decrementa estoque
@@ -170,12 +207,26 @@ public class TransactionService : ITransactionService
             {
                 product.Stock = Math.Max(0, product.Stock - t.Quantity);
                 if (product.Stock == 0) product.Status = ItemStatus.Sold;
-                await _productRepo.UpdateAsync(product, ct);
+                try
+                {
+                    await _productRepo.UpdateAsync(product, ct);
+                }
+                catch (ConcurrencyException)
+                {
+                    throw new InvalidOperationException("Erro de concorrência ao atualizar estoque. Tente novamente.");
+                }
             }
         }
 
         t.Finish();
-        await _repo.UpdateAsync(t, ct);
+        try
+        {
+            await _repo.UpdateAsync(t, ct);
+        }
+        catch (ConcurrencyException)
+        {
+            throw new InvalidOperationException("Erro de concorrência ao finalizar transação. Tente novamente.");
+        }
     }
 
     private async Task<TransactionDto> EnrichAsync(Transaction t, CancellationToken ct)

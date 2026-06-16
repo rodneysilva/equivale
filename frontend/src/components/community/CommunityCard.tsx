@@ -1,54 +1,82 @@
 import type { Component } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { Lock, Globe, Users } from 'lucide-solid';
-import type { Community } from '../../types';
-import Card from '../ui/Card';
+import { Users, Globe, Lock, MessageCircle } from 'lucide-solid';
 
 interface CommunityCardProps {
-  community: Community;
+  community: {
+    id: string;
+    name: string;
+    description: string;
+    imageUrl?: string;
+    coverUrl?: string;
+    ownerId: string;
+    ownerName?: string;
+    membersCount: number;
+    postsCount?: number;
+    type: 'open' | 'private';
+    createdAt?: string;
+  };
 }
 
 const CommunityCard: Component<CommunityCardProps> = (props) => {
   const navigate = useNavigate();
+  const c = props.community;
 
   return (
-    <Card hover class="overflow-hidden cursor-pointer" onClick={() => navigate(`/communities/${props.community.id}`)}>
-      {/* Cover banner with gradient overlay */}
-      <div class="h-28 relative" style={{ background: 'var(--color-surface-alt)' }}>
-        {props.community.coverUrl && (
-          <img src={props.community.coverUrl} alt="" class="w-full h-full object-cover" loading="lazy" />
+    <div
+      onClick={() => navigate(`/communities/${c.id}`)}
+      class="eq-card eq-card-hover overflow-hidden group"
+    >
+      {/* Cover area */}
+      <div class="relative h-28 bg-gradient-to-br from-cyan-400 to-cyan-600">
+        {c.coverUrl && (
+          <img src={c.coverUrl} alt="" class="w-full h-full object-cover absolute inset-0" loading="lazy" />
         )}
-        <div class="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)' }} />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+        {/* Type badge — top right */}
         <div class="absolute top-2 right-2">
-          <span class={`eq-badge ${props.community.type === 'private' ? 'eq-badge-warning' : 'eq-badge-primary'}`}>
-            {props.community.type === 'private' ? (
-              <><Lock size={10} class="mr-1" /> Privada</>
-            ) : (
-              <><Globe size={10} class="mr-1" /> Aberta</>
-            )}
+          <span class={`eq-badge ${c.type === 'private' ? 'eq-badge-warning' : 'eq-badge-community'} text-[0.625rem]`}>
+            {c.type === 'private' ? <Lock size={8} class="mr-0.5" /> : <Globe size={8} class="mr-0.5" />}
+            {c.type === 'private' ? 'Privada' : 'Aberta'}
           </span>
         </div>
-        <div class="absolute bottom-2 left-3 right-3 flex items-end gap-2">
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden shrink-0" style={{ border: '2px solid var(--color-surface)' }}>
-            {props.community.imageUrl ? (
-              <img src={props.community.imageUrl} alt={props.community.name} class="w-full h-full object-cover" loading="lazy" />
+
+        {/* Avatar + name — bottom left */}
+        <div class="absolute bottom-2 left-3 right-3 flex items-end gap-2.5">
+          <div class="w-12 h-12 rounded-full border-2 border-white/20 bg-white/10 backdrop-blur flex items-center justify-center overflow-hidden shrink-0 shadow-lg">
+            {c.imageUrl ? (
+              <img src={c.imageUrl} alt={c.name} class="w-full h-full object-cover rounded-full" loading="lazy" />
             ) : (
-              <span class="text-sm font-bold text-white" style={{ background: 'var(--color-primary)' }}>{props.community.name[0]}</span>
+              <span class="text-lg font-bold text-white">{c.name[0].toUpperCase()}</span>
             )}
           </div>
-          <h3 class="font-bold text-sm text-white truncate drop-shadow" title={props.community.name}>{props.community.name}</h3>
+          <div class="flex-1 min-w-0">
+            <h3 class="text-sm font-bold text-white truncate leading-tight drop-shadow">{c.name}</h3>
+            <p class="text-[0.6875rem] text-white/70 truncate">{c.ownerName || ''}</p>
+          </div>
         </div>
       </div>
+
+      {/* Info */}
       <div class="p-3">
-        <p class="text-xs line-clamp-2 leading-relaxed" title={props.community.description} style={{ color: 'var(--color-text-muted)' }}>
-          {props.community.description}
+        <p class="text-xs eq-text-secondary line-clamp-2 leading-relaxed mb-2.5">
+          {c.description}
         </p>
-        <div class="flex items-center gap-1 mt-2">
-          <Users size={12} style={{ color: 'var(--color-text-muted)' }} />
-          <span class="text-xs" style={{ color: 'var(--color-text-muted)' }}>{props.community.membersCount} membros</span>
+        <div class="flex items-center gap-3">
+          <span class="flex items-center gap-1 text-[0.6875rem] eq-text-muted">
+            <Users size={11} />
+            {c.membersCount} membro{c.membersCount !== 1 ? 's' : ''}
+          </span>
+          {c.postsCount !== undefined && (
+            <span class="flex items-center gap-1 text-[0.6875rem] eq-text-muted">
+              <MessageCircle size={11} />
+              {c.postsCount} post{c.postsCount !== 1 ? 's' : ''}
+            </span>
+          )}
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 

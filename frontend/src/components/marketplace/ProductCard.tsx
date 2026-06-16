@@ -1,7 +1,6 @@
 import type { Component } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import type { Product } from '../../types';
-import Card from '../ui/Card';
 
 interface ProductCardProps {
   product: Product;
@@ -9,34 +8,46 @@ interface ProductCardProps {
 
 const ProductCard: Component<ProductCardProps> = (props) => {
   const navigate = useNavigate();
+  const p = props.product;
 
   return (
-    <Card hover class="overflow-hidden cursor-pointer group" onClick={() => navigate(`/products/${props.product.id}`)}>
+    <div onClick={() => navigate(`/products/${p.id}`)} class="eq-card eq-card-hover overflow-hidden group">
       {/* Image */}
-      <div class="aspect-square relative overflow-hidden" style={{ background: 'var(--color-surface-alt)' }}>
-        {props.product.imageUrl ? (
-          <img src={props.product.imageUrl} alt={props.product.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+      <div class="relative h-40 bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-950/30 dark:to-amber-900/20 overflow-hidden">
+        {p.imageUrl ? (
+          <img src={p.imageUrl} alt={p.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
         ) : (
-          <div class="w-full h-full flex items-center justify-center" style={{ color: 'var(--color-text-muted)' }}>
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          <div class="w-full h-full flex items-center justify-center">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="eq-text-muted opacity-30">
+              <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
             </svg>
           </div>
         )}
-        {/* Condition badge */}
-        <span class="absolute top-1.5 left-1.5 text-[0.6rem] font-medium px-1.5 py-0.5 rounded truncate max-w-[80%]" style={{ background: 'var(--color-surface)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)' }} title={props.product.category}>
-          {props.product.category}
-        </span>
+        {/* Category badge */}
+        <div class="absolute top-2 left-2">
+          <span class="eq-badge eq-badge-product text-[0.625rem]">{p.category}</span>
+        </div>
+        {/* Community badge */}
+        {p.communityName && (
+          <div class="absolute top-2 right-2">
+            <span class="eq-badge eq-badge-community text-[0.625rem]">{p.communityName}</span>
+          </div>
+        )}
       </div>
       {/* Info */}
-      <div class="p-2">
-        <h3 class="text-xs font-normal leading-snug line-clamp-2" title={props.product.title} style={{ color: 'var(--color-text)', 'min-height': '2rem' }}>{props.product.title}</h3>
-        <div class="flex items-baseline gap-0.5 mt-1">
-          <span class="text-sm font-semibold eq-accent">{props.product.price}</span>
-          <span class="text-[0.65rem]" style={{ color: 'var(--color-text-muted)' }}>EQL</span>
+      <div class="p-3">
+        <h3 class="text-sm font-semibold eq-text line-clamp-2 leading-snug mb-1">{p.title}</h3>
+        <div class="flex items-center justify-between">
+          <span class="text-base font-bold eq-accent">{p.price} <span class="text-xs font-medium">EQL</span></span>
+          {p.sellerName && (
+            <span class="text-[0.6875rem] eq-text-muted truncate ml-2 max-w-[50%]">{p.sellerName}</span>
+          )}
         </div>
+        {p.condition && p.condition !== 'new' && (
+          <span class="inline-block mt-1 text-[0.625rem] eq-text-muted capitalize">{p.condition === 'used' ? 'Usado' : 'Recondicionado'}</span>
+        )}
       </div>
-    </Card>
+    </div>
   );
 };
 

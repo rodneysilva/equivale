@@ -75,6 +75,11 @@ builder.Services.AddScoped(typeof(equivale.Domain.Interfaces.IBaseRepository<equ
     var ctx = sp.GetRequiredService<equivale.Infrastructure.Persistence.MongoDbContext>();
     return new equivale.Infrastructure.Repositories.BaseRepository<equivale.Domain.Entities.JoinRequest>(ctx);
 });
+builder.Services.AddScoped(typeof(equivale.Domain.Interfaces.IBaseRepository<equivale.Domain.Entities.Post>), sp =>
+{
+    var ctx = sp.GetRequiredService<equivale.Infrastructure.Persistence.MongoDbContext>();
+    return new equivale.Infrastructure.Repositories.BaseRepository<equivale.Domain.Entities.Post>(ctx);
+});
 
 // In-memory cache for DTO enrichment
 builder.Services.AddMemoryCache();

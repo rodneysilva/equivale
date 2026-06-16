@@ -9,11 +9,13 @@ import CategoryFilter from '../components/marketplace/CategoryFilter';
 import TagFilter from '../components/marketplace/TagFilter';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import { useToast } from '../store/toast';
 import type { Service } from '../types';
 
 const ServicesPage: Component = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const toast = useToast();
   const [services, setServices] = createSignal<Service[]>([]);
   const [loading, setLoading] = createSignal(true);
   const [search, setSearch] = createSignal('');
@@ -32,8 +34,8 @@ const ServicesPage: Component = () => {
       const res = await servicesService.getAll(page(), pageSize(), category() || undefined, search() || undefined, tags().length > 0 ? tags() : undefined, undefined, communityId, sortBy());
       setServices(res.data);
       setTotalPages(res.totalPages);
-    } catch (e) {
-      console.error('Erro ao carregar serviços:', e);
+    } catch {
+      toast.error('Não foi possível carregar os serviços.');
       setServices([]);
     } finally {
       setLoading(false);

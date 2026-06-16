@@ -28,6 +28,7 @@ public class Transaction
     public DateTime? CancelledAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public long Version { get; set; }
 
     public bool CanCancel => Status is TransactionStatus.OrderPlaced or TransactionStatus.OrderConfirmed or TransactionStatus.Shipped;
     public bool CanSellerConfirm => Status == TransactionStatus.OrderPlaced;

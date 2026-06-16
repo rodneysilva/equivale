@@ -9,6 +9,7 @@ import { servicesService } from '../services/services.service';
 import { transactionsService } from '../services/transactions.service';
 import { api } from '../services/api';
 import { useAuth } from '../store/auth';
+import { useToast } from '../store/toast';
 import type { Product, Service, Transaction } from '../types';
 
 const orderLabel: Record<string, string> = {
@@ -35,6 +36,7 @@ function StatusIcon(props: { active: boolean }) {
 const DashboardPage: Component = () => {
   const navigate = useNavigate();
   const auth = useAuth();
+  const toast = useToast();
   const [tab, setTab] = createSignal<'overview' | 'products' | 'services' | 'buys' | 'sells'>('overview');
   const [products, setProducts] = createSignal<Product[]>([]);
   const [services, setServices] = createSignal<Service[]>([]);
@@ -75,8 +77,8 @@ const DashboardPage: Component = () => {
       setBuys(b.data);
       setSells(sel.data);
       setDataLoaded(true);
-    } catch (e) {
-      console.error('Dashboard load error:', e);
+    } catch {
+      toast.error('Não foi possível carregar o painel.');
     } finally {
       setLoading(false);
     }
@@ -101,13 +103,29 @@ const DashboardPage: Component = () => {
   };
 
   const toggleProductStatus = async (p: Product) => {
-    try { await api.put(`/products/${p.id}`, { status: p.status === 'available' ? 'sold' : 'available' }); setProducts(prev => prev.map(x => x.id === p.id ? { ...x, status: x.status === 'available' ? 'sold' : 'available' } : x)); } catch (e) { console.error(e); }
+    const prevStatus = p.status;
+    setProducts(prev => prev.map(x => x.id === p.id ? { ...x, status: x.status === 'available' ? 'sold' : 'available' } : x));
+    try { await api.put(`/products/${p.id}`, { status: prevStatus === 'available' ? 'sold' : 'available' }); toast.success('Produto atualizado.'); }
+    catch { setProducts(prev => prev.map(x => x.id === p.id ? { ...x, status: prevStatus } : x)); toast.error('Falha ao atualizar. Tente novamente.'); }
   };
-  const deleteProduct = async (id: string) => { try { await api.del(`/products/${id}`); setProducts(prev => prev.filter(p => p.id !== id)); } catch (e) { console.error(e); } };
+  const deleteProduct = async (id: string) => {
+    const prevProducts = products();
+    setProducts(prev => prev.filter(p => p.id !== id));
+    try { await api.del(`/products/${id}`); toast.success('Produto excluído.'); }
+    catch { setProducts(prevProducts); toast.error('Falha ao excluir. Tente novamente.'); }
+  };
   const toggleServiceStatus = async (svc: Service) => {
-    try { await api.put(`/services/${svc.id}`, { status: svc.status === 'available' ? 'pending_moderation' : 'available' }); setServices(prev => prev.map(x => x.id === svc.id ? { ...x, status: x.status === 'available' ? 'pending_moderation' : 'available' } : x)); } catch (e) { console.error(e); }
+    const prevStatus = svc.status;
+    setServices(prev => prev.map(x => x.id === svc.id ? { ...x, status: x.status === 'available' ? 'pending_moderation' : 'available' } : x));
+    try { await api.put(`/services/${svc.id}`, { status: prevStatus === 'available' ? 'pending_moderation' : 'available' }); toast.success('Serviço atualizado.'); }
+    catch { setServices(prev => prev.map(x => x.id === svc.id ? { ...x, status: prevStatus } : x)); toast.error('Falha ao atualizar. Tente novamente.'); }
   };
-  const deleteService = async (id: string) => { try { await api.del(`/services/${id}`); setServices(prev => prev.filter(s => s.id !== id)); } catch (e) { console.error(e); } };
+  const deleteService = async (id: string) => {
+    const prevServices = services();
+    setServices(prev => prev.filter(s => s.id !== id));
+    try { await api.del(`/services/${id}`); toast.success('Serviço excluído.'); }
+    catch { setServices(prevServices); toast.error('Falha ao excluir. Tente novamente.'); }
+  };
 
   const fmtDate = (d: string) => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
 

@@ -13,6 +13,8 @@ function toBackendCreate(data: CreateProductDto, sellerId?: string): BackendCrea
     category: data.category,
     priceInEquivale: data.price,
     images: data.images?.length ? data.images : data.imageUrl ? [data.imageUrl] : [],
+    condition: (data as any).condition || undefined,
+    communityId: (data as any).communityId || undefined,
   };
 }
 

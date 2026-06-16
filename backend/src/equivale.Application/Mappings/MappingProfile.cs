@@ -29,19 +29,15 @@ public class MappingProfile : Profile
 
         // Product mappings
         CreateMap<Product, ProductDto>()
-            .ForMember(dest => dest.PriceInEquivale, opt => opt.MapFrom(src => src.PriceInEquivale.Amount))
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-            .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => src.Condition.ToString()))
-            .ForMember(dest => dest.ShippingCost, opt => opt.MapFrom(src => src.ShippingCost))
-            .ForMember(dest => dest.Stock, opt => opt.MapFrom(src => src.Stock))
-            .ForMember(dest => dest.SellerName, opt => opt.Ignore())
-            .ForMember(dest => dest.SellerAvatarUrl, opt => opt.Ignore())
-            .ForMember(dest => dest.CommunityName, opt => opt.Ignore())
-            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags))
-            .ForCtorParam("SellerName", opt => opt.MapFrom(_ => (string?)null))
-            .ForCtorParam("SellerAvatarUrl", opt => opt.MapFrom(_ => (string?)null))
-            .ForCtorParam("CommunityName", opt => opt.MapFrom(_ => (string?)null))
-            .ForCtorParam("ShippingCost", opt => opt.MapFrom(src => src.ShippingCost));
+            .ForCtorParam("PriceInEquivale", opt => opt.MapFrom(src => src.PriceInEquivale.Amount))
+            .ForCtorParam("ShippingCost", opt => opt.MapFrom(src => src.ShippingCost))
+            .ForCtorParam("Stock", opt => opt.MapFrom(src => src.Stock))
+            .ForCtorParam("Status", opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForCtorParam("Condition", opt => opt.MapFrom(src => src.Condition.ToString()))
+            .ForCtorParam("SellerName", opt => opt.MapFrom(src => src.SellerName))
+            .ForCtorParam("SellerAvatarUrl", opt => opt.MapFrom(src => src.SellerAvatarUrl))
+            .ForCtorParam("CommunityName", opt => opt.MapFrom(src => src.CommunityName))
+            .ForCtorParam("Tags", opt => opt.MapFrom(src => src.Tags));
         CreateMap<CreateProductDto, Product>()
             .ForMember(dest => dest.PriceInEquivale, opt => opt.MapFrom(src => new Money(src.PriceInEquivale)))
             .ForMember(dest => dest.Id, opt => opt.Ignore())
@@ -55,15 +51,12 @@ public class MappingProfile : Profile
 
         // Service mappings
         CreateMap<Service, ServiceDto>()
-            .ForMember(dest => dest.PriceInEquivale, opt => opt.MapFrom(src => src.PriceInEquivale.Amount))
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-            .ForMember(dest => dest.ProviderName, opt => opt.Ignore())
-            .ForMember(dest => dest.ProviderAvatarUrl, opt => opt.Ignore())
-            .ForMember(dest => dest.CommunityName, opt => opt.Ignore())
-            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags))
-            .ForCtorParam("ProviderName", opt => opt.MapFrom(_ => (string?)null))
-            .ForCtorParam("ProviderAvatarUrl", opt => opt.MapFrom(_ => (string?)null))
-            .ForCtorParam("CommunityName", opt => opt.MapFrom(_ => (string?)null));
+            .ForCtorParam("PriceInEquivale", opt => opt.MapFrom(src => src.PriceInEquivale.Amount))
+            .ForCtorParam("Status", opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForCtorParam("ProviderName", opt => opt.MapFrom(src => src.ProviderName))
+            .ForCtorParam("ProviderAvatarUrl", opt => opt.MapFrom(src => src.ProviderAvatarUrl))
+            .ForCtorParam("CommunityName", opt => opt.MapFrom(src => src.CommunityName))
+            .ForCtorParam("Tags", opt => opt.MapFrom(src => src.Tags));
         CreateMap<CreateServiceDto, Service>()
             .ForMember(dest => dest.PriceInEquivale, opt => opt.MapFrom(src => new Money(src.PriceInEquivale)))
             .ForMember(dest => dest.Id, opt => opt.Ignore())
@@ -77,8 +70,6 @@ public class MappingProfile : Profile
         // Community mappings
         CreateMap<Community, CommunityDto>()
             .ForMember(dest => dest.MembersCount, opt => opt.MapFrom(src => src.Members.Count))
-            .ForMember(dest => dest.CreatorName, opt => opt.Ignore())
-            .ForMember(dest => dest.ModeratorNames, opt => opt.Ignore())
             .ForCtorParam("CreatorName", opt => opt.MapFrom(_ => (string?)null))
             .ForCtorParam("ModeratorNames", opt => opt.MapFrom(_ => (List<string>?)null));
         CreateMap<CreateCommunityDto, Community>()
@@ -98,13 +89,6 @@ public class MappingProfile : Profile
 
         // Transaction mappings
         CreateMap<Transaction, TransactionDto>()
-            .ForMember(dest => dest.ItemType, opt => opt.MapFrom(src => src.ItemType.ToString()))
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-            .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice.Amount))
-            .ForMember(dest => dest.ShippingCost, opt => opt.MapFrom(src => src.ShippingCost))
-            .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.TotalPrice.Amount))
-            .ForMember(dest => dest.BuyerName, opt => opt.Ignore())
-            .ForMember(dest => dest.SellerName, opt => opt.Ignore())
             .ForCtorParam("BuyerName", opt => opt.MapFrom(_ => (string?)null))
             .ForCtorParam("SellerName", opt => opt.MapFrom(_ => (string?)null))
             .ForCtorParam("ItemType", opt => opt.MapFrom(src => src.ItemType.ToString()))

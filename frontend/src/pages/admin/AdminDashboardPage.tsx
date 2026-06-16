@@ -1,21 +1,29 @@
-import { type Component, createSignal, onMount, For } from 'solid-js';
+import { type Component, createSignal, onMount, For, Show } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { Users, Package, Zap, Globe, TrendingUp, Shield } from 'lucide-solid';
+import { Users, Package, Zap, Globe, TrendingUp, Shield, Clock, ChevronRight } from 'lucide-solid';
 import Card from '../../components/ui/Card';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { adminService, type AdminStats } from '../../services/admin.service';
+import { api } from '../../services/api';
 import { useAuth } from '../../store/auth';
+import type { Transaction } from '../../types';
 
 const AdminDashboardPage: Component = () => {
   const navigate = useNavigate();
   const auth = useAuth();
   const [stats, setStats] = createSignal<AdminStats | null>(null);
   const [loading, setLoading] = createSignal(true);
+  const [recentTransactions, setRecentTransactions] = createSignal<Transaction[]>([]);
 
   onMount(async () => {
     if (!auth.isAuthenticated()) { navigate('/login'); return; }
     try {
-      setStats(await adminService.getStats());
+      const [s, txRaw] = await Promise.all([
+        adminService.getStats(),
+        api.get<{ items: Transaction[] }>('/transactions?page=1&pageSize=5'),
+      ]);
+      setStats(s);
+      setRecentTransactions(txRaw.items || []);
     } catch (err) {
       console.error('Erro ao carregar stats:', err);
       navigate('/');
@@ -23,16 +31,26 @@ const AdminDashboardPage: Component = () => {
     finally { setLoading(false); }
   });
 
+  const statusLabel: Record<string, string> = {
+    OrderPlaced: 'Realizado', OrderConfirmed: 'Confirmado', Shipped: 'Enviado',
+    Delivered: 'Entregue', Finished: 'Finalizado', Cancelled: 'Cancelado',
+  };
+
+  const statusColor: Record<string, string> = {
+    OrderPlaced: 'eq-badge-warning', OrderConfirmed: 'eq-badge-info', Shipped: 'eq-badge-info',
+    Delivered: 'eq-badge-success', Finished: 'eq-badge-success', Cancelled: 'eq-badge-error',
+  };
+
   const statCards = () => {
     const s = stats();
     if (!s) return [];
     return [
       { label: 'Usuários', value: s.users, icon: Users, link: '/admin/users', color: 'var(--color-primary)' },
       { label: 'Produtos', value: s.products, icon: Package, link: '/admin/products', color: 'var(--color-accent)' },
-      { label: 'Serviços', value: s.services, icon: Zap, link: '/admin/products', color: '#0891b2' },
+      { label: 'Serviços', value: s.services, icon: Zap, link: '/admin/services', color: '#0891b2' },
       { label: 'Comunidades', value: s.communities, icon: Globe, link: '/admin/communities', color: '#7c3aed' },
-      { label: 'Transações', value: s.transactions, icon: TrendingUp, link: '/transactions', color: '#059669' },
-      { label: 'Concluídas', value: s.completedTransactions, icon: Shield, link: '/transactions', color: '#dc2626' },
+      { label: 'Transações', value: s.transactions, icon: TrendingUp, link: '/admin/transactions', color: '#059669' },
+      { label: 'Concluídas', value: s.completedTransactions, icon: Shield, link: '/admin/transactions', color: '#dc2626' },
     ];
   };
 
@@ -66,6 +84,39 @@ const AdminDashboardPage: Component = () => {
               <p class="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Remover produtos inadequados</p>
             </Card>
           </div>
+
+          <Show when={recentTransactions().length > 0}>
+            <div class="mb-8">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Atividade Recente</h3>
+                <button onClick={() => navigate('/admin/transactions')} class="text-xs eq-link flex items-center gap-1">
+                  Ver todas <ChevronRight size={12} />
+                </button>
+              </div>
+              <div class="space-y-2">
+                <For each={recentTransactions()}>
+                  {(t) => (
+                    <Card class="p-3 flex items-center gap-3">
+                      <div class="w-9 h-9 rounded flex items-center justify-center shrink-0" style={{ background: 'var(--color-surface-alt)' }}>
+                        <Clock size={14} style={{ color: 'var(--color-text-muted)' }} />
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <span class="font-medium text-sm truncate" style={{ color: 'var(--color-text)' }}>{t.itemTitle}</span>
+                          <span class={`eq-badge ${statusColor[t.status] || 'eq-badge-info'}`}>
+                            {statusLabel[t.status] || t.status}
+                          </span>
+                        </div>
+                        <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                          Comprador: {t.buyerName || '—'} · Vendedor: {t.sellerName || '—'} · {t.totalPrice} EQL
+                        </p>
+                      </div>
+                    </Card>
+                  )}
+                </For>
+              </div>
+            </div>
+          </Show>
         </>
       )}
     </div>

@@ -16,7 +16,11 @@ public class Service
     public string? Location { get; set; }
     public ItemStatus Status { get; set; } = ItemStatus.Active;
     public string? CommunityId { get; set; }
+    public string? ProviderName { get; set; }
+    public string? ProviderAvatarUrl { get; set; }
+    public string? CommunityName { get; set; }
     public List<string> Tags { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public long Version { get; set; }
 }

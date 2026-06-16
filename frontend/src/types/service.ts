@@ -5,6 +5,7 @@ export interface Service {
   price: number;
   category: string;
   imageUrl?: string;
+  images?: string[];
   providerId: string;
   providerName?: string;
   providerAvatar?: string;
@@ -26,4 +27,6 @@ export interface CreateServiceDto {
   imageUrl?: string;
   duration?: string;
   location?: string;
+  communityId?: string;
+  tags?: string[];
 }

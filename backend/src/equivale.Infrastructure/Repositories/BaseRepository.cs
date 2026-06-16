@@ -1,6 +1,7 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
 using equivale.Application.Interfaces;
+using equivale.Domain.Exceptions;
 using equivale.Domain.Interfaces;
 using equivale.Infrastructure.Persistence;
 
@@ -52,23 +53,25 @@ public class BaseRepository<T> : IBaseRepository<T>, ITransactionalRepository<T>
 
     public virtual async Task UpdateAsync(T entity, CancellationToken cancellationToken = default)
     {
-        var idProp = typeof(T).GetProperty("Id");
-        var idValue = idProp?.GetValue(entity)?.ToString();
-        if (idValue is null) throw new InvalidOperationException("Entity must have an Id property.");
+        var (idFilter, versionFilter, newVersion) = BuildOptimisticLockFilter(entity);
+        var combinedFilter = Builders<T>.Filter.And(idFilter, versionFilter);
+        UpdateEntityVersion(entity, newVersion);
 
-        var filter = Builders<T>.Filter.Eq("_id", idValue);
-        await _collection.ReplaceOneAsync(filter, entity, cancellationToken: cancellationToken);
+        var result = await _collection.ReplaceOneAsync(combinedFilter, entity, cancellationToken: cancellationToken);
+        if (result.MatchedCount == 0)
+            throw new ConcurrencyException(typeof(T).Name, GetEntityId(entity), newVersion - 1);
     }
 
     public virtual async Task UpdateAsync(T entity, IDbSession session, CancellationToken cancellationToken = default)
     {
         var mongoSession = ResolveMongoSession(session);
-        var idProp = typeof(T).GetProperty("Id");
-        var idValue = idProp?.GetValue(entity)?.ToString();
-        if (idValue is null) throw new InvalidOperationException("Entity must have an Id property.");
+        var (idFilter, versionFilter, newVersion) = BuildOptimisticLockFilter(entity);
+        var combinedFilter = Builders<T>.Filter.And(idFilter, versionFilter);
+        UpdateEntityVersion(entity, newVersion);
 
-        var filter = Builders<T>.Filter.Eq("_id", idValue);
-        await _collection.ReplaceOneAsync(mongoSession, filter, entity, cancellationToken: cancellationToken);
+        var result = await _collection.ReplaceOneAsync(mongoSession, combinedFilter, entity, cancellationToken: cancellationToken);
+        if (result.MatchedCount == 0)
+            throw new ConcurrencyException(typeof(T).Name, GetEntityId(entity), newVersion - 1);
     }
 
     public virtual async Task DeleteAsync(string id, CancellationToken cancellationToken = default)
@@ -100,6 +103,33 @@ public class BaseRepository<T> : IBaseRepository<T>, ITransactionalRepository<T>
             .Limit(pageSize)
             .ToListAsync(cancellationToken);
         return (items.AsReadOnly(), total);
+    }
+
+    private static (FilterDefinition<T> idFilter, FilterDefinition<T> versionFilter, long newVersion) BuildOptimisticLockFilter(T entity)
+    {
+        var idProp = typeof(T).GetProperty("Id");
+        var idValue = idProp?.GetValue(entity)?.ToString();
+        if (idValue is null) throw new InvalidOperationException("Entity must have an Id property.");
+
+        var versionProp = typeof(T).GetProperty("Version");
+        var expectedVersion = versionProp is not null ? (long)versionProp.GetValue(entity)! : 0L;
+        var newVersion = expectedVersion + 1;
+
+        var idFilter = Builders<T>.Filter.Eq("_id", idValue);
+        var versionFilter = Builders<T>.Filter.Eq("version", expectedVersion);
+        return (idFilter, versionFilter, newVersion);
+    }
+
+    private static void UpdateEntityVersion(T entity, long newVersion)
+    {
+        var versionProp = typeof(T).GetProperty("Version");
+        versionProp?.SetValue(entity, newVersion);
+    }
+
+    private static string GetEntityId(T entity)
+    {
+        var idProp = typeof(T).GetProperty("Id");
+        return idProp?.GetValue(entity)?.ToString() ?? "unknown";
     }
 
     private static void EnsureEntityHasId(T entity)

@@ -81,7 +81,7 @@ public class UserTests
         user.Credit(50m);
         var act = () => user.Debit(100m);
         act.Should().Throw<InvalidOperationException>()
-           .WithMessage("*Insufficient wallet balance*");
+           .WithMessage("*Saldo*");
     }
 
     [Fact]

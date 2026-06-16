@@ -1,7 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" fill="none">
-  <rect width="180" height="180" rx="36" fill="#78350f"/>
-  <rect x="50" y="68" width="80" height="14" rx="7" fill="#fbbf24"/>
-  <rect x="50" y="98" width="80" height="14" rx="7" fill="#fbbf24"/>
-  <circle cx="38" cy="90" r="8" fill="#fef3c7"/>
-  <circle cx="142" cy="90" r="8" fill="#fef3c7"/>
+  <rect width="180" height="180" rx="38" fill="#2D6A4F"/>
+  <!-- Arco superior — seta dourada sentido horário -->
+  <path d="M50 90 A40 40 0 0 1 130 90" stroke="#DDA15E" stroke-width="12" stroke-linecap="round" fill="none"/>
+  <polygon points="123,75 134,90 114,91" fill="#DDA15E"/>
+  <!-- Arco inferior — seta creme sentido horário -->
+  <path d="M130 90 A40 40 0 0 1 50 90" stroke="#FEFAE0" stroke-width="12" stroke-linecap="round" fill="none"/>
+  <polygon points="57,105 46,90 66,89" fill="#FEFAE0"/>
+  <!-- Pontos centrais de troca -->
+  <circle cx="79" cy="82" r="9" fill="#DDA15E"/>
+  <circle cx="101" cy="98" r="9" fill="#FEFAE0"/>
 </svg>

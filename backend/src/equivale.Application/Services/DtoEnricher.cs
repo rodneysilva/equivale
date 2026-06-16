@@ -5,6 +5,12 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace equivale.Application.Services;
 
+/// <summary>
+/// Fallback enricher para ProductDto/ServiceDto. Agora as entidades Product e Service já embutem
+/// SellerName/SellerAvatarUrl/CommunityName (ou ProviderName equivalentes), que são mapeados
+/// diretamente pelo AutoMapper. Este enricher serve como defesa para documentos legados (criados
+/// antes da versão que embute os nomes) que possam ter esses campos nulos.
+/// </summary>
 public class DtoEnricher
 {
     private readonly IUserRepository _userRepository;
@@ -22,8 +28,11 @@ public class DtoEnricher
     {
         if (products.Count == 0) return;
 
-        var userIds = products.Select(p => p.SellerId).Distinct();
-        var communityIds = products.Select(p => p.CommunityId).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().Select(c => c!);
+        var needsEnrichment = products.Where(p => p.SellerName is null || p.CommunityName is null).ToList();
+        if (needsEnrichment.Count == 0) return;
+
+        var userIds = needsEnrichment.Select(p => p.SellerId).Distinct();
+        var communityIds = needsEnrichment.Select(p => p.CommunityId).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().Select(c => c!);
 
         var users = await FetchUsersAsync(userIds, cancellationToken);
         var communities = await FetchCommunitiesAsync(communityIds, cancellationToken);
@@ -31,14 +40,16 @@ public class DtoEnricher
         for (var i = 0; i < products.Count; i++)
         {
             var product = products[i];
-            string? sellerName = null, sellerAvatar = null, communityName = null;
+            if (product.SellerName is not null) continue;
+
+            string? sellerName = null, sellerAvatar = null, communityName = product.CommunityName;
 
             if (users.TryGetValue(product.SellerId, out var user))
             {
                 sellerName = user.Name;
                 sellerAvatar = user.AvatarUrl;
             }
-            if (!string.IsNullOrWhiteSpace(product.CommunityId) && communities.TryGetValue(product.CommunityId!, out var community))
+            if (!string.IsNullOrWhiteSpace(product.CommunityId) && communityName is null && communities.TryGetValue(product.CommunityId!, out var community))
             {
                 communityName = community.Name;
             }
@@ -51,8 +62,11 @@ public class DtoEnricher
     {
         if (services.Count == 0) return;
 
-        var userIds = services.Select(p => p.ProviderId).Distinct();
-        var communityIds = services.Select(p => p.CommunityId).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().Select(c => c!);
+        var needsEnrichment = services.Where(s => s.ProviderName is null || s.CommunityName is null).ToList();
+        if (needsEnrichment.Count == 0) return;
+
+        var userIds = needsEnrichment.Select(p => p.ProviderId).Distinct();
+        var communityIds = needsEnrichment.Select(p => p.CommunityId).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().Select(c => c!);
 
         var users = await FetchUsersAsync(userIds, cancellationToken);
         var communities = await FetchCommunitiesAsync(communityIds, cancellationToken);
@@ -60,14 +74,16 @@ public class DtoEnricher
         for (var i = 0; i < services.Count; i++)
         {
             var service = services[i];
-            string? providerName = null, providerAvatar = null, communityName = null;
+            if (service.ProviderName is not null) continue;
+
+            string? providerName = null, providerAvatar = null, communityName = service.CommunityName;
 
             if (users.TryGetValue(service.ProviderId, out var user))
             {
                 providerName = user.Name;
                 providerAvatar = user.AvatarUrl;
             }
-            if (!string.IsNullOrWhiteSpace(service.CommunityId) && communities.TryGetValue(service.CommunityId!, out var community))
+            if (!string.IsNullOrWhiteSpace(service.CommunityId) && communityName is null && communities.TryGetValue(service.CommunityId!, out var community))
             {
                 communityName = community.Name;
             }

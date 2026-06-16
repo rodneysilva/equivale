@@ -5,4 +5,5 @@ export type { Service, CreateServiceDto } from './service';
 export type { Community, CreateCommunityDto } from './community';
 export type { Transaction } from './transaction';
 export type { Review } from './review';
+export type { Post, CreatePostDto } from './post';
 export type { PaginatedResponse } from './common';

@@ -6,6 +6,7 @@ import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { transactionsService } from '../services/transactions.service';
 import { useAuth } from '../store/auth';
+import { useToast } from '../store/toast';
 import type { Transaction } from '../types';
 
 const txStatusLabel: Record<string, string> = {
@@ -35,6 +36,7 @@ const orderStatusLabel: Record<string, string> = {
 const TransactionsPage: Component = () => {
   const navigate = useNavigate();
   const auth = useAuth();
+  const toast = useToast();
   const [transactions, setTransactions] = createSignal<Transaction[]>([]);
   const [loading, setLoading] = createSignal(true);
   const [tab, setTab] = createSignal<'all' | 'buyer' | 'seller'>('all');
@@ -45,7 +47,7 @@ const TransactionsPage: Component = () => {
     try {
       const res = await transactionsService.getAll(tab() === 'all' ? undefined : tab(), 1, 50);
       setTransactions(res.data);
-    } catch { /* ignore */ }
+    } catch { toast.error('Não foi possível carregar suas transações.'); }
     finally { setLoading(false); }
   };
 
@@ -64,8 +66,9 @@ const TransactionsPage: Component = () => {
     setActionLoading(id);
     try {
       update(id, await fn(id));
+      toast.success('Transação atualizada.');
       if (auth.refreshProfile) await auth.refreshProfile();
-    } catch (err: any) { alert(err.message || 'Erro'); }
+    } catch (err: any) { toast.error(err.message || 'Erro na operação'); }
     finally { setActionLoading(null); }
   };
 

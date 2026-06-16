@@ -1,11 +1,13 @@
-import { type Component, createEffect, createSignal } from 'solid-js';
+import { type Component, createEffect, createSignal, onMount } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { ArrowLeft, Package } from 'lucide-solid';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import ImageUpload from '../components/ui/ImageUpload';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { productsService } from '../services/products.service';
+import { communitiesService } from '../services/communities.service';
 import { useAuth } from '../store/auth';
 import type { CreateProductDto } from '../types';
 
@@ -24,10 +26,23 @@ const CreateProductPage: Component = () => {
   const [imageUrl, setImageUrl] = createSignal('');
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal('');
+  const [communities, setCommunities] = createSignal<any[]>([]);
+  const [communityId, setCommunityId] = createSignal('');
+  const [tagsStr, setTagsStr] = createSignal('');
+  const [stock, setStock] = createSignal(1);
 
   createEffect(() => {
     if (!auth.isLoading() && !auth.isAuthenticated()) {
       navigate('/login', { replace: true });
+    }
+  });
+
+  onMount(async () => {
+    if (auth.isAuthenticated()) {
+      try {
+        const res = await communitiesService.getByMember(auth.currentUser()!.id);
+        setCommunities(res);
+      } catch {}
     }
   });
 
@@ -47,14 +62,20 @@ const CreateProductPage: Component = () => {
       return;
     }
 
+    const images = imageUrl().split(',').map(s => s.trim()).filter(Boolean);
+    const tags = tagsStr().split(',').map(s => s.trim()).filter(Boolean);
+
     const payload: CreateProductDto = {
       title: title().trim(),
       description: description().trim(),
       category: category(),
       price: parsedPrice,
       imageUrl: imageUrl().trim() || undefined,
-      images: imageUrl().trim() ? [imageUrl().trim()] : [],
+      images,
       condition: condition(),
+      communityId: communityId() || undefined,
+      tags: tags.length > 0 ? tags : undefined,
+      stock: stock(),
     };
 
     setLoading(true);
@@ -148,11 +169,34 @@ const CreateProductPage: Component = () => {
             </div>
           </div>
 
+          <div class="w-full">
+            <label class="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>Imagens</label>
+            <ImageUpload onUpload={(urls) => setImageUrl(urls.join(','))} />
+          </div>
+
+          <div class="w-full">
+            <label class="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>Comunidade</label>
+            <select value={communityId()} onChange={(e) => setCommunityId(e.currentTarget.value)} class="eq-input">
+              <option value="">Nenhuma</option>
+              {communities().map((c) => (
+                <option value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+
           <Input
-            label="URL da imagem (opcional)"
-            value={imageUrl()}
-            onInput={(e) => setImageUrl(e.currentTarget.value)}
-            placeholder="https://..."
+            label="Tags (separadas por vírgula)"
+            value={tagsStr()}
+            onInput={(e) => setTagsStr(e.currentTarget.value)}
+            placeholder="artesanal, madeira, sustentável"
+          />
+
+          <Input
+            label="Estoque"
+            type="number"
+            min="1"
+            value={stock()}
+            onInput={(e) => setStock(Number(e.currentTarget.value))}
           />
 
           <div class="flex gap-2 pt-2">

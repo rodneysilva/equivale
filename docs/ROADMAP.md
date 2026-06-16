@@ -9,39 +9,24 @@
 
 ### P0 — Bugs Críticos (bloqueiam experiência)
 
-#### 1. Corrigir Dark Mode
-- **Problema:** Dois stores de tema conflitantes. `ThemeToggle` usa `theme.ts` (seta `data-theme`), mas o CSS responde a `.dark` (em `theme.tsx`, que está orfao).
-- **Correção:** Fazer `ThemeToggle` importar de `store/theme.tsx`, ou ajustar `theme.ts` para usar `classList.add/remove('dark')`.
-- **Arquivo:** `frontend/src/components/ui/ThemeToggle.tsx`, `frontend/src/store/theme.ts` e `theme.tsx`.
-- **Verificar:** Remover o store redundante e a chave de localStorage conflitante.
+#### 1. ✅ Corrigir Dark Mode
+- **Concluído:** Store unificado, sem conflitos de tema.
 
-#### 2. Produtos da Comunidade Nunca Aparecem
-- **Problema:** `mapProduct` (em `mappers.ts`) nao popula `communityId`. A `CommunityDetailPage` filtra produtos por `p.communityId === data.id`, que é sempre `undefined`.
-- **Opçao A (frontend):** Adicionar `communityId` no `BackendProductDto` e popular no `mapProduct`.
-- **Opçao B (backend):** Adicionar `CommunityId` na entidade `Product` e retornar no `ProductDto`.
-- **Recomendado:** Opçao B — o produto pertence a uma comunidade no domínio.
+#### 2. ✅ Produtos da Comunidade Nunca Aparecem
+- **Concluído:** Backend retorna `communityId`, frontend mapeia corretamente no `mapProduct`.
 
-#### 3. `isMember` Sempre False
-- **Problema:** `CommunityDetailPage` inicializa `isMember = false` e nunca consulta o backend.
-- **Correção:** Adicionar endpoint `GET /api/communities/{id}/membership/{userId}` ou popular `isMember` verificando se `currentUser.id` está em `community.members`.
+#### 3. ✅ `isMember` Sempre False
+- **Concluído:** `CommunityDetailPage` consulta endpoint de membros para verificar associação.
 
 ---
 
 ### P1 — Telas de Criação/Gestao de Produto
 
-#### Criar Produto
-- **Service pronto:** `productsService.create(dto, sellerId)` — sem invocador.
-- **Faltam:**
-  - Rota: `/products/new` no `App.tsx`
-  - Página: `CreateProductPage.tsx` (ou modal em ProductsPage)
-  - Campos: título, descrição, preço (EQL), categoria, condição (novo/usado/recondicionado), imagens (upload ou URL)
-  - Botao "Criar produto" em ProductsPage (visível se autenticado)
+#### ✅ Criar Produto
+- **Concluído:** Rota `/products/new`, página `CreateProductPage` com communityId, tags, estoque, múltiplas imagens. Botao visível em ProductsPage para autenticados.
 
-#### Editar Produto
-- **Service pronto:** `productsService.update(id, dto, sellerId)`.
-- **Faltam:**
-  - Botao "Editar" em ProductDetailPage (visível só para o dono)
-  - Página ou modal de ediçao pré-preenchido
+#### ✅ Editar Produto
+- **Concluído:** Botao "Editar" visível para o dono em ProductDetailPage, modal/página de ediçao pré-preenchida.
 
 #### Excluir Produto
 - **Service pronto:** `productsService.delete(id)`.
@@ -53,11 +38,8 @@
 
 ### P2 — Telas de Gestao de Comunidade
 
-#### Editar Comunidade
-- **Service pronto:** `communitiesService.update(id, dto)`.
-- **Faltam:**
-  - Botao "Editar" em CommunityDetailPage (visível para owner/moderador)
-  - Modal de ediçao: nome, descrição, imagem, capa, tipo, visibilidade
+#### ✅ Editar Comunidade
+- **Concluído:** Modal de ediçao implementado com campos: nome, descriçao, imagem, capa, tipo, visibilidade. Visível para owner/moderador.
 
 #### Gerenciar Moderadores
 - **Services prontos:** `addModerator(communityId, userId)`, `removeModerator(communityId, userId)`.
@@ -66,10 +48,8 @@
   - Input para adicionar moderador (por ID ou username)
   - Lista de moderadores com botao remover (exceto criador)
 
-#### Listar/Gerenciar Membros
-- **Lacuna:** NAO há endpoint para listar membros de uma comunidade.
-- **Backend:** Adicionar `GET /api/communities/{id}/members` que retorna os usuários da lista `Members`.
-- **Frontend:** Lista de membros com opçao de remover (para moderadores).
+#### ✅ Listar/Gerenciar Membros
+- **Concluído:** Página `CommunityMembersPage` implementada, exibe lista de membros.
 
 #### Regenerar Invite Code
 - **Lacuna:** O código é gerado na criação mas nao há como regenerar.
@@ -78,44 +58,45 @@
 
 ---
 
-### P3 — Criação/Gestao de Serviço
-Mesma estrutura de produto, adaptada:
-- `servicesService.create/update/delete` estao prontos.
-- Criar `CreateServicePage` com campos: título, descrição, preço, categoria, duração, localizaçao, imagens.
-- Botoes editar/excluir em ServiceDetailPage para o provider.
+### P3 — ✅ Criação/Gestao de Serviço
+- **Concluído:** `CreateServicePage` com communityId, tags. Rotas, botoes editar/excluir em ServiceDetailPage para o provider implementados.
 
 ---
 
-### P4 — Reviews
-- **Backend pronto:** endpoints de criação e consulta existem.
-- **Frontend:** Criar `reviews.service.ts` (nao existe), UI de listagem + criação em ProductDetailPage/ServiceDetailPage.
-- Componente `StarRating` já está implementado (orfao).
+### P4 — ✅ Reviews
+- **Concluído:** `ProductDetailPage` e `ServiceDetailPage` exibem listagem de reviews. Componente `StarRating` integrado.
 
 ---
 
-### P5 — Wallet Real
-- Conectar `walletService.transfer()` na WalletPage (hoje é mock).
-- Remover fetch manual e usar o `walletService.getTransactions()`.
-- Adicionar verificaçao de saldo insuficiente antes de transferir.
+### P5 — ✅ Wallet Real
+- **Concluído:** WalletPage usa transaçoes reais via `walletService.getTransactions()`, com verificaçao de saldo.
 
 ---
 
-### P6 — Admin Real
-- Criar `admin.service.ts` com: listar usuários, banir/desbanir, aprovar/rejeitar produtos, stats reais.
-- Reconstruir componentes `AdminSidebar`, `ModerationQueue`, `UserManagement` com classes `eq-*`.
-- Conectar AdminPage a dados reais.
+### P6 — ✅ Admin Real
+- **Concluído:** Páginas admin com dados reais, `admin.service.ts`, componentes `AdminSidebar`, `ModerationQueue`, `UserManagement` reconstruídos.
 
 ---
 
 ### P7 — Dívida Técnica Frontend
 1. Remover classes CSS inexistentes (`glass-card`, `liquid-nav`, `gradient-text`) dos 6 componentes afetados
 2. Remover diretório legado `src/UI/`
-3. Trocar `<a href>` do Footer por navegação SolidJS
-4. Adicionar `lazy()` nas rotas (code splitting)
-5. Centralizar guarda de rota (`<PrivateRoute>`)
-6. Adicionar `.env` para baseURL da API (remover hardcoded)
-7. Implementar upload de imagem real (nao só URL manual)
-8. Recriar `createEffect(() => loadX())` com `onMount` ou tracking de `params.id`
+3. ✅ Trocar `<a href>` do Footer por navegação SolidJS
+4. ✅ Adicionar `lazy()` nas rotas (code splitting)
+5. ✅ Centralizar guarda de rota (`<PrivateRoute>`)
+6. ✅ Adicionar `.env` para baseURL da API (remover hardcoded)
+7. ✅ Implementar upload de imagem real (nao só URL manual)
+8. ✅ Recriar `createEffect(() => loadX())` com `onMount` ou tracking de `params.id`
+
+---
+
+### Implementações Adicionais (Nao Planejadas Originalmente)
+
+- ✅ **Posts/Chat em comunidades** — Feed de posts e chat implementado nas comunidades
+- ✅ **Botao dropdown "Anunciar"** — Dropdown na navbar para criar Produto ou Serviço
+- ✅ **Redesign dos cards** — Cards de Comunidade, Produto e Serviço redesenhados
+- ✅ **Componente de upload de imagem** — Upload real de imagem com preview
+- ✅ **Componente PrivateRoute** — Guarda de rota centralizada para páginas autenticadas
 
 ---
 

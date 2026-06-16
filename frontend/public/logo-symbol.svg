@@ -1,9 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
-  <circle cx="24" cy="24" r="23" fill="#fbbf24"/>
-  <path d="M24 6 A18 18 0 0 1 42 24" stroke="#78350f" stroke-width="3.2" stroke-linecap="round" fill="none"/>
-  <path d="M24 42 A18 18 0 0 1 6 24" stroke="#78350f" stroke-width="3.2" stroke-linecap="round" fill="none"/>
-  <path d="M38 20 L42 24 L38 28" stroke="#78350f" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <path d="M10 28 L6 24 L10 20" stroke="#78350f" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <line x1="17" y1="21" x2="31" y2="21" stroke="#451a03" stroke-width="3" stroke-linecap="round"/>
-  <line x1="17" y1="27" x2="31" y2="27" stroke="#451a03" stroke-width="3" stroke-linecap="round"/>
+  <rect width="48" height="48" rx="11" fill="#FEFAE0"/>
+  <!-- Arco superior — seta verde sentido horário -->
+  <path d="M13 24 A11 11 0 0 1 35 24" stroke="#2D6A4F" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <polygon points="32.5,20.5 35.5,24 30,24.3" fill="#2D6A4F"/>
+  <!-- Arco inferior — seta dourada sentido horário -->
+  <path d="M35 24 A11 11 0 0 1 13 24" stroke="#DDA15E" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <polygon points="15.5,27.5 12.5,24 18,23.7" fill="#DDA15E"/>
+  <!-- Pontos centrais de troca -->
+  <circle cx="20.5" cy="21.5" r="2.5" fill="#2D6A4F"/>
+  <circle cx="27.5" cy="26.5" r="2.5" fill="#DDA15E"/>
 </svg>

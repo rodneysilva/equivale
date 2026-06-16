@@ -1,12 +1,16 @@
 import { type Component, createSignal, createEffect, For, Show } from 'solid-js';
 import { useParams, useNavigate } from '@solidjs/router';
-import { ArrowLeft, Users, Lock, Globe, Shield, Package, Zap, UserPlus, UserMinus, Copy, ArrowRight, EyeOff } from 'lucide-solid';
+import { ArrowLeft, Users, Lock, Globe, Shield, Package, Zap, UserPlus, UserMinus, Copy, ArrowRight, EyeOff, Pencil, MessageCircle } from 'lucide-solid';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import Modal from '../components/ui/Modal';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import ProductGrid from '../components/marketplace/ProductGrid';
 import ServiceGrid from '../components/marketplace/ServiceGrid';
+import { api } from '../services/api';
 import { communitiesService, type CommunityMember } from '../services/communities.service';
+import { postsService } from '../services/posts.service';
 import { productsService } from '../services/products.service';
 import { servicesService } from '../services/services.service';
 import { useAuth } from '../store/auth';
@@ -27,6 +31,22 @@ const CommunityDetailPage: Component = () => {
   const [actionLoading, setActionLoading] = createSignal(false);
   const [copiedCode, setCopiedCode] = createSignal(false);
   const [inviteCodeInput, setInviteCodeInput] = createSignal('');
+  const [showEditModal, setShowEditModal] = createSignal(false);
+  const [editName, setEditName] = createSignal('');
+  const [editDescription, setEditDescription] = createSignal('');
+  const [editImageUrl, setEditImageUrl] = createSignal('');
+  const [editCoverUrl, setEditCoverUrl] = createSignal('');
+  const [editType, setEditType] = createSignal<'open' | 'private'>('open');
+  const [editVisibility, setEditVisibility] = createSignal<'public' | 'members'>('public');
+  const [editSaving, setEditSaving] = createSignal(false);
+  const [editError, setEditError] = createSignal('');
+  const [posts, setPosts] = createSignal<any[]>([]);
+  const [postContent, setPostContent] = createSignal('');
+  const [postSending, setPostSending] = createSignal(false);
+  const [postsLoading, setPostsLoading] = createSignal(false);
+  const [generatingCode, setGeneratingCode] = createSignal(false);
+  const [moderatorInput, setModeratorInput] = createSignal('');
+  const [moderatorLoading, setModeratorLoading] = createSignal(false);
 
   createEffect(() => { loadCommunity(); });
 
@@ -52,6 +72,7 @@ const CommunityDetailPage: Component = () => {
 
       if (member) {
         setMembers(allMembers);
+        loadPosts();
         const [p, s] = await Promise.all([
           productsService.getAll(1, 6, undefined, undefined, undefined, undefined, data.id),
           servicesService.getAll(1, 6, undefined, undefined, undefined, undefined, data.id),
@@ -115,6 +136,105 @@ const CommunityDetailPage: Component = () => {
     }
   };
 
+  const handleGeneratePassword = async () => {
+    setGeneratingCode(true);
+    try {
+      const res = await api.post<{ password: string; message: string }>(`/communities/${params.id}/generate-password`);
+      setCommunity(prev => prev ? { ...prev, inviteCode: res.password } : null);
+    } catch (err: any) {
+      setError(err.message || 'Erro ao gerar código');
+    } finally {
+      setGeneratingCode(false);
+    }
+  };
+
+  const handleAddModerator = async () => {
+    const userId = moderatorInput().trim();
+    if (!userId) return;
+    setModeratorLoading(true);
+    try {
+      await communitiesService.addModerator(params.id, userId);
+      setCommunity(prev => prev ? { ...prev, moderators: [...(prev.moderators || []), userId] } : null);
+      setModeratorInput('');
+    } catch (err: any) {
+      setError(err.message || 'Erro ao adicionar');
+    } finally {
+      setModeratorLoading(false);
+    }
+  };
+
+  const handleRemoveModerator = async (userId: string) => {
+    setModeratorLoading(true);
+    try {
+      await communitiesService.removeModerator(params.id, userId);
+      setCommunity(prev => prev ? { ...prev, moderators: prev.moderators.filter(m => m !== userId) } : null);
+    } catch (err: any) {
+      setError(err.message || 'Erro ao remover');
+    } finally {
+      setModeratorLoading(false);
+    }
+  };
+
+  const openEditModal = () => {
+    const c = community();
+    if (!c) return;
+    setEditName(c.name);
+    setEditDescription(c.description);
+    setEditImageUrl(c.imageUrl ?? '');
+    setEditCoverUrl(c.coverUrl ?? '');
+    setEditType(c.type);
+    setEditVisibility(c.productVisibility);
+    setEditError('');
+    setShowEditModal(true);
+  };
+
+  const handleEditSubmit = async (e: Event) => {
+    e.preventDefault();
+    if (!editName().trim() || !editDescription().trim()) {
+      setEditError('Nome e descrição são obrigatórios.');
+      return;
+    }
+    setEditSaving(true);
+    setEditError('');
+    try {
+      const updated = await communitiesService.update(community()!.id, {
+        name: editName().trim(),
+        description: editDescription().trim(),
+        imageUrl: editImageUrl().trim() || undefined,
+        coverUrl: editCoverUrl().trim() || undefined,
+        type: editType(),
+        productVisibility: editVisibility(),
+      });
+      setCommunity(updated);
+      setShowEditModal(false);
+    } catch (err: any) {
+      setEditError(err.message || 'Erro ao salvar');
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const loadPosts = async () => {
+    setPostsLoading(true);
+    try {
+      const res = await postsService.getByCommunity(params.id);
+      setPosts(res.items || res.data || []);
+    } catch { /* ignore */ }
+    finally { setPostsLoading(false); }
+  };
+
+  const handleCreatePost = async () => {
+    const content = postContent().trim();
+    if (!content) return;
+    setPostSending(true);
+    try {
+      const post = await postsService.create(params.id, content);
+      setPosts(prev => [post, ...prev]);
+      setPostContent('');
+    } catch { /* ignore */ }
+    finally { setPostSending(false); }
+  };
+
   const isOwner = () => auth.isAuthenticated() && community()?.ownerId === auth.currentUser()?.id;
   const isModerator = () => isOwner() || (auth.isAuthenticated() && (community()?.moderators?.includes(auth.currentUser()!.id) ?? false));
 
@@ -154,6 +274,11 @@ const CommunityDetailPage: Component = () => {
                 </div>
               </div>
               <Show when={isMember()}>
+                <Show when={isModerator()}>
+                  <Button variant="outline" size="sm" onClick={openEditModal} class="shrink-0" style={{ background: 'var(--color-surface)', color: 'var(--color-text)' }}>
+                    <Pencil size={14} class="mr-1" /> Editar
+                  </Button>
+                </Show>
                 <Button variant="outline" size="sm" onClick={handleLeave} disabled={actionLoading()} class="shrink-0" style={{ background: 'var(--color-surface)', color: 'var(--color-text)' }}>
                   <UserMinus size={14} class="mr-1" /> Sair
                 </Button>
@@ -196,8 +321,117 @@ const CommunityDetailPage: Component = () => {
                   <button onClick={handleCopyCode} class="eq-btn eq-btn-sm eq-btn-ghost"><Copy size={14} /></button>
                   {copiedCode() && <span class="text-xs" style={{ color: 'var(--color-text-muted)' }}>Copiado!</span>}
                 </div>
+                <button onClick={handleGeneratePassword} disabled={generatingCode()} class="text-xs eq-link mt-1">
+                  {generatingCode() ? 'Gerando...' : 'Gerar novo código'}
+                </button>
               </Card>
             </Show>
+
+            {/* Moderators (owners only) */}
+            <Show when={isOwner() && community()!.moderators && community()!.moderators.length > 0}>
+              <Card class="p-4">
+                <h3 class="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-secondary)' }}>Moderadores</h3>
+                <div class="space-y-1.5 mb-3">
+                  <For each={community()!.moderators}>
+                    {(modId) => (
+                      <div class="flex items-center justify-between py-1 px-2 rounded" style={{ background: 'var(--color-surface-alt)' }}>
+                        <div class="flex items-center gap-2">
+                          <Shield size={12} class="eq-text-muted" />
+                          <span class="text-sm eq-text">{modId}</span>
+                        </div>
+                        <button onClick={() => handleRemoveModerator(modId)} disabled={moderatorLoading()} class="text-xs eq-text-danger eq-btn-ghost">Remover</button>
+                      </div>
+                    )}
+                  </For>
+                </div>
+                <div class="flex gap-2">
+                  <input
+                    type="text"
+                    value={moderatorInput()}
+                    onInput={(e) => setModeratorInput(e.currentTarget.value)}
+                    placeholder="ID do usuário"
+                    class="eq-input text-sm flex-1"
+                  />
+                  <button onClick={handleAddModerator} disabled={moderatorLoading() || !moderatorInput().trim()} class="eq-btn eq-btn-sm">
+                    Adicionar
+                  </button>
+                </div>
+                {moderatorLoading() && <p class="text-xs eq-text-muted mt-1">Carregando...</p>}
+              </Card>
+            </Show>
+
+            {/* Posts / Chat */}
+            <section>
+              <div class="flex items-center justify-between mb-3">
+                <h2 class="flex items-center gap-2 text-base font-bold" style={{ color: 'var(--color-text)' }}>
+                  <MessageCircle size={16} class="eq-text-community" /> Conversas
+                </h2>
+                <span class="text-xs eq-text-muted">{posts().length} mensagen{posts().length !== 1 ? 's' : ''}</span>
+              </div>
+
+              {/* Post input */}
+              <Card class="p-4 mb-4">
+                <div class="flex gap-3">
+                  <div class="eq-avatar w-9 h-9 text-xs shrink-0 mt-0.5">
+                    {auth.currentUser()?.fullName?.[0]?.toUpperCase() || auth.currentUser()?.username?.[0]?.toUpperCase() || '?'}
+                  </div>
+                  <div class="flex-1">
+                    <textarea
+                      value={postContent()}
+                      onInput={(e) => setPostContent(e.currentTarget.value)}
+                      placeholder="Compartilhe algo com a comunidade..."
+                      rows={2}
+                      class="eq-input resize-none text-sm"
+                    />
+                    <div class="flex items-center justify-between mt-2">
+                      <span class="text-xs eq-text-muted">{postContent().length}/500</span>
+                      <button
+                        onClick={handleCreatePost}
+                        disabled={postSending() || !postContent().trim()}
+                        class="eq-btn eq-btn-sm"
+                      >
+                        {postSending() ? 'Enviando...' : 'Publicar'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Posts list */}
+              <Show when={posts().length > 0} fallback={
+                <Card class="p-6 text-center">
+                  <MessageCircle size={24} class="mx-auto mb-2" style={{ color: 'var(--color-text-muted)' }} />
+                  <p class="text-sm eq-text-muted">Nenhuma mensagem ainda. Seja o primeiro a compartilhar!</p>
+                </Card>
+              }>
+                <div class="space-y-3">
+                  <For each={posts().slice(0, 10)}>
+                    {(post) => (
+                      <Card class="p-4">
+                        <div class="flex gap-3">
+                          <div class="eq-avatar w-9 h-9 text-xs shrink-0 overflow-hidden" onClick={() => navigate(`/users/${post.authorId}`)} style={{ cursor: 'pointer' }}>
+                            {post.authorAvatarUrl ? (
+                              <img src={post.authorAvatarUrl} alt={post.authorName} class="w-full h-full object-cover" loading="lazy" />
+                            ) : (
+                              <span>{post.authorName?.[0]?.toUpperCase() || '?'}</span>
+                            )}
+                          </div>
+                          <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                              <button onClick={() => navigate(`/users/${post.authorId}`)} class="text-sm font-semibold eq-link">
+                                {post.authorName || 'Usuário'}
+                              </button>
+                              <span class="text-xs eq-text-muted">{new Date(post.createdAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                            <p class="text-sm eq-text whitespace-pre-wrap break-words">{post.content}</p>
+                          </div>
+                        </div>
+                      </Card>
+                    )}
+                  </For>
+                </div>
+              </Show>
+            </section>
 
             {/* Membros */}
             <Show when={members().length > 0}>
@@ -261,6 +495,60 @@ const CommunityDetailPage: Component = () => {
               </Show>
             </section>
           </Show>
+
+          {/* Edit Modal */}
+          <Modal open={showEditModal()} onClose={() => setShowEditModal(false)} title="Editar comunidade" size="lg">
+            <form onSubmit={handleEditSubmit} class="space-y-4">
+              {editError() && (
+                <div class="p-3 rounded text-sm" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>{editError()}</div>
+              )}
+              <Input label="Nome" value={editName()} onInput={(e) => setEditName(e.currentTarget.value)} placeholder="Nome da comunidade" required />
+              <div>
+                <label class="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>Descrição</label>
+                <textarea value={editDescription()} onInput={(e) => setEditDescription(e.currentTarget.value)} placeholder="Descreva o propósito da comunidade" rows={4} required class="eq-input resize-none" />
+              </div>
+              <Input label="URL da imagem" value={editImageUrl()} onInput={(e) => setEditImageUrl(e.currentTarget.value)} placeholder="https://..." />
+              <Input label="URL da capa" value={editCoverUrl()} onInput={(e) => setEditCoverUrl(e.currentTarget.value)} placeholder="https://..." />
+              <div>
+                <label class="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>Tipo de acesso</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setEditType('open')} class={`eq-card p-3 flex items-center gap-2 text-sm cursor-pointer ${editType() === 'open' ? 'eq-card-hover' : ''}`} style={{ 'border-color': editType() === 'open' ? 'var(--color-primary)' : undefined }}>
+                    <Globe size={16} class="eq-brand" />
+                    <div class="text-left">
+                      <p class="font-medium" style={{ color: 'var(--color-text)' }}>Aberta</p>
+                      <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>Qualquer pessoa pode entrar</p>
+                    </div>
+                  </button>
+                  <button type="button" onClick={() => setEditType('private')} class={`eq-card p-3 flex items-center gap-2 text-sm cursor-pointer ${editType() === 'private' ? 'eq-card-hover' : ''}`} style={{ 'border-color': editType() === 'private' ? 'var(--color-primary)' : undefined }}>
+                    <Lock size={16} class="eq-brand" />
+                    <div class="text-left">
+                      <p class="font-medium" style={{ color: 'var(--color-text)' }}>Privada</p>
+                      <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>Apenas por convite</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>Visibilidade dos produtos</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setEditVisibility('public')} class={`eq-card p-3 text-sm cursor-pointer text-left ${editVisibility() === 'public' ? 'eq-card-hover' : ''}`} style={{ 'border-color': editVisibility() === 'public' ? 'var(--color-primary)' : undefined }}>
+                    <p class="font-medium" style={{ color: 'var(--color-text)' }}>Público</p>
+                    <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>Produtos visíveis para todos</p>
+                  </button>
+                  <button type="button" onClick={() => setEditVisibility('members')} class={`eq-card p-3 text-sm cursor-pointer text-left ${editVisibility() === 'members' ? 'eq-card-hover' : ''}`} style={{ 'border-color': editVisibility() === 'members' ? 'var(--color-primary)' : undefined }}>
+                    <p class="font-medium" style={{ color: 'var(--color-text)' }}>Membros</p>
+                    <p class="text-xs" style={{ color: 'var(--color-text-muted)' }}>Apenas membros veem os produtos</p>
+                  </button>
+                </div>
+              </div>
+              <div class="flex gap-2 pt-2">
+                <Button type="submit" class="flex-1" disabled={editSaving()}>
+                  {editSaving() ? 'Salvando...' : 'Salvar alterações'}
+                </Button>
+                <Button variant="ghost" onClick={() => setShowEditModal(false)}>Cancelar</Button>
+              </div>
+            </form>
+          </Modal>
 
           {error() && (
             <div class="p-3 rounded text-sm" style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>{error()}</div>

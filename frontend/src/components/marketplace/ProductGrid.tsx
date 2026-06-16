@@ -1,11 +1,16 @@
 import { type Component, For, Show } from 'solid-js';
+import { Package } from 'lucide-solid';
 import type { Product } from '../../types';
 import ProductCard from './ProductCard';
+import EmptyState from '../ui/EmptyState';
 
 interface ProductGridProps {
   products: Product[];
   isLoading?: boolean;
-  emptyMessage?: string;
+  emptyTitle?: string;
+  emptyDescription?: string;
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
 const ProductGrid: Component<ProductGridProps> = (props) => {
@@ -31,9 +36,13 @@ const ProductGrid: Component<ProductGridProps> = (props) => {
       <Show
         when={props.products && props.products.length > 0}
         fallback={
-          <div class="text-center py-12">
-            <p style={{ color: 'var(--color-text-muted)' }}>{props.emptyMessage || 'Nenhum produto encontrado'}</p>
-          </div>
+          <EmptyState
+            icon={Package}
+            title={props.emptyTitle || 'Nenhum produto encontrado'}
+            description={props.emptyDescription}
+            actionLabel={props.actionLabel}
+            onAction={props.onAction}
+          />
         }
       >
         <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">

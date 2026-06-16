@@ -628,6 +628,8 @@ public class SeedService
             var product = new Product
             {
                 SellerId = seller.Id,
+                SellerName = seller.Name,
+                SellerAvatarUrl = seller.AvatarUrl,
                 Title = seed.Name,
                 Description = seed.Desc,
                 Category = category,
@@ -637,6 +639,7 @@ public class SeedService
                 Status = ItemStatus.Active,
                 Condition = condition,
                 CommunityId = community?.Id,
+                CommunityName = community?.Name,
                 Tags = TagGenerator.Generate(seed.Name, category, seed.Desc),
                 CreatedAt = DateTime.UtcNow.AddDays(-_rng.Next(1, 60)),
                 UpdatedAt = DateTime.UtcNow.AddDays(-_rng.Next(0, 30)),
@@ -665,6 +668,8 @@ public class SeedService
             var service = new Service
             {
                 ProviderId = provider.Id,
+                ProviderName = provider.Name,
+                ProviderAvatarUrl = provider.AvatarUrl,
                 Title = seed.Name,
                 Description = seed.Desc,
                 Category = category,
@@ -674,6 +679,7 @@ public class SeedService
                 Location = Pick(Locations),
                 Status = ItemStatus.Active,
                 CommunityId = community?.Id,
+                CommunityName = community?.Name,
                 Tags = TagGenerator.Generate(seed.Name, category, seed.Desc),
                 CreatedAt = DateTime.UtcNow.AddDays(-_rng.Next(1, 50)),
                 UpdatedAt = DateTime.UtcNow.AddDays(-_rng.Next(0, 25)),

@@ -17,15 +17,14 @@ const StarRating: Component<StarRatingProps> = (props) => {
       {Array.from({ length: maxRating() }, (_, i) => (
         <Star
           size={size()}
-          class={
-            i < Math.round(props.rating)
-              ? 'text-yellow-400 fill-yellow-400'
-              : 'text-gray-300 dark:text-gray-600'
-          }
+          style={{
+            color: i < Math.round(props.rating) ? 'var(--color-primary)' : 'var(--color-border)',
+            fill: i < Math.round(props.rating) ? 'var(--color-primary)' : 'transparent',
+          }}
         />
       ))}
       {props.showValue && (
-        <span class="ml-1 text-sm text-gray-600 dark:text-gray-400 font-medium">
+        <span class="ml-1 text-sm font-medium eq-text-secondary">
           {props.rating.toFixed(1)}
         </span>
       )}

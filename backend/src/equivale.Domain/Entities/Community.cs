@@ -19,4 +19,5 @@ public class Community
     public string JoinMode { get; set; } = "open";
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public long Version { get; set; }
 }

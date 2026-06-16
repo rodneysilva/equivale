@@ -12,8 +12,10 @@ function toBackendCreate(data: CreateServiceDto, providerId?: string): BackendCr
     description: data.description,
     category: data.category,
     priceInEquivale: data.price,
+    images: data.imageUrl ? [data.imageUrl] : undefined,
     duration: data.duration || null,
     location: data.location || null,
+    communityId: data.communityId || undefined,
   };
 }
 

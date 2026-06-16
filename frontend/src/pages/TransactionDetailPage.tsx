@@ -4,7 +4,9 @@ import { ArrowLeft, Check, X, Truck, CheckCircle, Star, Package, Clock, MapPin }
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import StarRating from '../components/ui/StarRating';
 import { transactionsService, reviewsService } from '../services/transactions.service';
+import { api } from '../services/api';
 import { useAuth } from '../store/auth';
 import type { Transaction } from '../types';
 
@@ -36,6 +38,10 @@ const TransactionDetailPage: Component = () => {
   const [rating, setRating] = createSignal(5);
   const [comment, setComment] = createSignal('');
   const [reviewed, setReviewed] = createSignal(false);
+  const [reviewRating, setReviewRating] = createSignal(5);
+  const [reviewComment, setReviewComment] = createSignal('');
+  const [reviewSubmitting, setReviewSubmitting] = createSignal(false);
+  const [reviewSubmitted, setReviewSubmitted] = createSignal(false);
   const [trackingInput, setTrackingInput] = createSignal('');
   const [showShipForm, setShowShipForm] = createSignal(false);
 
@@ -68,6 +74,27 @@ const TransactionDetailPage: Component = () => {
       if (auth.refreshProfile) await auth.refreshProfile();
     } catch (err: any) { setError(err.message); }
     finally { setActionLoading(false); }
+  };
+
+  const handleSubmitReview = async () => {
+    const t = tx();
+    if (!t) return;
+    setReviewSubmitting(true);
+    try {
+      await api.post('/reviews', {
+        reviewerId: auth.currentUser()!.id,
+        targetUserId: t.buyerId === auth.currentUser()!.id ? t.sellerId : t.buyerId,
+        itemId: t.itemId,
+        itemType: t.itemType || 'Product',
+        rating: reviewRating(),
+        comment: reviewComment().trim() || undefined,
+      });
+      setReviewSubmitted(true);
+    } catch (err: any) {
+      console.error('Review error:', err);
+    } finally {
+      setReviewSubmitting(false);
+    }
   };
 
   const fmtDateTime = (d?: string) => d ? new Date(d).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
@@ -155,6 +182,28 @@ const TransactionDetailPage: Component = () => {
                 </div>
               </Show>
             </Card>
+
+            {/* Review creation */}
+            <Show when={tx()?.status === 'Delivered' && !reviewSubmitted()}>
+              <Card class="p-4 mt-4">
+                <h3 class="text-sm font-semibold mb-3 eq-text">Avaliar esta transação</h3>
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="text-xs eq-text-muted">Nota:</span>
+                  <StarRating rating={reviewRating()} size={20} />
+                  <select value={reviewRating()} onChange={(e) => setReviewRating(Number(e.currentTarget.value))} class="eq-input w-16 text-sm">
+                    <option value="5">5</option>
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2">2</option>
+                    <option value="1">1</option>
+                  </select>
+                </div>
+                <textarea value={reviewComment()} onInput={(e) => setReviewComment(e.currentTarget.value)} placeholder="Comentário (opcional)" rows={2} class="eq-input resize-none text-sm mb-3" />
+                <button onClick={handleSubmitReview} disabled={reviewSubmitting()} class="eq-btn eq-btn-sm">
+                  {reviewSubmitting() ? 'Enviando...' : 'Enviar avaliação'}
+                </button>
+              </Card>
+            </Show>
 
             {/* Timeline */}
             <Card class="p-5">

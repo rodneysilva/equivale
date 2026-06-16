@@ -1,4 +1,4 @@
-import { type Component, createSignal, createEffect, For } from 'solid-js';
+import { type Component, createSignal, onMount, For } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { ArrowRight } from 'lucide-solid';
 import CommunityCard from '../components/community/CommunityCard';
@@ -18,7 +18,7 @@ const HomePage: Component = () => {
   const [communities, setCommunities] = createSignal<Community[]>([]);
   const [loading, setLoading] = createSignal(true);
 
-  createEffect(() => { loadFeatured(); });
+  onMount(() => { loadFeatured(); });
 
   const loadFeatured = async () => {
     try {
