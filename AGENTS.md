@@ -123,6 +123,11 @@ OrderPlaced → (vendedor) OrderConfirmed → (vendedor) Shipped → (comprador)
 - **Túnel Cloudflare:** `cloudflared.exe tunnel run --token <TOKEN>` → `https://app.rodney.website`
   - Tunnel ID permanente: `7dd51b4b-0537-48ad-ba30-d1981a03fefe`
   - Token de conexão em `.env.cloudflare` (gitignored)
+
+> **⚠️ Pré-requisito de deploy:** `start.ps1` **exige** o arquivo `.env.cloudflare`
+> (com `CLOUDFLARE_TUNNEL_TOKEN=<token>`) no host antes de rodar. Sem ele o script
+> aborta no passo 3/3 (o túnel não sobe) — backend e frontend continuam saudáveis,
+> mas `app.rodney.website` fica offline. Provisione o arquivo em todo host de deploy.
   - Binário: `C:\Users\rodne\AppData\Local\Temp\kilo\cloudflared.exe`
 - **MongoDB:** serviço local padrão
 
