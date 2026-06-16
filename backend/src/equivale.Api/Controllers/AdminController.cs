@@ -34,21 +34,26 @@ public class AdminController : ControllerBase
     [HttpGet("stats")]
     public async Task<ActionResult<AdminStatsDto>> GetStats(CancellationToken ct)
     {
-        var users = await _userRepository.GetAllAsync(ct);
-        var products = await _productRepository.GetAllAsync(ct);
-        var services = await _serviceRepository.GetAllAsync(ct);
-        var communities = await _communityRepository.GetAllAsync(ct);
-        var transactions = await _transactionRepository.GetAllAsync(ct);
+        var usersTask = _userRepository.CountAsync(ct);
+        var productsTask = _productRepository.CountAsync(ct);
+        var servicesTask = _serviceRepository.CountAsync(ct);
+        var communitiesTask = _communityRepository.CountAsync(ct);
+        var transactionsTask = _transactionRepository.CountAsync(ct);
+        var finishedStatsTask = _transactionRepository.GetFinishedStatsAsync(ct);
+
+        await Task.WhenAll(usersTask, productsTask, servicesTask, communitiesTask, transactionsTask, finishedStatsTask);
+
+        var finished = finishedStatsTask.Result;
 
         return Ok(new AdminStatsDto(
-            Users: users.Count,
-            Products: products.Count,
-            Services: services.Count,
-            Communities: communities.Count,
-            Transactions: transactions.Count,
-            CompletedTransactions: transactions.Count(t => t.Status == Domain.Enums.TransactionStatus.Finished),
-            TotalFeesCollected: transactions.Where(t => t.Status == Domain.Enums.TransactionStatus.Finished).Sum(t => t.FeeAmount),
-            TotalVolume: transactions.Where(t => t.Status == Domain.Enums.TransactionStatus.Finished).Sum(t => t.TotalPrice.Amount)
+            Users: (int)usersTask.Result,
+            Products: (int)productsTask.Result,
+            Services: (int)servicesTask.Result,
+            Communities: (int)communitiesTask.Result,
+            Transactions: (int)transactionsTask.Result,
+            CompletedTransactions: (int)finished.CompletedTransactions,
+            TotalFeesCollected: finished.TotalFeesCollected,
+            TotalVolume: finished.TotalVolume
         ));
     }
 

@@ -1,5 +1,7 @@
+using MongoDB.Bson;
 using MongoDB.Driver;
 using equivale.Domain.Entities;
+using equivale.Domain.Enums;
 using equivale.Domain.Interfaces;
 using equivale.Infrastructure.Persistence;
 
@@ -42,5 +44,31 @@ public class TransactionRepository : BaseRepository<Transaction>, ITransactionRe
         var filter = Builders<Transaction>.Filter.Eq(t => t.ItemId, itemId);
         var results = await _transactions.Find(filter).ToListAsync(cancellationToken);
         return results.AsReadOnly();
+    }
+
+    public async Task<(long CompletedTransactions, decimal TotalVolume, decimal TotalFeesCollected)> GetFinishedStatsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        // Status é serializado como int32 (enum sem convenção); Finished = 4.
+        var match = new BsonDocument("$match", new BsonDocument("Status", (int)TransactionStatus.Finished));
+        var group = new BsonDocument("$group", new BsonDocument
+        {
+            { "_id", BsonNull.Value },
+            { "volume", new BsonDocument("$sum", "$TotalPrice") },
+            { "fees", new BsonDocument("$sum", "$FeeAmount") },
+            { "count", new BsonDocument("$sum", 1) }
+        });
+
+        var pipeline = new[] { match, group };
+        using var cursor = await _transactions.AggregateAsync<BsonDocument>(pipeline, cancellationToken: cancellationToken);
+        var doc = await cursor.FirstOrDefaultAsync(cancellationToken);
+
+        if (doc is null)
+            return (0, 0m, 0m);
+
+        var completed = doc.Contains("count") ? (long)doc["count"].ToDouble() : 0L;
+        var volume = doc.Contains("volume") ? doc["volume"].ToDecimal() : 0m;
+        var fees = doc.Contains("fees") ? doc["fees"].ToDecimal() : 0m;
+        return (completed, volume, fees);
     }
 }

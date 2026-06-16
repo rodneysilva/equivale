@@ -38,6 +38,9 @@ public class BaseRepository<T> : IBaseRepository<T>, ITransactionalRepository<T>
         return results.AsReadOnly();
     }
 
+    public virtual Task<long> CountAsync(CancellationToken cancellationToken = default)
+        => _collection.CountDocumentsAsync(Builders<T>.Filter.Empty, cancellationToken: cancellationToken);
+
     public virtual async Task AddAsync(T entity, CancellationToken cancellationToken = default)
     {
         EnsureEntityHasId(entity);

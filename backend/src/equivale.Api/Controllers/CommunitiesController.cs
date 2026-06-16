@@ -133,6 +133,9 @@ public class CommunitiesController : ControllerBase
         var community = await _communityRepository.GetByIdAsync(id, cancellationToken);
         if (community is null) return NotFound();
 
+        if (IsPrivateToCaller(community))
+            return Forbid();
+
         var memberIds = community.Members.Union(new[] { community.CreatorId }).Distinct().ToList();
 
         var users = await _userRepository.GetByIdsAsync(memberIds, cancellationToken);
@@ -156,6 +159,27 @@ public class CommunitiesController : ControllerBase
         User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
         ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
         ?? throw new UnauthorizedAccessException("Token inválido.");
+
+    /// <summary>
+    /// Determina se uma comunidade privada deve ser ocultada do chamador atual.
+    /// Comunidades abertas são sempre públicas. Privadas exigem ser membro,
+    /// criador, moderador ou admin para ver a lista de membros.
+    /// </summary>
+    private bool IsPrivateToCaller(Community community)
+    {
+        if (community.Type != "private") return false;
+        if (User.IsInRole("Admin")) return false;
+
+        string? callerId;
+        try { callerId = GetUserId(); }
+        catch (UnauthorizedAccessException) { return true; }
+
+        if (string.IsNullOrEmpty(callerId)) return true;
+        if (community.CreatorId == callerId) return false;
+        if (community.Moderators.Contains(callerId)) return false;
+        if (community.Members.Contains(callerId)) return false;
+        return true;
+    }
 
     /// <summary>
     /// Entra na comunidade. Para privadas: senha única OU solicita aprovação.
