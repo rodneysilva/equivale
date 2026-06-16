@@ -36,7 +36,7 @@ services:
     environment:
       - ASPNETCORE_URLS=http://0.0.0.0:5053
       - ASPNETCORE_ENVIRONMENT=Development
-      - MongoDb__ConnectionString=mongodb://mongodb:27017
+      - MongoDb__ConnectionString=mongodb://mongodb:27017/?replicaSet=rs0
       - MongoDb__DatabaseName=equivale
       - Jwt__Secret=${JWT_SECRET:-dev-secret-change-me-in-production-minimum-32-chars!!}
       - AllowedOrigins__0=http://localhost:3000
