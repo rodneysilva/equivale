@@ -35,4 +35,18 @@ test.describe('Marketplace', () => {
       await expect(page).toHaveURL(/\/search/);
     }
   });
+
+  test('marketplace listing excludes sold / out-of-stock products', async ({ request }) => {
+    // Regressão do bug "produto aparece disponível mas compra diz sem estoque":
+    // a listagem pública só pode conter itens Active (e com estoque, para produtos).
+    const res = await request.get('/api/products?pageSize=100');
+    expect(res.ok()).toBeTruthy();
+    const json = await res.json();
+    const items: Array<{ status: string; stock?: number }> = json.items ?? [];
+    expect(items.length, 'deve haver produtos listados').toBeGreaterThan(0);
+    for (const p of items) {
+      expect(p.status, 'produto Sold nao deve aparecer no marketplace').toBe('Active');
+      expect(p.stock ?? 0, 'produto sem estoque nao deve aparecer').toBeGreaterThan(0);
+    }
+  });
 });

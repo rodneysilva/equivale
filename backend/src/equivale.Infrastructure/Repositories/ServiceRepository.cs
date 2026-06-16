@@ -1,5 +1,6 @@
 using MongoDB.Driver;
 using equivale.Domain.Entities;
+using equivale.Domain.Enums;
 using equivale.Domain.Interfaces;
 using equivale.Infrastructure.Persistence;
 
@@ -54,6 +55,9 @@ public class ServiceRepository : BaseRepository<Service>, IServiceRepository
     private static FilterDefinition<Service> BuildFilter(string? category, string? searchTerm, List<string>? tags, string? providerId, string? communityId)
     {
         var filters = new List<FilterDefinition<Service>>();
+
+        // Marketplace público: somente serviços ativos.
+        filters.Add(Builders<Service>.Filter.Eq(s => s.Status, ItemStatus.Active));
 
         if (!string.IsNullOrWhiteSpace(category))
             filters.Add(Builders<Service>.Filter.Eq(s => s.Category, category));

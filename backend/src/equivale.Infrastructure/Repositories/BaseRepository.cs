@@ -11,10 +11,12 @@ public class BaseRepository<T> : IBaseRepository<T>, ITransactionalRepository<T>
 {
     protected readonly IMongoCollection<T> _collection;
 
-    public BaseRepository(MongoDbContext context)
+    public BaseRepository(MongoDbContext context, string? collectionName = null)
     {
-        var collectionName = typeof(T).Name.ToLowerInvariant() + "s";
-        _collection = context.Database.GetCollection<T>(collectionName);
+        // Permite ao repositório derivado fixar o nome da coleção (ex.: Community -> "communities",
+        // já que a derivação automática geraria "communitys").
+        var name = collectionName ?? typeof(T).Name.ToLowerInvariant() + "s";
+        _collection = context.Database.GetCollection<T>(name);
     }
 
     public virtual async Task<T?> GetByIdAsync(string id, CancellationToken cancellationToken = default)

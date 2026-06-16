@@ -3,6 +3,7 @@ using MongoDB.Driver;
 using equivale.Application.DTOs;
 using equivale.Application.Interfaces;
 using equivale.Domain.Entities;
+using equivale.Domain.Enums;
 using equivale.Infrastructure.Persistence;
 
 namespace equivale.Infrastructure.Repositories;
@@ -22,11 +23,13 @@ public class SearchRepository
     {
         var safeTerm = System.Text.RegularExpressions.Regex.Escape(searchTerm.Trim());
         var regex = new BsonRegularExpression(safeTerm, "i");
-        var filter = Builders<Product>.Filter.Or(
-            Builders<Product>.Filter.Regex(p => p.Title, regex),
-            Builders<Product>.Filter.Regex(p => p.Description, regex),
-            Builders<Product>.Filter.Regex(p => p.Category, regex),
-            Builders<Product>.Filter.AnyEq(p => p.Tags, searchTerm.Trim().ToLowerInvariant()));
+        var filter = Builders<Product>.Filter.And(
+            AvailableProductFilter,
+            Builders<Product>.Filter.Or(
+                Builders<Product>.Filter.Regex(p => p.Title, regex),
+                Builders<Product>.Filter.Regex(p => p.Description, regex),
+                Builders<Product>.Filter.Regex(p => p.Category, regex),
+                Builders<Product>.Filter.AnyEq(p => p.Tags, searchTerm.Trim().ToLowerInvariant())));
         return await _products.Find(filter).Limit(limit).ToListAsync(cancellationToken);
     }
 
@@ -34,11 +37,13 @@ public class SearchRepository
     {
         var safeTerm = System.Text.RegularExpressions.Regex.Escape(searchTerm.Trim());
         var regex = new BsonRegularExpression(safeTerm, "i");
-        var filter = Builders<Service>.Filter.Or(
-            Builders<Service>.Filter.Regex(s => s.Title, regex),
-            Builders<Service>.Filter.Regex(s => s.Description, regex),
-            Builders<Service>.Filter.Regex(s => s.Category, regex),
-            Builders<Service>.Filter.AnyEq(s => s.Tags, searchTerm.Trim().ToLowerInvariant()));
+        var filter = Builders<Service>.Filter.And(
+            AvailableServiceFilter,
+            Builders<Service>.Filter.Or(
+                Builders<Service>.Filter.Regex(s => s.Title, regex),
+                Builders<Service>.Filter.Regex(s => s.Description, regex),
+                Builders<Service>.Filter.Regex(s => s.Category, regex),
+                Builders<Service>.Filter.AnyEq(s => s.Tags, searchTerm.Trim().ToLowerInvariant())));
         return await _services.Find(filter).Limit(limit).ToListAsync(cancellationToken);
     }
 
@@ -46,7 +51,9 @@ public class SearchRepository
         string searchTerm, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         var skip = (page - 1) * pageSize;
-        var filter = Builders<Product>.Filter.Text(searchTerm);
+        var filter = Builders<Product>.Filter.And(
+            AvailableProductFilter,
+            Builders<Product>.Filter.Text(searchTerm));
 
         var total = (int)await _products.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
         var items = await _products.Find(filter).Skip(skip).Limit(pageSize).ToListAsync(cancellationToken);
@@ -59,7 +66,9 @@ public class SearchRepository
         string searchTerm, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         var skip = (page - 1) * pageSize;
-        var filter = Builders<Service>.Filter.Text(searchTerm);
+        var filter = Builders<Service>.Filter.And(
+            AvailableServiceFilter,
+            Builders<Service>.Filter.Text(searchTerm));
 
         var total = (int)await _services.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
         var items = await _services.Find(filter).Skip(skip).Limit(pageSize).ToListAsync(cancellationToken);
@@ -67,6 +76,14 @@ public class SearchRepository
         var dtos = items.Select(MapService).ToList();
         return new PagedResult<ServiceDto> { Items = dtos, Page = page, PageSize = pageSize, TotalItems = total };
     }
+
+    // Marketplace público: somente itens ativos (e com estoque, no caso de produtos).
+    private static readonly FilterDefinition<Product> AvailableProductFilter =
+        Builders<Product>.Filter.And(
+            Builders<Product>.Filter.Eq(p => p.Status, ItemStatus.Active),
+            Builders<Product>.Filter.Gt(p => p.Stock, 0));
+    private static readonly FilterDefinition<Service> AvailableServiceFilter =
+        Builders<Service>.Filter.Eq(s => s.Status, ItemStatus.Active);
 
     public async Task<Dictionary<string, int>> GetProductCategoryCountsAsync(string? category = null, List<string>? tags = null, CancellationToken cancellationToken = default)
     {

@@ -34,12 +34,12 @@ test.describe('CRUD de comunidade + posts + comentários (autenticado)', () => {
     await page.getByPlaceholder('Descreva o propósito da comunidade').fill(description);
     await page.getByRole('button', { name: 'Criar comunidade' }).click();
 
-    // 2) Redireciona para a lista e a comunidade aparece.
+    // 2) Redireciona para a lista.
     await expect(page).toHaveURL(/\/communities$/, { timeout: 10_000 });
     await expect(page.getByRole('heading', { name: 'Comunidades' })).toBeVisible();
-    await expect(page.getByText(name).first()).toBeVisible({ timeout: 10_000 });
 
-    // 3) Entrar no detail (via ID obtido pela API — robusto contra ordem da grade).
+    // 3) Entrar no detail (via ID obtido pela API — robusto contra paginação/ordem da grade,
+    //    já que a nova comunidade pode não aparecer na 1ª página quando há muitas).
     const communityId = await findCommunityIdByName(page, name);
     await page.goto(`/communities/${communityId}`);
 

@@ -1,5 +1,6 @@
 using MongoDB.Driver;
 using equivale.Domain.Entities;
+using equivale.Domain.Enums;
 using equivale.Domain.Interfaces;
 using equivale.Infrastructure.Persistence;
 
@@ -54,6 +55,10 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
     private static FilterDefinition<Product> BuildFilter(string? category, string? searchTerm, List<string>? tags, string? sellerId, string? communityId)
     {
         var filters = new List<FilterDefinition<Product>>();
+
+        // Marketplace público: somente produtos ativos E com estoque (exclui Sold/esgotado).
+        filters.Add(Builders<Product>.Filter.Eq(p => p.Status, ItemStatus.Active));
+        filters.Add(Builders<Product>.Filter.Gt(p => p.Stock, 0));
 
         if (!string.IsNullOrWhiteSpace(category))
             filters.Add(Builders<Product>.Filter.Eq(p => p.Category, category));

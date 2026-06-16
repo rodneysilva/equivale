@@ -5,6 +5,7 @@ using equivale.Domain.ValueObjects;
 using equivale.Infrastructure.Serialization;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 
 namespace equivale.Infrastructure.Persistence;
@@ -57,6 +58,11 @@ public sealed class MongoDbContext
     {
         if (Interlocked.CompareExchange(ref _serializersRegistered, 1, 0) != 0)
             return;
+
+        // Tolerância global a campos legados: documentos com campos renomeados/removidos
+        // (ex.: BannerUrl -> CoverUrl em Community) não quebram a desserialização.
+        var conventionPack = new ConventionPack { new IgnoreExtraElementsConvention(true) };
+        ConventionRegistry.Register("IgnoreExtraElements", conventionPack, _ => true);
 
         BsonSerializer.RegisterSerializer(new EmailBsonSerializer());
         BsonSerializer.RegisterSerializer(new MoneyBsonSerializer());
