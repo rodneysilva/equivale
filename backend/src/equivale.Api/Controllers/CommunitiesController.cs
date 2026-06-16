@@ -46,6 +46,22 @@ public class CommunitiesController : ControllerBase
         return Ok(community);
     }
 
+    [HttpDelete("{id}")]
+    [Authorize]
+    public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        var community = await _communityService.GetByIdAsync(id, cancellationToken);
+        if (community is null) return NotFound(new { error = "Comunidade não encontrada." });
+        if (community.CreatorId != userId) return Forbid();
+
+        await _communityService.DeleteAsync(id, cancellationToken);
+        return NoContent();
+    }
+
     [HttpPost]
     [Authorize]
     public async Task<ActionResult<CommunityDto>> Create([FromBody] CreateCommunityDto dto, CancellationToken cancellationToken)

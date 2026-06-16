@@ -47,6 +47,31 @@ public class ReviewsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet]
+    public async Task<ActionResult<List<ReviewWithUserDto>>> GetByItem([FromQuery] string? itemId, [FromQuery] string? itemType, CancellationToken ct)
+    {
+        var allReviews = await _reviewRepository.GetAllAsync(ct);
+        var filtered = allReviews.AsEnumerable();
+        if (!string.IsNullOrEmpty(itemId))
+            filtered = filtered.Where(r => r.ItemId == itemId);
+        if (!string.IsNullOrEmpty(itemType))
+            filtered = filtered.Where(r => r.ItemType.Equals(itemType, StringComparison.OrdinalIgnoreCase));
+        var itemReviews = filtered.ToList();
+
+        var reviewerIds = itemReviews.Select(r => r.ReviewerId).Distinct();
+        var users = await _userRepository.GetByIdsAsync(reviewerIds, ct);
+        var userMap = users.ToDictionary(u => u.Id);
+
+        var result = itemReviews.Select(r => new ReviewWithUserDto(
+            r.Id, r.Rating, r.Comment, r.ItemType, r.CreatedAt,
+            r.ReviewerId,
+            userMap.TryGetValue(r.ReviewerId, out var u) ? u.Name : null,
+            userMap.TryGetValue(r.ReviewerId, out var u2) ? u2.AvatarUrl : null
+        )).ToList();
+
+        return Ok(result);
+    }
+
     [HttpPost]
     [Authorize]
     public async Task<ActionResult<Review>> Create([FromBody] CreateReviewRequest req, CancellationToken ct)
