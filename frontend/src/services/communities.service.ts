@@ -56,9 +56,8 @@ export const communitiesService = {
     return api.del<void>(`/communities/${id}`);
   },
 
-  async join(id: string, inviteCode?: string): Promise<void> {
-    const params = inviteCode ? `?inviteCode=${encodeURIComponent(inviteCode)}` : '';
-    return api.post<void>(`/communities/${id}/join${params}`);
+  async join(id: string, password?: string, message?: string): Promise<void> {
+    return api.post<void>(`/communities/${id}/join`, { password, message });
   },
 
   async leave(id: string): Promise<void> {

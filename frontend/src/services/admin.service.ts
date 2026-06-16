@@ -24,7 +24,7 @@ export const adminService = {
   },
 
   async banUser(id: string): Promise<void> {
-    await api.del(`/admin/users/${id}/ban`);
+    await api.put(`/admin/users/${id}/ban`);
   },
 
   async deleteProduct(id: string): Promise<void> {

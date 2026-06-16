@@ -10,27 +10,21 @@ import { useToast } from '../store/toast';
 import type { Transaction } from '../types';
 
 const txStatusLabel: Record<string, string> = {
-  Pending: 'Aguardando confirmação',
-  ConfirmedByBuyer: 'Comprador confirmou',
-  ConfirmedBySeller: 'Vendedor confirmou',
-  Completed: 'Pagamento confirmado',
+  OrderPlaced: 'Pedido criado',
+  OrderConfirmed: 'Vendedor confirmou',
+  Shipped: 'Enviado',
+  Delivered: 'Entregue',
+  Finished: 'Finalizado',
   Cancelled: 'Cancelada',
 };
 
 const txStatusColor: Record<string, string> = {
-  Pending: 'eq-badge-warning',
-  ConfirmedByBuyer: 'eq-badge-info',
-  ConfirmedBySeller: 'eq-badge-info',
-  Completed: 'eq-badge-success',
+  OrderPlaced: 'eq-badge-warning',
+  OrderConfirmed: 'eq-badge-info',
+  Shipped: 'eq-badge-info',
+  Delivered: 'eq-badge-success',
+  Finished: 'eq-badge-success',
   Cancelled: 'eq-badge-error',
-};
-
-const orderStatusLabel: Record<string, string> = {
-  OrderPlaced: 'Pedido realizado',
-  PaymentConfirmed: 'Pagamento confirmado',
-  Shipped: 'Enviado',
-  Delivered: 'Entregue',
-  Finished: 'Finalizado',
 };
 
 const TransactionsPage: Component = () => {
@@ -109,9 +103,6 @@ const TransactionsPage: Component = () => {
                       <div class="flex items-center gap-2 flex-wrap">
                         <span class="font-medium text-sm" style={{ color: 'var(--color-text)' }}>{t.itemTitle}</span>
                         <span class={`eq-badge ${txStatusColor[t.status]}`}>{txStatusLabel[t.status]}</span>
-                        <Show when={t.status === 'Completed'}>
-                          <span class="eq-badge eq-badge-info">{orderStatusLabel[t.orderStatus] ?? t.orderStatus}</span>
-                        </Show>
                       </div>
 
                       {/* Info */}
@@ -124,11 +115,11 @@ const TransactionsPage: Component = () => {
                       <p class="text-sm font-semibold mt-1 eq-accent">{t.totalPrice} EQL</p>
 
                       {/* Timeline of order */}
-                      <Show when={t.status === 'Completed'}>
+                      <Show when={t.status === 'Finished'}>
                         <div class="flex items-center gap-1 mt-2 text-xs" style={{ color: 'var(--color-text-muted)' }}>
                           <Show when={t.shippedAt}><Truck size={11} /> Enviado · </Show>
                           <Show when={t.deliveredAt}><CheckCircle size={11} /> Entregue · </Show>
-                          <Show when={t.orderStatus === 'Finished'}><Star size={11} /> Finalizado</Show>
+                          <Show when={t.status === 'Finished'}><Star size={11} /> Finalizado</Show>
                         </div>
                       </Show>
 
@@ -138,44 +129,50 @@ const TransactionsPage: Component = () => {
                           <button class="text-xs eq-link flex items-center gap-1" onClick={() => navigate(`/transactions/${t.id}/chat`)}>
                             <MessageCircle size={11} /> Chat
                           </button>
+                          <button class="text-xs eq-link flex items-center gap-1" onClick={() => navigate(`/transactions/${t.id}`)}>
+                            <Package size={11} /> Detalhes
+                          </button>
                         </Show>
-                        {/* Transaction confirmation */}
-                        <Show when={t.status !== 'Completed' && t.status !== 'Cancelled'}>
-                          <Show when={isBuyer() && (t.status === 'Pending' || t.status === 'ConfirmedBySeller')}>
-                            <Button size="sm" onClick={() => action(t.id, transactionsService.confirmByBuyer)} disabled={actionLoading() === t.id}>
-                              <Check size={12} class="mr-1" /> Confirmar pagamento
+
+                        {/* Seller actions */}
+                        <Show when={isBuyer() === false && t.status !== 'Finished' && t.status !== 'Cancelled'}>
+                          <Show when={t.status === 'OrderPlaced'}>
+                            <Button size="sm" onClick={() => action(t.id, transactionsService.sellerConfirmOrder)} disabled={actionLoading() === t.id}>
+                              <Check size={12} class="mr-1" /> Confirmar pedido
                             </Button>
                           </Show>
-                          <Show when={!isBuyer() && (t.status === 'Pending' || t.status === 'ConfirmedByBuyer')}>
-                            <Button size="sm" onClick={() => action(t.id, transactionsService.confirmBySeller)} disabled={actionLoading() === t.id}>
-                              <Check size={12} class="mr-1" /> Confirmar recebimento
+                          <Show when={t.status === 'OrderConfirmed'}>
+                            <Button size="sm" onClick={() => action(t.id, (id) => transactionsService.sellerShip(id))} disabled={actionLoading() === t.id}>
+                              <Truck size={12} class="mr-1" /> Marcar como enviado
                             </Button>
                           </Show>
+                        </Show>
+
+                        {/* Buyer actions */}
+                        <Show when={isBuyer() && t.status !== 'Finished' && t.status !== 'Cancelled'}>
+                          <Show when={t.status === 'Shipped'}>
+                            <Button size="sm" onClick={() => action(t.id, transactionsService.buyerConfirmDelivery)} disabled={actionLoading() === t.id}>
+                              <CheckCircle size={12} class="mr-1" /> Confirmar entrega
+                            </Button>
+                          </Show>
+                          <Show when={t.status === 'Delivered'}>
+                            <button class="text-xs eq-link flex items-center gap-1" onClick={() => navigate(`/transactions/${t.id}`)}>
+                              <Star size={11} /> Avaliar e finalizar
+                            </button>
+                          </Show>
+                        </Show>
+
+                        {/* Cancel (ambos, antes de Delivered) */}
+                        <Show when={t.status !== 'Finished' && t.status !== 'Cancelled' && t.status !== 'Delivered'}>
                           <Button variant="outline" size="sm" onClick={() => action(t.id, transactionsService.cancel)} disabled={actionLoading() === t.id} style={{ color: '#dc2626' }}>
                             <X size={12} class="mr-1" /> Cancelar
                           </Button>
                         </Show>
 
-                        {/* Order logistics (after payment confirmed) */}
-                        <Show when={t.status === 'Completed'}>
-                          {/* Seller ships */}
-                          <Show when={!isBuyer() && t.orderStatus === 'PaymentConfirmed'}>
-                            <Button size="sm" onClick={() => action(t.id, transactionsService.markShipped)} disabled={actionLoading() === t.id}>
-                              <Truck size={12} class="mr-1" /> Marcar como enviado
-                            </Button>
-                          </Show>
-                          {/* Buyer confirms delivery */}
-                          <Show when={isBuyer() && t.orderStatus === 'Shipped'}>
-                            <Button size="sm" onClick={() => action(t.id, transactionsService.markDelivered)} disabled={actionLoading() === t.id}>
-                              <CheckCircle size={12} class="mr-1" /> Confirmar entrega
-                            </Button>
-                          </Show>
-                          {/* Review */}
-                          <Show when={t.orderStatus === 'Delivered' || t.orderStatus === 'Finished'}>
-                            <button class="text-xs eq-link flex items-center gap-1" onClick={() => navigate(`/transactions/${t.id}`)}>
-                              <Star size={11} /> Avaliar
-                            </button>
-                          </Show>
+                        <Show when={t.status === 'Finished'}>
+                          <button class="text-xs eq-link flex items-center gap-1" onClick={() => navigate(`/transactions/${t.id}`)}>
+                            <Star size={11} /> Ver detalhes
+                          </button>
                         </Show>
                       </div>
                     </div>

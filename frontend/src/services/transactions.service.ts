@@ -71,16 +71,6 @@ export const transactionsService = {
     return mapTransaction(raw);
   },
 
-  async confirmByBuyer(id: string): Promise<Transaction> {
-    const raw = await api.put<BackendTransactionDto>(`/transactions/${id}/confirm-buyer`);
-    return mapTransaction(raw);
-  },
-
-  async confirmBySeller(id: string): Promise<Transaction> {
-    const raw = await api.put<BackendTransactionDto>(`/transactions/${id}/confirm-seller`);
-    return mapTransaction(raw);
-  },
-
   async cancel(id: string): Promise<Transaction> {
     const raw = await api.put<BackendTransactionDto>(`/transactions/${id}/cancel`);
     return mapTransaction(raw);
