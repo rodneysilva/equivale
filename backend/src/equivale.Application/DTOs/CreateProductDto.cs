@@ -1,7 +1,7 @@
 namespace equivale.Application.DTOs;
 
 public record CreateProductDto(
-    string SellerId,
+    string? SellerId,
     string Title,
     string Description,
     string Category,

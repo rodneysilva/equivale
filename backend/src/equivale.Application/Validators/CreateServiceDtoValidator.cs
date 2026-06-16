@@ -7,8 +7,7 @@ public class CreateServiceDtoValidator : AbstractValidator<CreateServiceDto>
 {
     public CreateServiceDtoValidator()
     {
-        RuleFor(x => x.ProviderId)
-            .NotEmpty().WithMessage("ProviderId is required.");
+        // ProviderId vem do token (controller derida do usuário autenticado); não validar no DTO.
 
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Title is required.")

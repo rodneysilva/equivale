@@ -1,7 +1,7 @@
 namespace equivale.Application.DTOs;
 
 public record CreateServiceDto(
-    string ProviderId,
+    string? ProviderId,
     string Title,
     string Description,
     string Category,

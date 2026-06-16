@@ -7,8 +7,7 @@ public class CreateProductDtoValidator : AbstractValidator<CreateProductDto>
 {
     public CreateProductDtoValidator()
     {
-        RuleFor(x => x.SellerId)
-            .NotEmpty().WithMessage("SellerId is required.");
+        // SellerId vem do token (controller deriva do usuário autenticado); não validar no DTO.
 
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Title is required.")

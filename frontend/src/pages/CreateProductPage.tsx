@@ -1,5 +1,5 @@
-import { type Component, createEffect, createSignal, onMount } from 'solid-js';
-import { useNavigate } from '@solidjs/router';
+import { type Component, Show, createEffect, createSignal, onMount } from 'solid-js';
+import { useNavigate, useParams } from '@solidjs/router';
 import { ArrowLeft, Package } from 'lucide-solid';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -9,6 +9,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { productsService } from '../services/products.service';
 import { communitiesService } from '../services/communities.service';
 import { useAuth } from '../store/auth';
+import { useToast } from '../store/toast';
 import type { CreateProductDto } from '../types';
 
 const categories = ['Artesanato', 'Fotografia', 'Arte', 'Madeira', 'Alimentação', 'Jardinagem', 'Tecnologia', 'Bem-estar'];
@@ -16,7 +17,12 @@ const conditions: Array<'new' | 'used' | 'refurbished'> = ['new', 'used', 'refur
 
 const CreateProductPage: Component = () => {
   const navigate = useNavigate();
+  const params = useParams<{ id?: string }>();
   const auth = useAuth();
+  const toast = useToast();
+
+  const editId = () => params.id;
+  const isEdit = () => Boolean(editId());
 
   const [title, setTitle] = createSignal('');
   const [description, setDescription] = createSignal('');
@@ -25,6 +31,7 @@ const CreateProductPage: Component = () => {
   const [condition, setCondition] = createSignal<'new' | 'used' | 'refurbished'>('new');
   const [imageUrl, setImageUrl] = createSignal('');
   const [loading, setLoading] = createSignal(false);
+  const [loadingProduct, setLoadingProduct] = createSignal(false);
   const [error, setError] = createSignal('');
   const [communities, setCommunities] = createSignal<any[]>([]);
   const [communityId, setCommunityId] = createSignal('');
@@ -38,11 +45,32 @@ const CreateProductPage: Component = () => {
   });
 
   onMount(async () => {
-    if (auth.isAuthenticated()) {
+    if (!auth.isAuthenticated()) return;
+    try {
+      const res = await communitiesService.getByMember(auth.currentUser()!.id);
+      setCommunities(res);
+    } catch {}
+
+    // Modo edição: carrega o produto e preenche o formulário.
+    if (editId()) {
+      setLoadingProduct(true);
       try {
-        const res = await communitiesService.getByMember(auth.currentUser()!.id);
-        setCommunities(res);
-      } catch {}
+        const p = await productsService.getById(editId()!);
+        setTitle(p.title ?? '');
+        setDescription(p.description ?? '');
+        setCategory(p.category ?? categories[0]);
+        setPrice(String(p.price ?? ''));
+        setCondition(p.condition ?? 'new');
+        const imgs = p.images?.length ? p.images : (p.imageUrl ? [p.imageUrl] : []);
+        setImageUrl(imgs.join(','));
+        setCommunityId(p.communityId ?? '');
+        setTagsStr(p.tags?.join(', ') ?? '');
+        setStock(p.stock ?? 1);
+      } catch (err: any) {
+        setError(err?.message || 'Não foi possível carregar o produto para edição.');
+      } finally {
+        setLoadingProduct(false);
+      }
     }
   });
 
@@ -80,10 +108,17 @@ const CreateProductPage: Component = () => {
 
     setLoading(true);
     try {
-      await productsService.create(payload, sellerId);
-      navigate('/products');
+      if (isEdit()) {
+        await productsService.update(editId()!, payload, sellerId);
+        toast.success('Produto atualizado!');
+        navigate(`/products/${editId()}`);
+      } else {
+        await productsService.create(payload, sellerId);
+        toast.success('Produto publicado!');
+        navigate('/products');
+      }
     } catch (err: any) {
-      setError(err.message || 'Não foi possível publicar o produto.');
+      setError(err.message || 'Não foi possível salvar o produto.');
     } finally {
       setLoading(false);
     }
@@ -102,13 +137,18 @@ const CreateProductPage: Component = () => {
             <Package size={18} style={{ color: 'var(--color-primary)' }} />
           </div>
           <div>
-            <h1 class="text-2xl font-semibold" style={{ color: 'var(--color-text)' }}>Publicar produto</h1>
+            <h1 class="text-2xl font-semibold" style={{ color: 'var(--color-text)' }}>{isEdit() ? 'Editar produto' : 'Publicar produto'}</h1>
             <p class="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
-              Compartilhe algo que você quer trocar com a comunidade.
+              {isEdit() ? 'Atualize as informações do seu produto.' : 'Compartilhe algo que você quer trocar com a comunidade.'}
             </p>
           </div>
         </div>
 
+        <Show when={loadingProduct()}>
+          <LoadingSpinner class="py-12" />
+        </Show>
+
+        <Show when={!loadingProduct()}>
         <form onSubmit={handleSubmit} class="space-y-4">
           {error() && (
             <div class="p-3 rounded text-sm" style={{ background: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: '1px solid var(--color-danger)' }}>
@@ -201,11 +241,12 @@ const CreateProductPage: Component = () => {
 
           <div class="flex gap-2 pt-2">
             <Button type="submit" class="flex-1" disabled={loading()}>
-              {loading() ? <LoadingSpinner size="w-4 h-4" class="!justify-start" /> : 'Publicar produto'}
+              {loading() ? <LoadingSpinner size="w-4 h-4" class="!justify-start" /> : (isEdit() ? 'Salvar alterações' : 'Publicar produto')}
             </Button>
             <Button variant="ghost" onClick={() => navigate('/products')}>Cancelar</Button>
           </div>
         </form>
+        </Show>
       </Card>
     </div>
   );

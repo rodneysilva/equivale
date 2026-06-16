@@ -61,6 +61,7 @@ const App: Component = () => {
       <Route path="/search" component={SearchPage} />
       <Route path="/products" component={ProductsPage} />
       <Route path="/products/new" component={CreateProductPage} />
+      <Route path="/products/:id/edit" component={CreateProductPage} />
       <Route path="/products/:id" component={ProductDetailPage} />
       <Route path="/services" component={ServicesPage} />
       <Route path="/services/new" component={CreateServicePage} />

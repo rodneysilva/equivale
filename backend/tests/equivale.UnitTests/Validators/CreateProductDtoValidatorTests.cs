@@ -17,12 +17,12 @@ public class CreateProductDtoValidatorTests
     }
 
     [Fact]
-    public void Validate_EmptySellerId_ShouldHaveError()
+    public void Validate_EmptySellerId_ShouldNotHaveError()
     {
+        // SellerId não é mais validado no DTO — vem do token no controller.
         var dto = new CreateProductDto("", "Title", "Desc", "Cat", 50m, null);
         var result = _validator.Validate(dto);
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == "SellerId");
+        result.IsValid.Should().BeTrue();
     }
 
     [Fact]
