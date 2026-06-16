@@ -33,6 +33,7 @@ const AdminProductsPage = lazy(() => import('./pages/admin/AdminProductsPage'));
 const AdminCommunitiesPage = lazy(() => import('./pages/admin/AdminCommunitiesPage'));
 const AdminServicesPage = lazy(() => import('./pages/admin/AdminServicesPage'));
 const AdminTransactionsPage = lazy(() => import('./pages/admin/AdminTransactionsPage'));
+const AdminModerationPage = lazy(() => import('./pages/admin/AdminModerationPage'));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
 const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
 const ChatPage = lazy(() => import('./pages/ChatPage'));
@@ -87,6 +88,7 @@ const App: Component = () => {
       <Route path="/admin/communities" component={AdminCommunitiesPage} />
       <Route path="/admin/services" component={AdminServicesPage} />
       <Route path="/admin/transactions" component={AdminTransactionsPage} />
+      <Route path="/admin/moderation" component={AdminModerationPage} />
       <Route path="/notifications" component={NotificationsPage} />
     </Router>
   );

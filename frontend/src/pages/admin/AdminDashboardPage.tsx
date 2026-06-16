@@ -1,6 +1,6 @@
 import { type Component, createSignal, onMount, For, Show } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { Users, Package, Zap, Globe, TrendingUp, Shield, Clock, ChevronRight, Coins, BarChart3 } from 'lucide-solid';
+import { Users, Package, Zap, Globe, TrendingUp, Shield, Clock, ChevronRight, Coins, BarChart3, ShieldAlert } from 'lucide-solid';
 import Card from '../../components/ui/Card';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { adminService, type AdminStats } from '../../services/admin.service';
@@ -113,6 +113,11 @@ const AdminDashboardPage: Component = () => {
               <Package size={24} class="eq-brand mb-2" />
               <h3 class="font-semibold" style={{ color: 'var(--color-text)' }}>Moderar Produtos</h3>
               <p class="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Remover produtos inadequados</p>
+            </Card>
+            <Card hover class="p-5 cursor-pointer" onClick={() => navigate('/admin/moderation')}>
+              <ShieldAlert size={24} class="eq-brand mb-2" />
+              <h3 class="font-semibold" style={{ color: 'var(--color-text)' }}>Moderação de Conteúdo</h3>
+              <p class="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Ocultar ou excluir posts e comentários</p>
             </Card>
           </div>
 
