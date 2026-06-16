@@ -1,0 +1,36 @@
+# MongoDB como replica set single-node (NECESSARIO para transacoes ACID).
+#
+# Uso:
+#   docker-compose -f docker-compose.mongo.yml up -d
+#   # apos o container subir, inicie o replica set UMA vez:
+#   docker exec -it equivale-mongo mongosh --eval "load('/docker-entrypoint-initdb.d/init-replicaset.js')"
+#
+# Ou, se voce roda MongoDB local (sem Docker):
+#   1. Pare o servico do MongoDB
+#   2. Inicie com: mongod --replSet rs0 --bind_ip 127.0.0.1
+#   3. Rode uma vez: mongosh --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]})"
+#
+# Converter standalone -> replica set NAO quebra dados existentes.
+# A string de conexao em appsettings.json (mongodb://localhost:27017) continua funcionando.
+services:
+  mongodb:
+    image: mongo:7
+    container_name: equivale-mongo
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ./scripts/init-replicaset.js:/docker-entrypoint-initdb.d/init-replicaset.js:ro
+    healthcheck:
+      test: |
+        mongosh --quiet --eval "
+          try { rs.status().ok } catch(e) { 0 }
+        "
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  mongo_data:

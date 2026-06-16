@@ -1,6 +1,6 @@
 import { type Component, createSignal, onMount, For, Show } from 'solid-js';
 import { useParams, useNavigate } from '@solidjs/router';
-import { ArrowLeft, Check, X, Truck, CheckCircle, Star, Package, Clock, MapPin } from 'lucide-solid';
+import { ArrowLeft, Check, X, Truck, CheckCircle, Star, Package, Clock, MapPin, MessageCircle } from 'lucide-solid';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -229,6 +229,13 @@ const TransactionDetailPage: Component = () => {
 
           {/* Sidebar: actions */}
           <div class="space-y-4">
+            <Show when={tx()!.status !== 'Cancelled' && tx()!.status !== 'Finished'}>
+              <Card class="p-4">
+                <Button variant="outline" class="w-full" size="sm" onClick={() => navigate(`/transactions/${params.id}/chat`)}>
+                  <MessageCircle size={14} class="mr-1" /> Abrir chat
+                </Button>
+              </Card>
+            </Show>
             {/* Seller actions */}
             <Show when={isSeller() && tx()!.status !== 'Finished' && tx()!.status !== 'Cancelled'}>
               <Card class="p-5">

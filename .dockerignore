@@ -1,0 +1,29 @@
+# Node / frontend
+node_modules/
+dist/
+dev-dist/
+test-results/
+playwright-report/
+.vite/
+
+# .NET / backend
+bin/
+obj/
+*.user
+*.suo
+logs/
+
+# Geral
+.git/
+.gitignore
+.gitattributes
+.vs/
+.vscode/
+.env
+.env.*
+!.env.example
+*.log
+
+# Docker
+docker-compose*.yml
+Dockerfile

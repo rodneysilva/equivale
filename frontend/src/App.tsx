@@ -34,6 +34,8 @@ const AdminCommunitiesPage = lazy(() => import('./pages/admin/AdminCommunitiesPa
 const AdminServicesPage = lazy(() => import('./pages/admin/AdminServicesPage'));
 const AdminTransactionsPage = lazy(() => import('./pages/admin/AdminTransactionsPage'));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
+const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
+const ChatPage = lazy(() => import('./pages/ChatPage'));
 
 const PageLoader = () => (
   <div class="py-20">
@@ -70,12 +72,14 @@ const App: Component = () => {
       <Route path="/communities/:id/members" component={CommunityMembersPage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/register" component={RegisterPage} />
+      <Route path="/onboarding" component={OnboardingPage} />
       <Route path="/users" component={UsersListPage} />
       <Route path="/users/:id" component={UserProfilePage} />
       <Route path="/profile" component={ProfilePage} />
       <Route path="/dashboard" component={DashboardPage} />
       <Route path="/wallet" component={WalletPage} />
       <Route path="/transactions" component={TransactionsPage} />
+      <Route path="/transactions/:id/chat" component={ChatPage} />
       <Route path="/transactions/:id" component={TransactionDetailPage} />
       <Route path="/admin" component={AdminDashboardPage} />
       <Route path="/admin/users" component={AdminUsersPage} />

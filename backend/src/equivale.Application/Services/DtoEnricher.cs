@@ -92,6 +92,55 @@ public class DtoEnricher
         }
     }
 
+    public async Task EnrichCommunitiesAsync(IList<CommunityDto> communities, CancellationToken cancellationToken)
+    {
+        if (communities.Count == 0) return;
+
+        var needsCreator = communities
+            .Where(c => string.IsNullOrWhiteSpace(c.CreatorName) && !string.IsNullOrWhiteSpace(c.CreatorId))
+            .ToList();
+
+        var needsModeratorNames = communities
+            .Where(c => (c.ModeratorNames is null || c.ModeratorNames.Count == 0) && c.Moderators.Count > 0)
+            .ToList();
+
+        if (needsCreator.Count == 0 && needsModeratorNames.Count == 0) return;
+
+        var userIds = new List<string>();
+        userIds.AddRange(needsCreator.Select(c => c.CreatorId!));
+        userIds.AddRange(needsModeratorNames.SelectMany(c => c.Moderators));
+
+        var users = await FetchUsersAsync(userIds, cancellationToken);
+
+        for (var i = 0; i < communities.Count; i++)
+        {
+            var community = communities[i];
+
+            string? creatorName = community.CreatorName;
+            if (string.IsNullOrWhiteSpace(creatorName) &&
+                !string.IsNullOrWhiteSpace(community.CreatorId) &&
+                users.TryGetValue(community.CreatorId, out var creator))
+            {
+                creatorName = creator.Name;
+            }
+
+            List<string>? moderatorNames = community.ModeratorNames;
+            if ((moderatorNames is null || moderatorNames.Count == 0) && community.Moderators.Count > 0)
+            {
+                moderatorNames = community.Moderators
+                    .Where(id => users.ContainsKey(id))
+                    .Select(id => users[id].Name)
+                    .Where(n => !string.IsNullOrWhiteSpace(n))
+                    .ToList();
+            }
+
+            if (creatorName != community.CreatorName || moderatorNames != community.ModeratorNames)
+            {
+                communities[i] = community with { CreatorName = creatorName, ModeratorNames = moderatorNames };
+            }
+        }
+    }
+
     private async Task<Dictionary<string, User>> FetchUsersAsync(IEnumerable<string> ids, CancellationToken cancellationToken)
     {
         var idList = ids.Distinct().ToList();

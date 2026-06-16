@@ -2,7 +2,7 @@ using equivale.Domain.Entities;
 
 namespace equivale.Domain.Interfaces;
 
-public interface IProductRepository : IBaseRepository<Product>
+public interface IProductRepository : IBaseRepository<Product>, ITransactionalRepository<Product>
 {
     Task<IReadOnlyList<Product>> GetBySellerIdAsync(string sellerId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Product>> GetByCategoryAsync(string category, CancellationToken cancellationToken = default);

@@ -29,15 +29,17 @@ public class TransactionService : ITransactionService
     private readonly IProductRepository _productRepo;
     private readonly IServiceRepository _serviceRepo;
     private readonly IUserRepository _userRepo;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly TransactionFeeOptions _feeOptions;
 
     public TransactionService(ITransactionRepository repo, IProductRepository productRepo,
-        IServiceRepository serviceRepo, IUserRepository userRepo, IMapper mapper,
-        IOptions<TransactionFeeOptions> feeOptions)
+        IServiceRepository serviceRepo, IUserRepository userRepo, IUnitOfWork unitOfWork,
+        IMapper mapper, IOptions<TransactionFeeOptions> feeOptions)
     {
         _repo = repo; _productRepo = productRepo; _serviceRepo = serviceRepo;
-        _userRepo = userRepo; _mapper = mapper;
+        _userRepo = userRepo; _unitOfWork = unitOfWork;
+        _mapper = mapper;
         _feeOptions = feeOptions.Value;
     }
 
@@ -152,62 +154,57 @@ public class TransactionService : ITransactionService
         var t = await _repo.GetByIdAsync(transactionId, ct) ?? throw new InvalidOperationException("Transação não encontrada.");
         if (!t.CanFinish) throw new InvalidOperationException("A entrega precisa estar confirmada.");
 
-        // Libera bloqueado do comprador
-        var buyer = await _userRepo.GetByIdAsync(t.BuyerId, ct);
-        var seller = await _userRepo.GetByIdAsync(t.SellerId, ct);
-
-        // TODO: Envolver operações multi-documento em transação MongoDB para atomicidade
-        if (buyer is not null && buyer.BlockedBalance.Amount >= t.TotalPrice.Amount)
-        {
-            buyer.ReleaseBlocked(t.TotalPrice.Amount);
-            try { await _userRepo.UpdateAsync(buyer, ct); }
-            catch (ConcurrencyException) { throw new InvalidOperationException("Concorrência ao liberar saldo do comprador. Tente novamente."); }
-        }
-
-        // Calcula e aplica taxa de transação
+        // Calcula taxa de transacao antes de abrir a transacao (pure computation)
         var feeRate = _feeOptions.Percent / 100m;
         var feeAmount = Math.Round(t.TotalPrice.Amount * feeRate, 2);
         var sellerPayout = t.TotalPrice.Amount - feeAmount;
 
-        if (seller is not null)
-        {
-            seller.Credit(sellerPayout);
-            try { await _userRepo.UpdateAsync(seller, ct); }
-            catch (ConcurrencyException) { throw new InvalidOperationException("Concorrência ao creditar vendedor. Tente novamente."); }
-        }
-
-        // Credita a taxa na tesouraria (ignora falha — não deve bloquear a finalização)
-        if (feeAmount > 0)
-        {
-            try
-            {
-                var treasury = await EnsureTreasuryUserAsync(ct);
-                if (treasury is not null)
-                {
-                    treasury.Credit(feeAmount);
-                    await _userRepo.UpdateAsync(treasury, ct);
-                }
-            }
-            catch { /* taxa não crítica para o fluxo principal */ }
-        }
-
-        // Decrementa estoque
+        // Carrega entidades envolvidas (leitura fora da transacao para reduzir janela de lock)
+        var buyer = await _userRepo.GetByIdAsync(t.BuyerId, ct);
+        var seller = await _userRepo.GetByIdAsync(t.SellerId, ct);
+        var treasury = feeAmount > 0 ? await EnsureTreasuryUserAsync(ct) : null;
+        Product? product = null;
         if (t.ItemType == TransactionItemType.Product)
+            product = await _productRepo.GetByIdAsync(t.ItemId, ct);
+
+        // Executa todos os writes multi-documento dentro de uma transacao ACID.
+        // Se qualquer update falhar no meio, o MongoDB faz rollback automatico (abort).
+        await _unitOfWork.ExecuteInTransactionAsync(async (session, token) =>
         {
-            var product = await _productRepo.GetByIdAsync(t.ItemId, ct);
+            // 1) Libera saldo bloqueado do comprador
+            if (buyer is not null && buyer.BlockedBalance.Amount >= t.TotalPrice.Amount)
+            {
+                buyer.ReleaseBlocked(t.TotalPrice.Amount);
+                await _userRepo.UpdateAsync(buyer, session, token);
+            }
+
+            // 2) Credita o vendedor (total menos a taxa)
+            if (seller is not null)
+            {
+                seller.Credit(sellerPayout);
+                await _userRepo.UpdateAsync(seller, session, token);
+            }
+
+            // 3) Credita a taxa na tesouraria (agora atomico com o restante)
+            if (feeAmount > 0 && treasury is not null)
+            {
+                treasury.Credit(feeAmount);
+                await _userRepo.UpdateAsync(treasury, session, token);
+            }
+
+            // 4) Decrementa estoque (apenas produtos)
             if (product is not null)
             {
                 product.Stock = Math.Max(0, product.Stock - t.Quantity);
                 if (product.Stock == 0) product.Status = ItemStatus.Sold;
-                try { await _productRepo.UpdateAsync(product, ct); }
-                catch (ConcurrencyException) { throw new InvalidOperationException("Concorrência ao atualizar estoque. Tente novamente."); }
+                await _productRepo.UpdateAsync(product, session, token);
             }
-        }
 
-        t.FeeAmount = feeAmount;
-        t.Finish();
-        try { await _repo.UpdateAsync(t, ct); }
-        catch (ConcurrencyException) { throw new InvalidOperationException("Concorrência ao finalizar transação. Tente novamente."); }
+            // 5) Marca a transacao como finalizada com a taxa registrada
+            t.FeeAmount = feeAmount;
+            t.Finish();
+            await _repo.UpdateAsync(t, session, token);
+        }, ct);
     }
 
     private User? _treasuryUser;

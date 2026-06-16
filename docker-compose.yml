@@ -1,0 +1,59 @@
+# docker-compose raiz — sobe MongoDB (replica set), backend .NET e frontend Vite
+# Uso: docker-compose up --build
+services:
+  mongodb:
+    image: mongo:7
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo-init:
+    image: mongo:7
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    entrypoint:
+      - mongosh
+      - --host
+      - mongodb
+      - --eval
+      - "try { rs.status().ok } catch(e) { rs.initiate({_id:'rs0', members:[{_id:0, host:'mongodb:27017'}]}) }"
+    restart: "no"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5053:5053"
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:5053
+      - ASPNETCORE_ENVIRONMENT=Development
+      - MongoDb__ConnectionString=mongodb://mongodb:27017
+      - MongoDb__DatabaseName=equivale
+      - Jwt__Secret=${JWT_SECRET:-dev-secret-change-me-in-production-minimum-32-chars!!}
+      - AllowedOrigins__0=http://localhost:3000
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:5053
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:

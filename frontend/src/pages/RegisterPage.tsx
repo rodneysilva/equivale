@@ -30,7 +30,8 @@ const RegisterPage: Component = () => {
     setLoading(true);
     try {
       await auth.register({ fullName: fullName(), email: email(), password: password(), username: email().split('@')[0] });
-      navigate('/');
+      const user = auth.currentUser();
+      navigate(user && !user.bio ? '/onboarding' : '/', { replace: true });
     } catch (err: any) { setError(err.message || 'Erro ao registrar'); }
     finally { setLoading(false); }
   };

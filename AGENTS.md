@@ -149,13 +149,17 @@ OrderPlaced → (vendedor) OrderConfirmed → (vendedor) Shipped → (comprador)
 
 ## Próximos Passos (Roadmap)
 
-- [ ] Demurrage do EQL (anti-inflação — documentar no BUSINESS.md)
-- [ ] Onboarding guiado (wizard de boas-vindas)
-- [ ] Hero da home mais emocional
-- [ ] Notificações (badge na navbar)
-- [ ] Docker/docker-compose para onboarding
-- [ ] Transações MongoDB ACID para FinishTransactionAsync
-- [ ] Limpeza de código morto (src/UI/, componentes órfãos)
+- [x] Demurrage do EQL (anti-inflação — documentar no BUSINESS.md)
+- [x] Onboarding guiado (wizard de boas-vindas)
+- [x] Hero da home mais emocional
+- [x] Notificações (badge na navbar)
+- [x] Docker/docker-compose para onboarding
+- [x] Transações MongoDB ACID para FinishTransactionAsync
+- [x] Limpeza de código morto (src/UI/, componentes órfãos)
+- [ ] Chat comprador/vendedor (já implementado, falta testar)
+- [ ] CreatorName legacy fallback (já implementado, falta testar)
+- [ ] Testes e2e com Playwright
+- [ ] CI/CD pipeline
 
 ---
 

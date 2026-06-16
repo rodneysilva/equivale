@@ -21,7 +21,7 @@ const LoginPage: Component = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    try { await auth.login({ email: email(), password: password() }); navigate('/'); }
+    try { await auth.login({ email: email(), password: password() }); const user = auth.currentUser(); navigate(user && !user.bio ? '/onboarding' : '/', { replace: true }); }
     catch (err: any) { setError(err.message || 'Erro ao fazer login'); }
     finally { setLoading(false); }
   };

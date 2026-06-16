@@ -87,6 +87,7 @@ builder.Services.AddScoped(typeof(equivale.Domain.Interfaces.IBaseRepository<equ
     return new equivale.Infrastructure.Repositories.BaseRepository<equivale.Domain.Entities.Post>(ctx);
 });
 builder.Services.AddScoped<equivale.Domain.Interfaces.ICommentRepository, equivale.Infrastructure.Repositories.CommentRepository>();
+builder.Services.AddScoped<equivale.Domain.Interfaces.IChatMessageRepository, equivale.Infrastructure.Repositories.ChatMessageRepository>();
 
 // In-memory cache for DTO enrichment
 builder.Services.AddMemoryCache();

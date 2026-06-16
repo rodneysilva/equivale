@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Status — eqüivale</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',system-ui,sans-serif;}
+body{background:#1B2A1F;color:#FEFAE0;padding:24px;max-width:800px;margin:0 auto;}
+h1{font-family:'Fraunces',Georgia,serif;font-size:1.5rem;margin-bottom:8px;color:#52B788;}
+.sub{font-size:.8rem;opacity:.6;margin-bottom:24px;}
+.card{border:1px solid #2D4A38;border-radius:10px;padding:16px;margin-bottom:12px;}
+.card h3{font-size:.9rem;margin-bottom:4px;}
+.card .status{padding:2px 8px;border-radius:4px;font-size:.7rem;font-weight:600;display:inline-block;}
+.status-pending{background:#2A2410;color:#E9C46A;}
+.status-running{background:#14241A;color:#52B788;}
+.status-done{background:#0A2418;color:#74C69D;}
+.status-fail{background:#2A1408;color:#C1440E;}
+.meta{font-size:.7rem;opacity:.5;margin-top:4px;}
+.log{background:#14241A;border-radius:6px;padding:8px;margin-top:8px;font-size:.7rem;max-height:120px;overflow-y:auto;white-space:pre-wrap;line-height:1.4;}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;}
+.dot-pending{background:#E9C46A;}
+.dot-running{background:#52B788;animation:pulse 1s infinite;}
+.dot-done{background:#74C69D;}
+.dot-fail{background:#C1440E;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.progress{font-size:.7rem;opacity:.6;margin-top:16px;text-align:center;}
+</style>
+</head>
+<body>
+<h1>Agentes em execução — eqüivale</h1>
+<p class=sub>6 tarefas em paralelo. Atualize a página para ver o progresso.</p>
+
+<div class=card>
+ <h3><span class="dot dot-running"></span> Onboarding guiado</h3>
+ <div class="status status-running">running</div>
+ <div class=meta>Wizard de boas-vindas: perfil → explorar → publicar</div>
+ <div class=log>Iniciando...</div>
+</div>
+
+<div class=card>
+ <h3><span class="dot dot-running"></span> Transações MongoDB ACID</h3>
+ <div class="status status-running">running</div>
+ <div class=meta>Atomicidade no FinishTransactionAsync</div>
+ <div class=log>Iniciando...</div>
+</div>
+
+<div class=card>
+ <h3><span class="dot dot-running"></span> Docker/docker-compose</h3>
+ <div class="status status-running">running</div>
+ <div class=meta>docker-compose up sobe MongoDB + backend + frontend</div>
+ <div class=log>Iniciando...</div>
+</div>
+
+<div class=card>
+ <h3><span class="dot dot-running"></span> CreatorName legacy (DtoEnricher)</h3>
+ <div class="status status-running">running</div>
+ <div class=meta>Fallback para comunidades antigas sem CreatorName</div>
+ <div class=log>Iniciando...</div>
+</div>
+
+<div class=card>
+ <h3><span class="dot dot-running"></span> Perfis públicos completos</h3>
+ <div class="status status-running">running</div>
+ <div class=meta>Produtos, comunidades e histórico no perfil público</div>
+ <div class=log>Iniciando...</div>
+</div>
+
+<div class=card>
+ <h3><span class="dot dot-running"></span> Chat comprador/vendedor</h3>
+ <div class="status status-running">running</div>
+ <div class=meta>Mensagens diretas durante transação</div>
+ <div class=log>Iniciando...</div>
+</div>
+
+<p class=progress>Última atualização: <span id=time>--</span> | <a href="javascript:location.reload()" style="color:#52B788">Atualizar</a></p>
+<script>document.getElementById('time').textContent=new Date().toLocaleString('pt-BR')</script>
+</body>
+</html>

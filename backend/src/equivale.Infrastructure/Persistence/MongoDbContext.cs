@@ -1,10 +1,11 @@
 using System.Threading;
-using MongoDB.Bson.Serialization;
-using MongoDB.Driver;
 using equivale.Domain.Entities;
+using equivale.Domain.Interfaces;
 using equivale.Domain.ValueObjects;
 using equivale.Infrastructure.Serialization;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson.Serialization;
+using MongoDB.Driver;
 
 namespace equivale.Infrastructure.Persistence;
 
@@ -19,6 +20,16 @@ public sealed class MongoDbContext
     {
         RegisterValueObjectSerializers();
         Database = mongoClient.GetDatabase(settings.Value.DatabaseName);
+    }
+
+    /// <summary>
+    /// Inicia uma nova sessao transacional no MongoDB.
+    /// Requer que o cluster esteja rodando como replica set (mesmo single-node).
+    /// </summary>
+    public async Task<IDbSession> StartSessionAsync(CancellationToken cancellationToken = default)
+    {
+        var clientSession = await Database.Client.StartSessionAsync(cancellationToken: cancellationToken);
+        return new MongoDbSession(clientSession);
     }
 
     public IMongoCollection<User> Users => Database.GetCollection<User>("users");

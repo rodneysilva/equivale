@@ -1,6 +1,6 @@
 import { type Component, createSignal, onMount, createEffect, on, For, Show } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { Check, X, Clock, Package, Truck, CheckCircle, Star } from 'lucide-solid';
+import { Check, X, Clock, Package, Truck, CheckCircle, Star, MessageCircle } from 'lucide-solid';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -134,6 +134,11 @@ const TransactionsPage: Component = () => {
 
                       {/* Actions */}
                       <div class="flex items-center gap-2 mt-3 flex-wrap">
+                        <Show when={t.status !== 'Cancelled' && t.status !== 'Finished'}>
+                          <button class="text-xs eq-link flex items-center gap-1" onClick={() => navigate(`/transactions/${t.id}/chat`)}>
+                            <MessageCircle size={11} /> Chat
+                          </button>
+                        </Show>
                         {/* Transaction confirmation */}
                         <Show when={t.status !== 'Completed' && t.status !== 'Cancelled'}>
                           <Show when={isBuyer() && (t.status === 'Pending' || t.status === 'ConfirmedBySeller')}>
