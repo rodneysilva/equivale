@@ -99,6 +99,7 @@ pnpm-debug.log*
 test-results/
 playwright-report/
 dev-dist/
+.auth/
 
 # Secrets
 .env.cloudflare

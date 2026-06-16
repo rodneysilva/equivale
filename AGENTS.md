@@ -22,6 +22,15 @@
 
 ---
 
+## Fluxo de Trabalho (regras do dono)
+
+- **SEMPRE commitar e fazer push ao final de cada tarefa** — não esperar o usuário pedir. É a regra padrão.
+- Antes de commitar: rode lint/typecheck/build (ou os testes e2e se tocou no frontend) e verifique `git status` + `git diff`.
+- Mensagens em português, conventional commits (`feat:`, `fix:`, `chore:`, `docs:`, `infra:`, `test:`).
+- Revisões de código (`/local-review`) ficam para o final do dia, em conjunto — não interromper a cada tarefa.
+
+---
+
 ## Arquitetura — Decisões
 
 ### Embed de Nomes (anti N+1)
@@ -147,6 +156,42 @@ OrderPlaced → (vendedor) OrderConfirmed → (vendedor) Shipped → (comprador)
 
 ---
 
+## Testes E2E (Playwright)
+
+Config: `frontend/playwright.config.ts` — 3 projetos:
+- **`setup`** — faz login via API (`POST /api/auth/login`) e salva o cookie `eql_token` em `frontend/e2e/.auth/user.json` (gitignored).
+- **`chromium`** — testes anônimos (sem cookie). Specs em `frontend/e2e/*.spec.ts`.
+- **`chromium-authenticated`** — testes autenticados, reusam o `storageState` salvo. Specs em `frontend/e2e/authenticated/*.spec.ts`.
+
+### Como rodar
+```powershell
+# 1. Suba backend (porta 5053) + frontend (porta 3000) — use .\start.ps1
+# 2. (uma vez) Instale browsers do Playwright
+cd frontend; npx playwright install chromium
+# 3. Rode todos os testes
+cd frontend; npm run test:e2e
+#    ou com UI interativa
+cd frontend; npm run test:e2e:ui
+```
+
+### Pré-requisitos de dados
+- O admin `rodneydocarmo@gmail.com` / `123Mudar!` precisa existir (rodar `POST /api/seed/run` antes).
+- Variáveis de ambiente opcionais (sobrescrevem defaults do setup):
+  - `E2E_API_URL` (default `http://localhost:5053`)
+  - `E2E_USER_EMAIL` / `E2E_USER_PASSWORD`
+
+### Cobertura atual
+- `auth.spec.ts` — login válido/inválido, navegação register→login
+- `marketplace.spec.ts`, `navigation.spec.ts`, `community.spec.ts` — smoke anônimo
+- `authenticated/create-product.spec.ts` — publicar produto e vê-lo na lista
+- `authenticated/purchase.spec.ts` — checkout completo (comprar → ver pedido)
+
+### Padrões
+- Login é feito via **API** no setup (não pela UI) para velocidade; o cookie HttpOnly é reusado.
+- Não use `getByLabel` para o componente `Input` (label e input são siblings sem `for`/`id`) — use `placeholder` ou `data-testid`.
+
+---
+
 ## Próximos Passos (Roadmap)
 
 - [x] Demurrage do EQL (anti-inflação — documentar no BUSINESS.md)
@@ -156,12 +201,12 @@ OrderPlaced → (vendedor) OrderConfirmed → (vendedor) Shipped → (comprador)
 - [x] Docker/docker-compose para onboarding
 - [x] Transações MongoDB ACID para FinishTransactionAsync
 - [x] Limpeza de código morto (src/UI/, componentes órfãos)
+- [x] Testes e2e com Playwright (auth setup, create-product, purchase, login)
 - [ ] Chat comprador/vendedor (já implementado, falta testar)
 - [ ] CreatorName legacy fallback (já implementado, falta testar)
-- [ ] Testes e2e com Playwright
 - [ ] CI/CD pipeline
 
 ---
 
 *Última atualização: 16/06/2026*
-*Commit atual: e3972c4*
+*Commit atual: aaa85cb*
