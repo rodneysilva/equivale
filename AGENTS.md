@@ -44,12 +44,18 @@
 - O proxy `/api` → `http://localhost:5053` resolve CORS automaticamente (o browser vê mesma origem).
 - **NÃO use `@vitejs/plugin-basic-ssl`** — certificado auto-assinado não funciona para PWA no Android.
 
-### PWA no Android
+### PWA no Android + Domínio Próprio
 - Chrome Android **NÃO instala PWA com certificado auto-assinado** (só aceita HTTPS confiável).
-- **Solução:** Cloudflare Tunnel (`cloudflared`). Binário em `C:\Users\rodne\AppData\Local\Temp\kilo\cloudflared.exe`.
-- Comando: `cloudflared.exe tunnel --url http://localhost:3000` → gera URL `https://xxx.trycloudflare.com` com cert válido.
+- **Domínio do projeto:** `app.rodney.website` (Cloudflare gerencia DNS).
+- **Solução:** Cloudflare Named Tunnel. Binário em `C:\Users\rodne\AppData\Local\Temp\kilo\cloudflared.exe`.
+- Comando para iniciar: `cloudflared.exe tunnel run --token <TOKEN>` (token em `.env.cloudflare`, gitignored).
+- Tunnel ID: `7dd51b4b-0537-48ad-ba30-d1981a03fefe` (permanente, não muda).
+- DNS CNAME: `app.rodney.website` → tunnel (configurado via API Cloudflare).
+- IP dinâmico não é problema: cloudflared conecta **outbound** (saída), não precisa de IP fixo nem port forwarding.
 - localtunnel (`npx localtunnel`) é instável e mostra página de senha — **NÃO usar**.
+- `@vitejs/plugin-basic-ssl` (cert auto-assinado) **NÃO funciona para PWA no Android**.
 - Traefik gera SSL via Let's Encrypt, **mas precisa de domínio público**. Para LAN sem domínio, cloudflared é a resposta.
+- `vite.config.ts` tem `server.allowedHosts: true` para aceitar qualquer host (necessário para túneis).
 
 ### CORS
 - Configurado em `appsettings.json` → `AllowedOrigins`.
@@ -146,8 +152,8 @@ OrderPlaced → (vendedor) OrderConfirmed → (vendedor) Shipped → (comprador)
 ## Processos em Execução (Background)
 
 - **Backend:** `dotnet run --urls "http://localhost:5053"` (porta 5053)
-- **Frontend:** `npm run dev` (porta 3000, host 0.0.0.0)
-- **Túnel Cloudflare:** `cloudflared.exe tunnel --url http://localhost:3000` (URL muda a cada reinício)
+- **Frontend:** `npm run dev` (porta 3000, host 0.0.0.0, allowedHosts: true)
+- **Túnel Cloudflare:** `cloudflared.exe tunnel run --token <TOKEN>` → `https://app.rodney.website` (Tunnel ID permanente: 7dd51b4b-0537-48ad-ba30-d1981a03fefe)
 - **MongoDB:** serviço local padrão
 
 ---
