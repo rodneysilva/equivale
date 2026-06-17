@@ -268,7 +268,7 @@ cd frontend; npm run test:e2e:ui
 
 ### Dívida técnica remanescente (registrar)
 - [ ] **Pix on/off-ramp — BLOQUEADO**: exige escolher provedor (Mercado Pago/Gerencianet/Asaas), chaves de API, webhooks e KYC. Não implementar "cego" (seria código morto). Decisão de produto.
-- [ ] Demurrage sem scheduler (Hangfire/Quartz): `ApplyAsync` é acionado manualmente pelo admin (1x/mês)
+- [x] Scheduler de demurrage automático (BackgroundService mensal, restart-safe/idempotente)
 - [ ] `AdminDashboardPage` stat cards com cores ciano/violeta (#0891b2/#7c3aed) sem token (acentos intencionais)
 - [ ] DI duplicada: `IBaseRepository<Post>` registrado como `BaseRepository<Post>` genérico além de `IPostRepository`→`PostRepository` (dois singletons sobre a mesma coleção; inofensivo)
 - [ ] Moderação: comentário pai ocultado deixa replies órfãos como raízes na árvore pública
