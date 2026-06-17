@@ -269,14 +269,16 @@ cd frontend; npm run test:e2e:ui
 ### Dívida técnica remanescente (registrar)
 - [ ] **Pix on/off-ramp — BLOQUEADO**: exige escolher provedor (Mercado Pago/Gerencianet/Asaas), chaves de API, webhooks e KYC. Não implementar "cego" (seria código morto). Decisão de produto.
 - [ ] Demurrage sem scheduler (Hangfire/Quartz): `ApplyAsync` é acionado manualmente pelo admin (1x/mês)
-- [ ] `productsService.getByCategory()` suspeito de órfão (confirmar antes de remover)
 - [ ] `AdminDashboardPage` stat cards com cores ciano/violeta (#0891b2/#7c3aed) sem token (acentos intencionais)
-- [ ] Index único em `users.Email` (a tesouraria é auto-provisionada; corrida no 1º finish pode duplicar)
-- [ ] DI duplicada: `IBaseRepository<Post>` registrado como `BaseRepository<Post>` genérico além de `IPostRepository`→`PostRepository` (dois singletons sobre a mesma coleção)
+- [ ] DI duplicada: `IBaseRepository<Post>` registrado como `BaseRepository<Post>` genérico além de `IPostRepository`→`PostRepository` (dois singletons sobre a mesma coleção; inofensivo)
 - [ ] Moderação: comentário pai ocultado deixa replies órfãos como raízes na árvore pública
-- [ ] ~35 erros TS pré-existentes no frontend (boxShadow/borderColor em CSSProperties, `items` em PaginatedResponse, etc.) — sem gate de typecheck
 - [ ] Chat sem paginação/marcação de leitura; polling fixo 5s sem backoff
 - [ ] `AdminStatsDto` casts long→int (seguro até <2bi)
+
+### Resolvido recentemente
+- [x] Gate de qualidade typecheck: **0 erros TS** (`npm run typecheck`); Solid CSSProperties usa kebab-case
+- [x] Index único em `users.Email` (integridade + previne race da tesouraria)
+- [x] Removido `productsService.getByCategory()` (órfão)
 
 ---
 
