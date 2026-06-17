@@ -1,6 +1,6 @@
 import { type Component, createSignal, createEffect, on, onMount, For, Show } from 'solid-js';
 import { useNavigate, useSearchParams } from '@solidjs/router';
-import { Plus, X } from 'lucide-solid';
+import { Plus, X, BriefcaseBusiness } from 'lucide-solid';
 import { servicesService } from '../services/services.service';
 import { searchService, type FacetResult } from '../services/search.service';
 import ServiceGrid from '../components/marketplace/ServiceGrid';
@@ -23,6 +23,7 @@ const ServicesPage: Component = () => {
   const [tags, setTags] = createSignal<string[]>([]);
   const [page, setPage] = createSignal(1);
   const [totalPages, setTotalPages] = createSignal(1);
+  const [total, setTotal] = createSignal(0);
   const [facets, setFacets] = createSignal<FacetResult>({ categories: {}, tags: {} });
   const [sortBy, setSortBy] = createSignal('recent');
   const [pageSize, setPageSize] = createSignal(24);
@@ -34,6 +35,7 @@ const ServicesPage: Component = () => {
       const res = await servicesService.getAll(page(), pageSize(), category() || undefined, search() || undefined, tags().length > 0 ? tags() : undefined, undefined, communityId, sortBy());
       setServices(res.data);
       setTotalPages(res.totalPages);
+      setTotal(res.total);
     } catch {
       toast.error('Não foi possível carregar os serviços.');
       setServices([]);
@@ -75,14 +77,38 @@ const ServicesPage: Component = () => {
 
   return (
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div class="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 class="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Serviços</h1>
-          <p class="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Encontre talentos e serviços</p>
+      {/* Intro / hero da seção */}
+      <section class="eq-card p-6 sm:p-8 mb-8" style={{ background: 'var(--color-service-bg, var(--color-primary-light))', border: '1px solid var(--color-border)' }}>
+        <div class="flex flex-col lg:flex-row lg:items-center gap-6">
+          <div class="flex-1">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mb-3" style={{ background: 'var(--color-surface)', color: 'var(--color-service)' }}>
+              <BriefcaseBusiness size={12} /> Talentos da comunidade
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-bold eq-display" style={{ color: 'var(--color-text)' }}>
+              Serviços que <span style={{ color: 'var(--color-service)' }}>movimentam</span> a economia
+            </h1>
+            <p class="text-sm sm:text-base mt-3 max-w-2xl" style={{ color: 'var(--color-text-secondary)' }}>
+              Design, aulas, consultoria, reparos e muito mais — pagos em EQL.
+              Contrate pessoas da sua comunidade ou <strong style={{ color: 'var(--color-text)' }}>ofereça seu talento</strong> e receba por ele.
+            </p>
+            <div class="flex flex-wrap gap-2 mt-5">
+              <Button onClick={() => navigate('/services/new')}>
+                <Plus size={16} class="mr-1.5" /> Oferecer serviço
+              </Button>
+            </div>
+          </div>
+          <div class="lg:w-56 shrink-0">
+            <div class="eq-card p-4 text-center">
+              <div class="text-2xl font-bold" style={{ color: 'var(--color-service)' }}>{total()}</div>
+              <div class="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>serviços disponíveis</div>
+            </div>
+          </div>
         </div>
-        <Button onClick={() => navigate('/services/new')}>
-          <Plus size={16} class="mr-1.5" /> Oferecer
-        </Button>
+      </section>
+
+      <div class="mb-4 flex items-center justify-between gap-4">
+        <h2 class="text-lg font-semibold" style={{ color: 'var(--color-text)' }}>Todos os serviços</h2>
+        <span class="eq-badge eq-badge-info">{total()} no total</span>
       </div>
 
       <Show when={activeFilters().length > 0}>
