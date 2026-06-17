@@ -55,6 +55,22 @@ public class CommentRepository : BaseRepository<Comment>, ICommentRepository
             .Set(c => c.HiddenBy, hidden ? hiddenBy : null);
         var result = await _collection.UpdateOneAsync(
             Builders<Comment>.Filter.Eq(c => c.Id, id), update, cancellationToken: cancellationToken);
-        return result.MatchedCount > 0;
+        if (result.MatchedCount == 0) return false;
+
+        // Cascade: ocultar/exibir também os descendentes (replies de replies),
+        // para não deixar replies órfãos visíveis sob um comentário pai oculto.
+        var front = new List<string> { id };
+        while (front.Count > 0)
+        {
+            var children = await _collection
+                .Find(Builders<Comment>.Filter.In(c => c.ParentCommentId, front))
+                .Project(c => c.Id)
+                .ToListAsync(cancellationToken);
+            if (children.Count == 0) break;
+            await _collection.UpdateManyAsync(
+                Builders<Comment>.Filter.In(c => c.Id, children), update, cancellationToken: cancellationToken);
+            front = children;
+        }
+        return true;
     }
 }

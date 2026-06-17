@@ -46,9 +46,9 @@ const AdminDashboardPage: Component = () => {
     if (!s) return [];
     return [
       { label: 'Usuários', value: s.users, icon: Users, link: '/admin/users', color: 'var(--color-primary)' },
-      { label: 'Produtos', value: s.products, icon: Package, link: '/admin/products', color: 'var(--color-accent)' },
-      { label: 'Serviços', value: s.services, icon: Zap, link: '/admin/services', color: '#0891b2' },
-      { label: 'Comunidades', value: s.communities, icon: Globe, link: '/admin/communities', color: '#7c3aed' },
+      { label: 'Produtos', value: s.products, icon: Package, link: '/admin/products', color: 'var(--color-product)' },
+      { label: 'Serviços', value: s.services, icon: Zap, link: '/admin/services', color: 'var(--color-service)' },
+      { label: 'Comunidades', value: s.communities, icon: Globe, link: '/admin/communities', color: 'var(--color-community)' },
       { label: 'Transações', value: s.transactions, icon: TrendingUp, link: '/admin/transactions', color: 'var(--color-success)' },
       { label: 'Concluídas', value: s.completedTransactions, icon: Shield, link: '/admin/transactions', color: 'var(--color-danger)' },
     ];
