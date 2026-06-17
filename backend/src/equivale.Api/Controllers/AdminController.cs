@@ -49,12 +49,12 @@ public class AdminController : ControllerBase
         var finished = finishedStatsTask.Result;
 
         return Ok(new AdminStatsDto(
-            Users: (int)usersTask.Result,
-            Products: (int)productsTask.Result,
-            Services: (int)servicesTask.Result,
-            Communities: (int)communitiesTask.Result,
-            Transactions: (int)transactionsTask.Result,
-            CompletedTransactions: (int)finished.CompletedTransactions,
+            Users: usersTask.Result,
+            Products: productsTask.Result,
+            Services: servicesTask.Result,
+            Communities: communitiesTask.Result,
+            Transactions: transactionsTask.Result,
+            CompletedTransactions: finished.CompletedTransactions,
             TotalFeesCollected: finished.TotalFeesCollected,
             TotalVolume: finished.TotalVolume
         ));
@@ -125,11 +125,11 @@ public class AdminController : ControllerBase
 }
 
 public record AdminStatsDto(
-    int Users,
-    int Products,
-    int Services,
-    int Communities,
-    int Transactions,
-    int CompletedTransactions,
+    long Users,
+    long Products,
+    long Services,
+    long Communities,
+    long Transactions,
+    long CompletedTransactions,
     decimal TotalFeesCollected,
     decimal TotalVolume);

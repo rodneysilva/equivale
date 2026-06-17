@@ -292,13 +292,11 @@ cd frontend; npm run test:e2e:ui
 
 ### Dívida técnica remanescente (registrar)
 - [ ] **Pix on/off-ramp — BLOQUEADO**: exige escolher provedor (Mercado Pago/Gerencianet/Asaas), chaves de API, webhooks e KYC. Não implementar "cego" (seria código morto). Decisão de produto.
-- [x] Scheduler de demurrage automático (BackgroundService mensal, restart-safe/idempotente)
-- [ ] DI duplicada: `IBaseRepository<Post>` registrado como `BaseRepository<Post>` genérico além de `IPostRepository`→`PostRepository` (dois singletons sobre a mesma coleção; inofensivo)
-- [ ] Moderação: comentário pai ocultado deixa replies órfãos como raízes na árvore pública
-- [ ] Chat sem paginação/marcação de leitura; polling fixo 5s sem backoff
-- [ ] `AdminStatsDto` casts long→int (counts long→int; seguro até <2bi)
 
 ### Resolvido recentemente
+- [x] DI: `IBaseRepository<Post>` agora resolve para a mesma instância de `PostRepository` (sem dois singletons sobre a coleção)
+- [x] `AdminStatsDto`: counts em `long` (sem cast/truncagem long→int)
+- [x] Chat: marcação de leitura + badge de não-lidas (Transaction.LastReadAt + GET /unread-chat-count + ChatBell)
 - [x] Moderação: cascade ao ocultar/exibir comentário (propaga aos descendentes — sem replies órfãos)
 - [x] AdminDashboardPage stat cards alinhados às cores de seção (tokens, sem hardcoded)
 - [x] Guards de segurança: JWT secret fail-fast em produção + `SeedController [Authorize(Admin)]`
