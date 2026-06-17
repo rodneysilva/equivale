@@ -107,11 +107,36 @@ C:\Users\rodne\projetos\equivale\
 ```
 
 - **Branches:** `master` (canônica/estável), `dev` (desenvolvimento ativo), `hom` (homologação).
-- **Todo desenvolvimento acontece em `dev`** (pasta `equivale\dev`), exposto via `http://localhost:3000` (frontend) / `:5053` (backend). É o ambiente padrão das conversas.
-- **Merge para `hom`** só quando o usuário solicitar explicitamente (ex.: "faça merge para hom").
-- Para promover dev→hom: `git -C C:\Users\rodne\projetos\equivale\hom merge dev` (ou via PR no GitHub).
+- **Todo desenvolvimento acontece em `dev`** (pasta `equivale\dev`). É o ambiente padrão das conversas.
+- **Merge para `hom`** só quando o usuário solicitar explicitamente (ex.: "faça merge para hom"). Para promover: `git -C C:\Users\rodne\projetos\equivale\hom merge dev` (ou PR).
+
+### Portas por ambiente (coexistem simultaneamente)
+| Ambiente | Backend | Frontend | Acesso |
+|---|---|---|---|
+| **dev** | 5053 | 3000 | `localhost` / IP interno (LAN) |
+| **hom** | 5054 | 3001 | Cloudflare → `https://app.rodney.silva` |
+
+Portas são **env-driven** (não divergem entre branches): `vite.config.ts` lê `VITE_PORT`/`VITE_API_TARGET`; `start.ps1` lê `BACKEND_PORT`/`VITE_PORT` (defaults 5053/3000 = dev).
+
+### Como subir cada ambiente
+```powershell
+# DEV (interno): portas 5053/3000
+cd C:\Users\rodne\projetos\equivale\dev; .\start.ps1
+
+# HOM (cloudflare): portas 5054/3001 + túnel
+cd C:\Users\rodne\projetos\equivale\hom
+$env:BACKEND_PORT=5054; $env:VITE_PORT=3001
+.\start.ps1 -Tunnel
+```
+> Primeira vez no hom: `cd hom\frontend; npm install` e `cd hom\backend; dotnet build`.
+
+### Cloudflare (HOM)
+- Túnel roda via `cloudflared.exe tunnel run --token <TOKEN>` (token em `.env.cloudflare`, presente em dev e hom).
+- **O ingress do túnel (no dashboard Zero Trust) deve apontar para `http://localhost:3001`** (frontend do hom). Se ainda aponta para `:3000`, atualize no dashboard — senão o túnel baterá no dev.
+- Domínio público: `https://app.rodney.silva` (CORS já liberado em appsettings `AllowedOrigins`).
+
 - **CI/CD**: `.github/workflows/ci.yml` roda em push/PR para dev/hom/master — backend (build + `dotnet test`) e frontend (`npm run build`).
-- `restructure.ps1` (raiz): move o workspace para a estrutura acima. Rodar **uma vez**, com o Kilo fechado (o processo do Kilo trava a pasta do workspace).
+- `restructure.ps1` (raiz dev): move o workspace para a estrutura dev/hom. Já executado.
 
 ---
 
