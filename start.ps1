@@ -26,13 +26,13 @@ Start-Sleep 1
 
 # [1/2] Backend (dotnet run na pasta do projeto, via -WorkingDirectory).
 Write-Host "[1/2] Backend API..."
-Start-Process -FilePath "dotnet" -ArgumentList "run --urls http://localhost:$backendPort" -WorkingDirectory "$root\backend\src\equivale.Api" -WindowStyle Minimized
+Start-Process -FilePath "dotnet" -ArgumentList "run --urls http://localhost:$backendPort" -WorkingDirectory "$root\backend\src\equivale.Api" -WindowStyle Hidden
 Start-Sleep 6
 
 # [2/2] Frontend (Vite) - VITE_PORT e VITE_API_TARGET repassados como env do processo.
 Write-Host "[2/2] Frontend Vite..."
 $feCmd = "`$env:VITE_PORT='$frontendPort'; `$env:VITE_API_TARGET='$apiTarget'; npm run dev"
-Start-Process -FilePath "powershell" -ArgumentList @("-NoExit", "-Command", $feCmd) -WorkingDirectory "$root\frontend" -WindowStyle Minimized
+Start-Process -FilePath "powershell" -ArgumentList @("-NoExit", "-Command", $feCmd) -WorkingDirectory "$root\frontend" -WindowStyle Hidden
 Start-Sleep 5
 
 # [3] Tunel Cloudflare (opcional - usado pela HOM).
@@ -46,7 +46,7 @@ if ($Tunnel) {
     if (-not $token) { Write-Host "ERRO: CLOUDFLARE_TUNNEL_TOKEN ausente." -ForegroundColor Red }
     else {
       $cf = "C:\Users\rodne\AppData\Local\Temp\kilo\cloudflared.exe"
-      Start-Process -FilePath $cf -ArgumentList "tunnel run --token $token" -WindowStyle Minimized
+      Start-Process -FilePath $cf -ArgumentList "tunnel run --token $token" -WindowStyle Hidden
     }
   }
 }
