@@ -50,6 +50,12 @@ public sealed class MongoDbContext
         await Transactions.Indexes.CreateOneAsync(
             new CreateIndexModel<Transaction>(statusKeys, new CreateIndexOptions { Background = true }),
             cancellationToken: cancellationToken);
+
+        // Email único: integridade de usuários + previne corrida no auto-provisionamento da tesouraria.
+        var emailKeys = Builders<User>.IndexKeys.Ascending(u => u.Email);
+        await Users.Indexes.CreateOneAsync(
+            new CreateIndexModel<User>(emailKeys, new CreateIndexOptions { Unique = true, Background = true }),
+            cancellationToken: cancellationToken);
     }
 
     private static int _serializersRegistered = 0;

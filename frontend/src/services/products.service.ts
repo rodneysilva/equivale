@@ -55,8 +55,4 @@ export const productsService = {
     return raw.map(mapProduct);
   },
 
-  async getByCategory(category: string): Promise<Product[]> {
-    const raw = await api.get<BackendProductDto[]>(`/products/category/${category}`);
-    return raw.map(mapProduct);
-  },
 };
