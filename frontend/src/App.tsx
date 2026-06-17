@@ -65,6 +65,7 @@ const App: Component = () => {
       <Route path="/products/:id" component={ProductDetailPage} />
       <Route path="/services" component={ServicesPage} />
       <Route path="/services/new" component={CreateServicePage} />
+      <Route path="/services/:id/edit" component={CreateServicePage} />
       <Route path="/services/:id" component={ServiceDetailPage} />
       <Route path="/communities" component={CommunitiesPage} />
       <Route path="/communities/new" component={CreateCommunityPage} />

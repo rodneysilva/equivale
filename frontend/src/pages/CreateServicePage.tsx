@@ -1,5 +1,5 @@
-import { type Component, createEffect, createSignal, onMount } from 'solid-js';
-import { useNavigate } from '@solidjs/router';
+import { type Component, Show, createEffect, createSignal, onMount } from 'solid-js';
+import { useNavigate, useParams } from '@solidjs/router';
 import { ArrowLeft, BriefcaseBusiness } from 'lucide-solid';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -9,13 +9,19 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { servicesService } from '../services/services.service';
 import { communitiesService } from '../services/communities.service';
 import { useAuth } from '../store/auth';
+import { useToast } from '../store/toast';
 import type { CreateServiceDto } from '../types';
 
 const categories = ['Design', 'Programação', 'Marketing', 'Escrita', 'Consultoria', 'Aulas', 'Fotografia', 'Outros'];
 
 const CreateServicePage: Component = () => {
   const navigate = useNavigate();
+  const params = useParams<{ id?: string }>();
   const auth = useAuth();
+  const toast = useToast();
+
+  const editId = () => params.id;
+  const isEdit = () => Boolean(editId());
 
   const [title, setTitle] = createSignal('');
   const [description, setDescription] = createSignal('');
@@ -25,6 +31,7 @@ const CreateServicePage: Component = () => {
   const [location, setLocation] = createSignal('');
   const [imageUrl, setImageUrl] = createSignal('');
   const [loading, setLoading] = createSignal(false);
+  const [loadingService, setLoadingService] = createSignal(false);
   const [error, setError] = createSignal('');
   const [communities, setCommunities] = createSignal<any[]>([]);
   const [communityId, setCommunityId] = createSignal('');
@@ -37,11 +44,31 @@ const CreateServicePage: Component = () => {
   });
 
   onMount(async () => {
-    if (auth.isAuthenticated()) {
+    if (!auth.isAuthenticated()) return;
+    try {
+      const res = await communitiesService.getByMember(auth.currentUser()!.id);
+      setCommunities(res);
+    } catch {}
+
+    if (editId()) {
+      setLoadingService(true);
       try {
-        const res = await communitiesService.getByMember(auth.currentUser()!.id);
-        setCommunities(res);
-      } catch {}
+        const s = await servicesService.getById(editId()!);
+        setTitle(s.title ?? '');
+        setDescription(s.description ?? '');
+        setCategory(s.category ?? categories[0]);
+        setPrice(String(s.price ?? ''));
+        setDuration(s.duration ?? '');
+        setLocation(s.location ?? '');
+        const imgs = s.images?.length ? s.images : (s.imageUrl ? [s.imageUrl] : []);
+        setImageUrl(imgs.join(','));
+        setCommunityId(s.communityId ?? '');
+        setTagsStr(s.tags?.join(', ') ?? '');
+      } catch (err: any) {
+        setError(err?.message || 'Não foi possível carregar o serviço para edição.');
+      } finally {
+        setLoadingService(false);
+      }
     }
   });
 
@@ -77,10 +104,17 @@ const CreateServicePage: Component = () => {
 
     setLoading(true);
     try {
-      await servicesService.create(payload, providerId);
-      navigate('/services');
+      if (isEdit()) {
+        await servicesService.update(editId()!, payload, providerId);
+        toast.success('Serviço atualizado!');
+        navigate(`/services/${editId()}`);
+      } else {
+        await servicesService.create(payload, providerId);
+        toast.success('Serviço publicado!');
+        navigate('/services');
+      }
     } catch (err: any) {
-      setError(err.message || 'Não foi possível publicar o serviço.');
+      setError(err.message || 'Não foi possível salvar o serviço.');
     } finally {
       setLoading(false);
     }
@@ -99,13 +133,18 @@ const CreateServicePage: Component = () => {
             <BriefcaseBusiness size={18} style={{ color: 'var(--color-primary)' }} />
           </div>
           <div>
-            <h1 class="text-2xl font-semibold" style={{ color: 'var(--color-text)' }}>Oferecer serviço</h1>
+            <h1 class="text-2xl font-semibold" style={{ color: 'var(--color-text)' }}>{isEdit() ? 'Editar serviço' : 'Oferecer serviço'}</h1>
             <p class="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
-              Mostre o que você faz e comece a receber EQL por isso.
+              {isEdit() ? 'Atualize as informações do seu serviço.' : 'Mostre o que você faz e comece a receber EQL por isso.'}
             </p>
           </div>
         </div>
 
+        <Show when={loadingService()}>
+          <LoadingSpinner class="py-12" />
+        </Show>
+
+        <Show when={!loadingService()}>
         <form onSubmit={handleSubmit} class="space-y-4">
           {error() && (
             <div class="p-3 rounded text-sm" style={{ background: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: '1px solid var(--color-danger)' }}>
@@ -195,11 +234,12 @@ const CreateServicePage: Component = () => {
 
           <div class="flex gap-2 pt-2">
             <Button type="submit" class="flex-1" disabled={loading()}>
-              {loading() ? <LoadingSpinner size="w-4 h-4" class="!justify-start" /> : 'Publicar serviço'}
+              {loading() ? <LoadingSpinner size="w-4 h-4" class="!justify-start" /> : (isEdit() ? 'Salvar alterações' : 'Publicar serviço')}
             </Button>
             <Button variant="ghost" onClick={() => navigate('/services')}>Cancelar</Button>
           </div>
         </form>
+        </Show>
       </Card>
     </div>
   );
