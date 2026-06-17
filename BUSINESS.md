@@ -119,33 +119,39 @@ Design, Programação, Marketing, Escrita, Consultoria, Aulas, Fotografia, Outro
 ### Taxa de Transação
 - **2%** sobre cada transação finalizada (configurável em `appsettings.json` → `TransactionFee.Percent`)
 - Cobrada do **vendedor**: `sellerPayout = total - fee`
-- Creditada na conta **tesouraria** (`tesouraria@equivale`, criada automaticamente no seed)
+- Creditada na conta **tesouraria** (`tesouraria@equivale.com`, criada automaticamente no seed)
 - Visível no painel admin: `TotalFeesCollected`, `TotalVolume`, taxa média
 - A taxa é aplicada apenas quando a transação chega ao status `Finished`
 
 ## Demurrage do EQL (Anti-inflação)
 
-> **Conceito (fase 1 — documentado, não implementado)**
+> **IMPLEMENTADO** — `DemurrageService` + `DemurrageSchedulerHostedService` + ledger `DemurrageEntry` + endpoints admin.
 
 ### O problema
-Sem um mecanismo de "queima" de moeda, a base monetária do EQL só cresce (saldo inicial no cadastro + circulação sem destruição). Com o tempo, cada EQL vale menos — é a inflação da moeda social.
+Sem um mecanismo de "quebra" de moeda, a base monetária do EQL só cresce (saldo inicial no cadastro + circulação sem destruição). Com o tempo, cada EQL vale menos — é a inflação da moeda social.
 
-### Proposta — Taxa de Retenção (Demurrage)
-- **0,5% ao mês** sobre saldo parado (WalletBalance acima de certo piso, ex: 100 EQL)
-- Aplica-se apenas ao saldo **disponível** (não ao bloqueado em transações)
-- A taxa é "queimada" (destruída), reduzindo a base monetária
-- Incentiva a **circulação**: melhor gastar/trocar EQL do que acumular
+### Taxa de Retenção (Demurrage)
+- **0,5% ao mês** sobre saldo parado (WalletBalance acima do piso).
+- Aplica-se apenas ao saldo **disponível** (não ao bloqueado em transações).
+- A taxa é **queimada** (destruída) via `User.Debit`, reduzindo a base monetária.
+- Incentiva a **circulação**: melhor gastar/trocar EQL do que acumular.
+
+### Implementação
+- **`DemurrageService`**: métodos `PreviewAsync` (simulação) e `ApplyAsync` (execução efetiva), queimando via `User.Debit`.
+- **`DemurrageSchedulerHostedService`** (BackgroundService): aplica automaticamente **1x/mês** no `ScheduleDay` configurado. **Restart-safe/idempotente**: registra a última execução e não re-aplica o mesmo mês após reinício.
+- **Ledger `DemurrageEntry`**: registra cada cobrança para auditoria (usuário, valor, data).
+- **Endpoints admin**: `GET /api/admin/demurrage/preview` (prévia do mês) e `POST /api/admin/demurrage/run` (execução manual).
+
+### Configuração (`appsettings.json` → `Demurrage`)
+- `RatePercent`: **0.5**
+- `Floor`: **100** (piso de isenção)
+- `InactivityDays`: **30**
+- `ScheduleDay`: **1** (dia do mês da execução automática)
 
 ### Gatilhos de isenção
-- Usuários com menos de 100 EQL são isentos (pisão básico)
-- Saldo bloqueado em transações ativas não sofre demurrage
-- Atividade nos últimos 30 dias (comprou ou vendeu) isenta do mês corrente
-
-### Implementação futura
-- Job agendado (Hangfire/Quartz) que roda 1x por mês
-- Itera sobre todos os usuários, calcula demurrage, debita
-- Registra transação de "queima" no ledger para auditoria
-- Notifica usuários antes da cobrança (X EQL serão debitados em Y dias)
+- Usuários com menos de 100 EQL são isentos (piso básico).
+- Saldo bloqueado em transações ativas não sofre demurrage.
+- Atividade nos últimos 30 dias (comprou ou vendeu) isenta do mês corrente.
 
 ### Por que é importante
 - **Moeda social só funciona se circular** — acumular não gera valor

@@ -21,7 +21,7 @@ dotnet build
 cd src/equivale.Api
 dotnet run
 # API: http://localhost:5053
-# Swagger: http://localhost:5053/scalar
+# Swagger: http://localhost:5053/swagger
 ```
 
 ### Frontend
@@ -40,6 +40,44 @@ POST http://localhost:5053/api/seed/run?reset=true&users=20&communities=10&produ
 
 **Usuário admin**: `rodneydocarmo@gmail.com` / `123Mudar!`
 **Usuários de teste**: `@equivale.test` / `Eql@2026`
+
+## Ambientes (dev/hom)
+
+O projeto roda em dois ambientes que **coexistem simultaneamente**, cada um em sua pasta/branch com portas próprias:
+
+| Ambiente | Pasta | Branch | Backend | Frontend | Acesso |
+|---|---|---|---|---|---|
+| **dev** | `equivale\dev` | `dev` | 5053 | 3000 | `localhost` / IP interno (LAN) |
+| **hom** | `equivale\hom` | `hom` | 5054 | 3001 | `https://app.rodney.website` (túnel Cloudflare) |
+
+As portas são **env-driven** (não divergem entre branches): `start.ps1` lê `BACKEND_PORT`/`VITE_PORT` (defaults 5053/3000 = dev) e `vite.config.ts` lê `VITE_PORT`/`VITE_API_TARGET`.
+
+### Como subir
+
+```powershell
+# DEV (interno): portas 5053/3000
+cd C:\Users\rodne\projetos\equivale\dev; .\start.ps1
+
+# HOM (Cloudflare): portas 5054/3001 + túnel
+cd C:\Users\rodne\projetos\equivale\hom
+$env:BACKEND_PORT=5054; $env:VITE_PORT=3001
+.\start.ps1 -Tunnel
+```
+
+> Primeira vez no hom: `cd hom\frontend; npm install` e `cd hom\backend; dotnet build`.
+
+### Auto-start no logon
+Para iniciar o ambiente automaticamente no boot/login, rode (uma vez):
+```powershell
+.\scripts\setup-autostart.ps1
+```
+
+### Pré-requisito HOM: `.env.cloudflare`
+O `start.ps1 -Tunnel` **exige** o arquivo `.env.cloudflare` no host, contendo:
+```
+CLOUDFLARE_TUNNEL_TOKEN=<token>
+```
+Este arquivo é **gitignored** — provisione-o manualmente em todo host de deploy. Sem ele o script aborta no passo do túnel (backend e frontend continuam saudáveis, mas `app.rodney.website` fica offline).
 
 ## Funcionalidades
 
@@ -105,7 +143,7 @@ equivale/
 
 - [BUSINESS.md](BUSINESS.md) — Regras de negócio
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Arquitetura técnica
-- [docs/PLANO_MASTER.md](docs/PLANO_MASTER.md) — Plano de desenvolvimento
+- [docs/archive/PLANO_MASTER.md](docs/archive/PLANO_MASTER.md) — Plano de desenvolvimento (histórico)
 
 ## Licença
 

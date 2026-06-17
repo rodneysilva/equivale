@@ -43,7 +43,7 @@
 ### Modelo de Receita
 - Taxa de **2%** sobre cada transação finalizada (config: `TransactionFee:Percent` em appsettings.json).
 - Cobrada do vendedor: `sellerPayout = total - fee`.
-- Creditada na conta tesouraria: `tesouraria@equivale` (criada automaticamente no seed).
+- Creditada na conta tesouraria: `tesouraria@equivale.com` (criada automaticamente no seed).
 - Visível no painel admin: `TotalFeesCollected`, `TotalVolume`, taxa média.
 
 ### Escrow (Fluxo de Transação)
@@ -75,9 +75,9 @@ OrderPlaced → (vendedor) OrderConfirmed → (vendedor) Shipped → (comprador)
 | GET/PUT/DELETE | `/api/services/{id}` | CRUD serviço |
 | GET/POST | `/api/communities` | Listar/Criar comunidades |
 | GET/PUT/DELETE | `/api/communities/{id}` | CRUD comunidade (DELETE só dono) |
-| POST | `/api/communities/{id}/join` | Entrar (body: `{}`) |
+| POST | `/api/communities/{id}/join` | Entrar (body: `{password?, message?}` — privadas usam password/message) |
 | POST | `/api/communities/{id}/leave` | Sair |
-| GET | `/api/communities/{id}/members` | Lista membros |
+| GET | `/api/communities/{id}/members` | Lista membros (privadas: **403** para não-membros — só criador/moderador/membro/admin) |
 | GET/POST | `/api/communities/{cid}/posts` | Posts da comunidade |
 | GET/POST/DELETE | `/api/communities/{cid}/posts/{pid}/comments` | Comentários aninhados |
 | POST | `/api/transactions` | Criar (comprar/contratar) |
@@ -93,7 +93,19 @@ OrderPlaced → (vendedor) OrderConfirmed → (vendedor) Shipped → (comprador)
 | GET | `/api/search/service-facets` | Facets serviços |
 | GET | `/api/users/{id}/activities` | Feed de atividades |
 | GET | `/api/admin/stats` | Dashboard (com taxas) |
+| GET/POST | `/api/transactions/{id}/chat` | Chat comprador↔vendedor |
+| GET | `/api/notifications` | Lista notificações do usuário |
+| GET | `/api/notifications/unread-count` | Contagem de não-lidas |
+| PUT | `/api/notifications/mark-read` | Marcar como lidas |
+| POST | `/api/files/upload` | Upload de arquivos |
+| GET | `/api/admin/moderation/posts` | Fila de moderação (posts) |
+| PUT | `/api/admin/moderation/posts/{id}/hide` | Ocultar post |
+| PUT | `/api/admin/moderation/posts/{id}/unhide` | Reexibir post |
+| GET | `/api/admin/demurrage/preview` | Prévia do demurrage do mês |
+| POST | `/api/admin/demurrage/run` | Executar demurrage manualmente |
 | POST | `/api/seed/run` | Popular banco |
+
+> Documentação interativa completa: `/swagger` (em Development).
 
 ---
 
@@ -114,7 +126,7 @@ C:\Users\rodne\projetos\equivale\
 | Ambiente | Backend | Frontend | Acesso |
 |---|---|---|---|
 | **dev** | 5053 | 3000 | `localhost` / IP interno (LAN) |
-| **hom** | 5054 | 3001 | Cloudflare → `https://app.rodney.silva` |
+| **hom** | 5054 | 3001 | Cloudflare → `https://app.rodney.website` |
 
 Portas são **env-driven** (não divergem entre branches): `vite.config.ts` lê `VITE_PORT`/`VITE_API_TARGET`; `start.ps1` lê `BACKEND_PORT`/`VITE_PORT` (defaults 5053/3000 = dev).
 
@@ -133,7 +145,7 @@ $env:BACKEND_PORT=5054; $env:VITE_PORT=3001
 ### Cloudflare (HOM)
 - Túnel roda via `cloudflared.exe tunnel run --token <TOKEN>` (token em `.env.cloudflare`, presente em dev e hom).
 - **O ingress do túnel (no dashboard Zero Trust) deve apontar para `http://localhost:3001`** (frontend do hom). Se ainda aponta para `:3000`, atualize no dashboard — senão o túnel baterá no dev.
-- Domínio público: `https://app.rodney.silva` (CORS já liberado em appsettings `AllowedOrigins`).
+- Domínio público: `https://app.rodney.website` (CORS já liberado em appsettings `AllowedOrigins`). *(Nota: `app.rodney.silva` não existe na conta Cloudflare — domínio legado incorreto; sempre usar `.website`.)*
 
 - **CI/CD**: `.github/workflows/ci.yml` roda em push/PR para dev/hom/master — backend (build + `dotnet test`) e frontend (`npm run build`).
 - `restructure.ps1` (raiz dev): move o workspace para a estrutura dev/hom. Já executado.
@@ -184,11 +196,16 @@ $env:BACKEND_PORT=5054; $env:VITE_PORT=3001
 - Vite proxy roteia `/api/*` → `http://localhost:5053` (backend)
 - IP atual da LAN: `192.168.15.63` (DHCP — pode mudar)
 
-### CORS (appsettings.json → AllowedOrigins)
+### CORS (appsettings.json → AllowedOrigins) — 9 origens
 - `http://localhost:3000`
+- `http://localhost:3001`
+- `http://localhost:5173`
+- `http://localhost:5174`
 - `https://localhost:3000`
 - `http://192.168.15.63:3000`
 - `https://192.168.15.63:3000`
+- `https://app.rodney.silva` *(legado; domínio inexistente — manter por referência)*
+- `https://app.rodney.website`
 - Ao mudar o IP (DHCP), adicionar o novo IP aqui.
 
 ---
@@ -229,14 +246,22 @@ cd frontend; npm run test:e2e:ui
   - `E2E_API_URL` (default `http://localhost:5053`)
   - `E2E_USER_EMAIL` / `E2E_USER_PASSWORD`
 
-### Cobertura atual
+### Cobertura atual (~41 testes)
 - `auth.spec.ts` — login válido/inválido, navegação register→login
 - `marketplace.spec.ts`, `navigation.spec.ts`, `community.spec.ts` — smoke anônimo (+ listagem exclui Sold/sem-estoque)
 - `authenticated/create-product.spec.ts` — publicar produto e vê-lo na lista
+- `authenticated/edit-product.spec.ts`, `edit-service.spec.ts` — edição de itens
+- `authenticated/delete-product.spec.ts` — exclusão
+- `authenticated/service-crud.spec.ts` — CRUD de serviços
 - `authenticated/purchase.spec.ts` — checkout completo (comprar → ver pedido)
 - `authenticated/transaction-flow.spec.ts` — fluxo two-actor completo (compra→confirma→envia→entrega→avalia→Finished, com taxa + estoque) e cancel
 - `authenticated/chat.spec.ts` — chat two-actor (buyer envia pela UI, seller responde via API, buyer vê via polling)
 - `authenticated/community-crud.spec.ts`, `onboarding.spec.ts`, `notifications.spec.ts`
+- `authenticated/profile.spec.ts` — perfil
+- `authenticated/wallet.spec.ts` — carteira/saldo
+- `authenticated/admin-pages.spec.ts` — páginas admin
+- `authenticated/moderation.spec.ts` — moderação de conteúdo
+- `authenticated/demurrage.spec.ts` — demurrage (preview/run)
 
 ### Padrões
 - Login é feito via **API** no setup (não pela UI) para velocidade; o cookie HttpOnly é reusado.
@@ -250,7 +275,6 @@ cd frontend; npm run test:e2e:ui
 
 ## Próximos Passos (Roadmap)
 
-- [x] Demurrage do EQL (documentado no BUSINESS.md — implementação pendente)
 - [x] Onboarding guiado (wizard de boas-vindas)
 - [x] Hero da home mais emocional
 - [x] Notificações (badge na navbar)
@@ -264,7 +288,7 @@ cd frontend; npm run test:e2e:ui
 - [x] Testes do fluxo financeiro (17 unit tests do TransactionService + e2e two-actor completo)
 - [x] Bug crítico da tesouraria corrigido (finalização com taxa quebrava o escrow)
 - [x] Moderação de conteúdo (admin: ocultar/excluir posts e comentários)
-- [x] Demurrage real do EQL (serviço + ledger + gatilho admin)
+- [x] Demurrage real do EQL (serviço + ledger + scheduler automático)
 
 ### Dívida técnica remanescente (registrar)
 - [ ] **Pix on/off-ramp — BLOQUEADO**: exige escolher provedor (Mercado Pago/Gerencianet/Asaas), chaves de API, webhooks e KYC. Não implementar "cego" (seria código morto). Decisão de produto.
@@ -273,14 +297,14 @@ cd frontend; npm run test:e2e:ui
 - [ ] DI duplicada: `IBaseRepository<Post>` registrado como `BaseRepository<Post>` genérico além de `IPostRepository`→`PostRepository` (dois singletons sobre a mesma coleção; inofensivo)
 - [ ] Moderação: comentário pai ocultado deixa replies órfãos como raízes na árvore pública
 - [ ] Chat sem paginação/marcação de leitura; polling fixo 5s sem backoff
-- [ ] `AdminStatsDto` casts long→int (seguro até <2bi)
+- [ ] `AdminStatsDto` casts long→int (counts long→int; seguro até <2bi)
 
 ### Resolvido recentemente
+- [x] Guards de segurança: JWT secret fail-fast em produção + `SeedController [Authorize(Admin)]`
 - [x] Gate de qualidade typecheck: **0 erros TS** (`npm run typecheck`); Solid CSSProperties usa kebab-case
 - [x] Index único em `users.Email` (integridade + previne race da tesouraria)
 - [x] Removido `productsService.getByCategory()` (órfão)
 
 ---
 
-*Última atualização: 16/06/2026*
-*Commit atual: 5cec921*
+*Última atualização: 17/06/2026*

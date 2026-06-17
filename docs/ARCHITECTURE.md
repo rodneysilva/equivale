@@ -25,7 +25,7 @@ Casos de uso, DTOs e orquestração.
 - **Services**: AuthService, TransactionService, SeedService, TagGenerator, DtoEnricher
 - **DTOs**: Records imutáveis (ProductDto, TransactionDto, etc.)
 - **Commands/Queries**: CQRS com MediatR (Create, GetAll, GetById por entidade)
-- **Mappings**: AutoMapper (records com ForCtorParam)
+- **Mappings**: AutoMapper (`MappingProfile` mapeia direto da entidade; nomes embutidos)
 
 ### 3. Infrastructure (`equivale.Infrastructure`)
 Acesso a dados e serialização.
@@ -128,13 +128,11 @@ O value object `Email` é serializado como string.
 
 ## AutoMapper com Records
 
-DTOs são `record` (imutáveis). AutoMapper precisa de `ForCtorParam` para parâmetros do construtor que não têm source direta (ex: `BuyerName`, `SellerName` que são enriquecidos via `DtoEnricher`).
+DTOs são `record` (imutáveis). Hoje os nomes relacionados (SellerName, BuyerName, CommunityName, avatares etc.) são **embutidos na própria entidade** no momento da criação (handlers de `CreateProductCommand`/`CreateServiceCommand`), o que evita N+1 nas listagens. Assim, o `MappingProfile` mapeia **direto da entidade para o DTO**, sem `ForCtorParam(_ => null)`.
 
-```csharp
-CreateMap<Transaction, TransactionDto>()
-    .ForCtorParam("BuyerName", opt => opt.MapFrom(_ => (string?)null))
-    .ForCtorParam("SellerName", opt => opt.MapFrom(_ => (string?)null));
-```
+O `DtoEnricher` permanece apenas como **fallback para documentos legados** que ainda não possuem os campos embutidos — preenche os nomes via lookup quando faltam na entidade.
+
+> Histórico: a versão anterior mapeava nomes como `null` no DTO e o `DtoEnricher` era a fonte primária; hoje ele é só legado.
 
 ---
 
@@ -155,22 +153,23 @@ POST /api/seed/run?reset=true&users=20&communities=10&products=80&services=40
 
 ## Gaps Conhecidos e Pendências
 
-### Crítico
-1. **CreateProductPage/CreateServicePage**: páginas existem mas não foram validadas (formulário de criação)
-2. **Editar produto/serviço**: não há página de edição (só toggle de status)
-3. **Upload de imagens**: só aceita URLs (FilesController existe mas não integrado)
-4. **Rota duplicada `/admin`**: `AdminPage` (antiga) e `AdminDashboardPage` (nova) conflitam
+A maior parte dos gaps históricos já foi resolvida. Abaixo o status atual.
 
-### Alto
-5. **Comunidades privadas (frontend)**: endpoints backend existem, frontend não usa o fluxo completo
-6. **Notificações**: não há sistema de notificação (pedidos, aprovações, etc.)
-7. **Chat comprador↔vendedor**: sem comunicação pós-compra
-8. **CreateCommunityPage**: existe mas não foi validada
+### ✅ Resolvidos
+1. **CreateProduct/CreateService**: páginas validadas (formulário de criação funcionando). *(era gap #1)*
+2. **Editar produto/serviço**: edição implementada além do toggle de status. *(era #2)*
+3. **Upload de arquivos**: `FilesController` integrado ao fluxo de criação/edição. *(era #3)*
+5. **Comunidades privadas**: fluxo completo (senha única + solicitação/aprovação) no backend e frontend. *(era #5)*
+6. **Notificações**: sistema de notificações implementado (badge na navbar). *(era #6)*
+7. **Chat comprador↔vendedor**: comunicação pós-compra implementada (two-actor e2e). *(era #7)*
+8. **CreateCommunity**: página validada. *(era #8)*
+10. **Cobertura de testes**: 157 testes unitários + 41 testes e2e (Playwright). *(era #10 — "zero cobertura")*
+11. **CI/CD**: configurado em `.github/workflows/ci.yml` (build + test em push/PR para dev/hom/master). *(era #11)*
+12. **Deploy**: `docker-compose` e Dockerfile existem (onboarding/produção). *(era #12)*
 
-### Médio
-9. **Mobile**: layout não testado sistematicamente
-10. **Testes**: zero cobertura de testes
-11. **CI/CD**: não configurado
-12. **Deploy**: sem Dockerfile ou configuração de produção
-13. **Enums não usados**: `TransactionType.cs`, `CommunityType.cs`, `ProductVisibilityType.cs` no Domain (entity usa strings)
-14. **Tipos duplicados**: `Transaction` e `Review` definidos 2x em types/index.ts
+> Observações menores ainda válidas: #4 (rotas admin) já normalizadas para `AdminDashboardPage`; #9 (mobile) em bom estado mas sem bateria sistemática de testes; #13/#14 (enums órfãos, tipos duplicados) são débito técnico baixo.
+
+### 🔴 Gaps remanescentes reais
+- **Chat sem paginação / marcação de leitura**: o chat funciona, mas não pagina mensagens nem marca como lido; polling fixo de 5s sem backoff.
+- **Moderação — replies órfãos**: ao ocultar/excluir um comentário pai, os replies ficam órfãos e aparecem como raízes na árvore pública.
+- **Pix on/off-ramp — BLOQUEADO**: exige provedor (Mercado Pago/Gerencianet/Asaas), chaves de API, webhooks e KYC. Decisão de produto pendente; não implementar "cego".
