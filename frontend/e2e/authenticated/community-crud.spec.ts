@@ -36,7 +36,7 @@ test.describe('CRUD de comunidade + posts + comentários (autenticado)', () => {
 
     // 2) Redireciona para a lista.
     await expect(page).toHaveURL(/\/communities$/, { timeout: 10_000 });
-    await expect(page.getByRole('heading', { name: 'Comunidades' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Todas as comunidades' })).toBeVisible();
 
     // 3) Entrar no detail (via ID obtido pela API — robusto contra paginação/ordem da grade,
     //    já que a nova comunidade pode não aparecer na 1ª página quando há muitas).

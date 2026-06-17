@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Communities', () => {
   test('should list communities', async ({ page }) => {
     await page.goto('/communities');
-    await expect(page.getByRole('heading', { name: 'Comunidades' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Todas as comunidades' })).toBeVisible();
   });
 
   test('every community has creatorName populated (legacy fallback)', async ({ request }) => {

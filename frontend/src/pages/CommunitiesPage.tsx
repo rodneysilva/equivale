@@ -1,6 +1,6 @@
-import { type Component, createSignal, createEffect } from 'solid-js';
+import { type Component, createSignal, createEffect, Show } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { Plus, Globe, Lock } from 'lucide-solid';
+import { Plus, Globe, Lock, Users, Sparkles, ArrowRight, Search } from 'lucide-solid';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
@@ -11,12 +11,19 @@ import { communitiesService } from '../services/communities.service';
 import { useAuth } from '../store/auth';
 import type { Community } from '../types';
 
+const PAGE_SIZE = 12;
+
 const CommunitiesPage: Component = () => {
   const auth = useAuth();
   const navigate = useNavigate();
 
   const [communities, setCommunities] = createSignal<Community[]>([]);
   const [loading, setLoading] = createSignal(true);
+  const [loadingMore, setLoadingMore] = createSignal(false);
+  const [total, setTotal] = createSignal(0);
+  const [page, setPage] = createSignal(1);
+  const [totalPages, setTotalPages] = createSignal(1);
+  const [query, setQuery] = createSignal('');
   const [showCreate, setShowCreate] = createSignal(false);
   const [creating, setCreating] = createSignal(false);
 
@@ -28,21 +35,36 @@ const CommunitiesPage: Component = () => {
   const [productVisibility, setProductVisibility] = createSignal<'public' | 'members'>('public');
   const [createError, setCreateError] = createSignal('');
 
-  createEffect(() => {
-    loadCommunities();
-  });
-
-  const loadCommunities = async () => {
-    setLoading(true);
+  const loadCommunities = async (reset = true) => {
+    if (reset) setLoading(true); else setLoadingMore(true);
     try {
-      const res = await communitiesService.getAll(1, 12);
-      setCommunities(res.data);
+      const p = reset ? 1 : page() + 1;
+      const res = await communitiesService.getAll(p, PAGE_SIZE);
+      setCommunities(reset ? res.data : (prev) => [...prev, ...res.data]);
+      setTotal(res.total);
+      setTotalPages(res.totalPages);
+      setPage(p);
     } catch {
-      setCommunities([]);
+      if (reset) setCommunities([]);
     } finally {
-      setLoading(false);
+      if (reset) setLoading(false); else setLoadingMore(false);
     }
   };
+
+  createEffect(() => {
+    loadCommunities(true);
+  });
+
+  // Filtra localmente as comunidades já carregadas pela busca.
+  const filtered = () => {
+    const q = query().trim().toLowerCase();
+    if (!q) return communities();
+    return communities().filter(
+      (c) => c.name?.toLowerCase().includes(q) || (c as any).description?.toLowerCase().includes(q),
+    );
+  };
+
+  const hasMore = () => page() < totalPages();
 
   const handleCreate = async (e: Event) => {
     e.preventDefault();
@@ -59,6 +81,7 @@ const CommunitiesPage: Component = () => {
         productVisibility: productVisibility(),
       }, userId);
       setCommunities(prev => [community, ...prev]);
+      setTotal(prev => prev + 1);
       setShowCreate(false);
       setName('');
       setDescription('');
@@ -74,31 +97,101 @@ const CommunitiesPage: Component = () => {
 
   return (
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div class="flex items-center justify-between mb-8">
-        <div>
-          <h1 class="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Comunidades</h1>
-          <p class="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Encontre seu grupo ou crie o seu</p>
+      {/* Intro / hero da seção */}
+      <section class="eq-card p-6 sm:p-8 mb-8" style={{ background: 'var(--color-community-bg, var(--color-primary-light))', border: '1px solid var(--color-border)' }}>
+        <div class="flex flex-col lg:flex-row lg:items-center gap-6">
+          <div class="flex-1">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mb-3" style={{ background: 'var(--color-surface)', color: 'var(--color-community)' }}>
+              <Sparkles size={12} /> Economia solidária
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-bold eq-display" style={{ color: 'var(--color-text)' }}>
+              Comunidades que <span style={{ color: 'var(--color-community)' }}>trocam</span> juntos
+            </h1>
+            <p class="text-sm sm:text-base mt-3 max-w-2xl" style={{ color: 'var(--color-text-secondary)' }}>
+              Entre em grupos que compartilham seus interesses — artesanato, tecnologia, alimentação, bem-estar.
+              Publique produtos e serviços, participe de conversas e movimente a economia local com EQL.
+              Não achou a sua? <strong style={{ color: 'var(--color-text)' }}>Crie uma comunidade</strong> em segundos.
+            </p>
+            <div class="flex flex-wrap gap-2 mt-5">
+              <Show when={auth.isAuthenticated()}>
+                <Button onClick={() => navigate('/communities/new')}>
+                  <Plus size={16} class="mr-1.5" /> Criar comunidade
+                </Button>
+              </Show>
+              <Show when={!auth.isAuthenticated()}>
+                <Button onClick={() => navigate('/register')}>
+                  Entrar na plataforma <ArrowRight size={16} class="ml-1.5" />
+                </Button>
+              </Show>
+              <Button variant="outline" onClick={() => document.getElementById('communities-grid')?.scrollIntoView({ behavior: 'smooth' })}>
+                Explorar comunidades
+              </Button>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3 lg:w-64 shrink-0">
+            <div class="eq-card p-4 text-center">
+              <div class="text-2xl font-bold" style={{ color: 'var(--color-community)' }}>{total()}</div>
+              <div class="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>comunidades ativas</div>
+            </div>
+            <div class="eq-card p-4 text-center">
+              <div class="inline-flex items-center justify-center text-2xl font-bold" style={{ color: 'var(--color-primary)' }}>
+                <Users size={20} class="mr-1" /> {auth.isAuthenticated() ? 'Você' : '—'}
+              </div>
+              <div class="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>faça parte também</div>
+            </div>
+          </div>
         </div>
-        {auth.isAuthenticated() && (
-          <Button onClick={() => navigate('/communities/new')}>
-            <Plus size={16} class="mr-1.5" />
-            Criar comunidade
-          </Button>
-        )}
+      </section>
+
+      {/* Barra de ações: busca + total + criar */}
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+        <div class="flex items-center gap-3">
+          <h2 class="text-lg font-semibold" style={{ color: 'var(--color-text)' }}>Todas as comunidades</h2>
+          <span class="eq-badge eq-badge-info">{total()} no total</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="relative">
+            <Search size={14} class="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-muted)' }} />
+            <input
+              value={query()}
+              onInput={(e) => setQuery(e.currentTarget.value)}
+              placeholder="Buscar comunidade..."
+              class="eq-input pl-8 text-sm w-full sm:w-56"
+            />
+          </div>
+          <Show when={auth.isAuthenticated()}>
+            <Button size="sm" onClick={() => navigate('/communities/new')}>
+              <Plus size={14} class="mr-1" /> Criar
+            </Button>
+          </Show>
+        </div>
       </div>
 
-      {loading() ? (
-        <LoadingSpinner class="py-20" />
-      ) : communities().length === 0 ? (
-        <Card class="p-12 text-center">
-          <p style={{ color: 'var(--color-text-muted)' }}>Nenhuma comunidade encontrada</p>
-          <p class="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>Seja o primeiro a criar uma!</p>
-        </Card>
-      ) : (
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {communities().map(c => <CommunityCard community={c} />)}
-        </div>
-      )}
+      <div id="communities-grid">
+        {loading() ? (
+          <LoadingSpinner class="py-20" />
+        ) : filtered().length === 0 ? (
+          <Card class="p-12 text-center">
+            <p style={{ color: 'var(--color-text-muted)' }}>
+              {query() ? 'Nenhuma comunidade encontrada para sua busca.' : 'Nenhuma comunidade encontrada'}
+            </p>
+            <p class="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>Seja o primeiro a criar uma!</p>
+          </Card>
+        ) : (
+          <>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filtered().map((c) => <CommunityCard community={c} />)}
+            </div>
+            <Show when={hasMore() && !query()}>
+              <div class="flex justify-center mt-8">
+                <Button variant="outline" onClick={() => loadCommunities(false)} disabled={loadingMore()}>
+                  {loadingMore() ? <LoadingSpinner size="w-4 h-4" class="!justify-start" /> : 'Carregar mais comunidades'}
+                </Button>
+              </div>
+            </Show>
+          </>
+        )}
+      </div>
 
       {/* Create community modal */}
       <Modal
