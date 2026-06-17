@@ -199,6 +199,8 @@ cd frontend; npm run test:e2e:ui
 - Login é feito via **API** no setup (não pela UI) para velocidade; o cookie HttpOnly é reusado.
 - Não use `getByLabel` para o componente `Input` (label e input são siblings sem `for`/`id`) — use `placeholder` ou `data-testid`.
 - **workers: 1** (config) — testes autenticados mutam a carteira do admin (Block/Credit); paralelismo causa `ConcurrencyException` por optimistic locking concorrente. Não rodar e2e autenticados em paralelo.
+- **Marcador de teste**: todo dado criado por E2E (comunidade/produto/serviço/post/etc.) deve conter **"E2E"** no nome/título/content. Assim o script de limpeza o reconhece. Não polua o banco de dev com dados sem marcador.
+- **Limpeza pós-teste**: os testes criam dados no banco compartilhado de dev. Após uma sessão de E2E, rode `npm run test:cleanup` (em `frontend/`) — executa `scripts/cleanup-test-data.js` (mongosh) que remove tudo com marcador "E2E" + posts/comentários/transações/chat órfãos. Exige `mongosh` no PATH.
 - **Two-actor**: para fluxos buyer↔seller, crie um contexto API isolado pro seller via `import { request as pwRequest } from 'playwright'`; sellers seed logam com `Eql@2026`.
 
 ---

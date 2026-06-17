@@ -9,12 +9,12 @@ test.describe('Moderação de conteúdo (admin)', () => {
     // 1) Cria comunidade + post (admin é criador/membro).
     const me = await (await api.get('/api/auth/profile')).json();
     const comm = await (await api.post('/api/communities', {
-      data: { name: `Mod Test ${Date.now()}`, description: 'x', creatorId: me.id, type: 'open', productVisibility: 'public' },
+      data: { name: `Mod E2E ${Date.now()}`, description: 'x', creatorId: me.id, type: 'open', productVisibility: 'public' },
     })).json();
     expect(comm.id, 'comunidade criada').toBeTruthy();
 
     const post = await (await api.post(`/api/communities/${comm.id}/posts`, {
-      data: { content: `Post mod ${Date.now()}` },
+      data: { content: `Post mod E2E ${Date.now()}` },
     })).json();
     expect(post.id, 'post criado').toBeTruthy();
 
