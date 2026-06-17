@@ -97,11 +97,29 @@ OrderPlaced → (vendedor) OrderConfirmed → (vendedor) Shipped → (comprador)
 
 ---
 
+## Ambientes (dev / hom) e Fluxo Git
+
+Estrutura de trabalho (após executar `restructure.ps1`):
+```
+C:\Users\rodne\projetos\equivale\
+  dev\   <- working copy principal, branch **dev** (Kilo abre aqui; roda em localhost)
+  hom\   <- git worktree, branch **hom** (destino dos merges dev->hom)
+```
+
+- **Branches:** `master` (canônica/estável), `dev` (desenvolvimento ativo), `hom` (homologação).
+- **Todo desenvolvimento acontece em `dev`** (pasta `equivale\dev`), exposto via `http://localhost:3000` (frontend) / `:5053` (backend). É o ambiente padrão das conversas.
+- **Merge para `hom`** só quando o usuário solicitar explicitamente (ex.: "faça merge para hom").
+- Para promover dev→hom: `git -C C:\Users\rodne\projetos\equivale\hom merge dev` (ou via PR no GitHub).
+- **CI/CD**: `.github/workflows/ci.yml` roda em push/PR para dev/hom/master — backend (build + `dotnet test`) e frontend (`npm run build`).
+- `restructure.ps1` (raiz): move o workspace para a estrutura acima. Rodar **uma vez**, com o Kilo fechado (o processo do Kilo trava a pasta do workspace).
+
+---
+
 ## Identidade Visual
 
 - **Paleta "Economia Solidária":** Verde floresta `#2D6A4F`, Terracota `#BC6C25`, Creme `#FEFAE0`, Dourado `#DDA15E`
-- **Logo:** Símbolo de troca circular + wordmark "eqüivale" (COM TREMA ü) em Fraunces
-- **Fontes:** Fraunces (títulos, `.eq-display`), Inter (corpo)
+- **Logo:** Símbolo de troca circular + wordmark "eqüivale" (COM TREMA ü) em **Inter** (classe `.eq-logo`)
+- **Fontes:** Fraunces (títulos, `.eq-display`), Inter (corpo e wordmark do logo)
 - **Cores de seção:** Community=verde, Product=terracota, Service=dourado
 - Documentação completa: `docs/BRAND.md`
 
