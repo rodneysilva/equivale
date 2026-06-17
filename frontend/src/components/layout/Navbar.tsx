@@ -40,14 +40,13 @@ const Navbar: Component = () => {
       <nav class="fixed top-0 left-0 right-0 z-50 eq-nav">
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
           <div class="flex items-center gap-2 h-14">
-            {/* Logo — desktop navega home, mobile abre menu */}
+            {/* Logo — desktop navega home, mobile abre menu. Wordmark em texto (Inter). */}
             <button onClick={() => {
               if (window.innerWidth < 768) { setMobileOpen(!mobileOpen()); }
               else { go('/'); }
             }} class="flex items-center gap-1.5 shrink-0">
-              <img src="/logo.svg" alt="eqüivale" class="h-10 w-auto hidden sm:block" />
-              <img src="/favicon.svg" alt="eqüivale" class="w-9 h-9 sm:hidden" />
-              <span class="text-lg font-bold tracking-tight eq-display sm:hidden">eqüivale</span>
+              <img src="/favicon.svg" alt="eqüivale" class="w-9 h-9" />
+              <span class="eq-logo text-lg font-bold tracking-tight">eqüivale</span>
             </button>
 
             {/* Search — desktop */}

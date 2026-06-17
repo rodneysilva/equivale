@@ -10,5 +10,5 @@
     <circle cx="18" cy="17.5" r="1.6" fill="#FEFAE0"/>
   </g>
   <!-- Wordmark -->
-  <text x="44" y="31" font-family="'Fraunces', Georgia, serif" font-size="27" font-weight="700" fill="#2D6A4F" letter-spacing="-0.02em">eqüivale</text>
+  <text x="44" y="31" font-family="'Inter', system-ui, -apple-system, sans-serif" font-size="27" font-weight="700" fill="#2D6A4F" letter-spacing="-0.02em">eqüivale</text>
 </svg>

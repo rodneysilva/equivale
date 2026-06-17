@@ -133,6 +133,11 @@
     font-family: 'Fraunces', Georgia, serif;
   }
 
+  /* Wordmark do logo — Inter (sempre, em qualquer viewport/tema). */
+  .eq-logo {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
   .eq-prose {
     line-height: 1.65;
   }
@@ -201,9 +206,9 @@
     color: var(--color-text);
     letter-spacing: -0.01em;
   }
-  .eq-btn-outline:hover { border-color: var(--color-primary); color: var(--color-primary); }
+  .eq-btn-outline:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-light); }
   .dark .eq-btn-outline { border-color: var(--color-border); color: var(--color-text); }
-  .dark .eq-btn-outline:hover { border-color: var(--color-accent); color: var(--color-accent); }
+  .dark .eq-btn-outline:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-light); }
 
   .eq-btn-ghost {
     display: inline-flex;
