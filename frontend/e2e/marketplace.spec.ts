@@ -10,30 +10,29 @@ test.describe('Marketplace', () => {
 
   test('should navigate to products page', async ({ page }) => {
     await page.goto('/');
-    await page.click('text=Produtos');
+    await page.getByRole('navigation').getByRole('button', { name: 'Produtos' }).click();
     await expect(page).toHaveURL(/\/products/);
   });
 
   test('should navigate to services page', async ({ page }) => {
     await page.goto('/');
-    await page.click('text=Serviços');
+    await page.getByRole('navigation').getByRole('button', { name: 'Serviços' }).click();
     await expect(page).toHaveURL(/\/services/);
   });
 
   test('should navigate to communities page', async ({ page }) => {
     await page.goto('/');
-    await page.click('text=Comunidades');
+    await page.getByRole('navigation').getByRole('button', { name: 'Comunidades' }).click();
     await expect(page).toHaveURL(/\/communities/);
   });
 
-  test('should have working search', async ({ page }) => {
+  test('search submits and navigates to /search', async ({ page }) => {
     await page.goto('/');
     const searchInput = page.locator('input[placeholder*="Buscar"]').first();
-    if (await searchInput.isVisible()) {
-      await searchInput.fill('test');
-      await page.keyboard.press('Enter');
-      await expect(page).toHaveURL(/\/search/);
-    }
+    await expect(searchInput, 'campo de busca deve existir na home').toBeVisible();
+    await searchInput.fill('cadeira');
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/\/search/, { timeout: 10_000 });
   });
 
   test('marketplace listing excludes sold / out-of-stock products', async ({ request }) => {
