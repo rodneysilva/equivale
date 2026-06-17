@@ -114,6 +114,8 @@ builder.Services.AddHealthChecks()
 var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>() ?? new JwtSettings();
 if (string.IsNullOrWhiteSpace(jwtSettings.Secret))
 {
+    if (!builder.Environment.IsDevelopment())
+        throw new InvalidOperationException("Jwt:Secret é obrigatório fora do ambiente Development.");
     jwtSettings.Secret = "dev-only-secret-key-change-in-production!!";
 }
 

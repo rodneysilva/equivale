@@ -120,7 +120,7 @@ public class SeedService
 
     private async Task EnsureTreasuryUserAsync(CancellationToken ct)
     {
-        var treasuryEmail = new Email("tesouraria@equivale");
+        var treasuryEmail = new Email("tesouraria@equivale.com");
         var existing = await _userRepository.GetByEmailAsync(treasuryEmail, ct);
         if (existing is not null) return;
         var treasury = new User
