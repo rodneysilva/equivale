@@ -14,8 +14,13 @@ $apiTarget    = "http://localhost:$backendPort"
 Write-Host "=== equivale - iniciando servicos ==="
 Write-Host "Backend port: $backendPort | Frontend port: $frontendPort | API target: $apiTarget"
 
-# Mata instancias antigas destas portas (libera lock de DLL).
-Get-Process equivale.Api -ErrorAction SilentlyContinue | Stop-Process -Force
+# Mata apenas o processo que ouve NA PORTA deste ambiente (nao derruba o outro ambiente).
+function Stop-PortOwner($port) {
+  $owners = Get-NetTCPConnection -State Listen -LocalPort $port -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
+  foreach ($p in $owners) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }
+}
+Stop-PortOwner $backendPort
+Stop-PortOwner $frontendPort
 if ($Tunnel) { Get-Process cloudflared -ErrorAction SilentlyContinue | Stop-Process -Force }
 Start-Sleep 1
 
