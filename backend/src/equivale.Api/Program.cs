@@ -1,6 +1,7 @@
 using System.Threading.RateLimiting;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
+using equivale.Api.BackgroundServices;
 using equivale.Api.Configuration;
 using equivale.Api.Middleware;
 using equivale.Application.Interfaces.Services;
@@ -66,6 +67,9 @@ builder.Services.AddScoped<equivale.Application.Services.IDemurrageService, equi
 builder.Services.AddScoped<equivale.Domain.Interfaces.IUserActivityRepository, equivale.Infrastructure.Repositories.UserActivityRepository>();
 builder.Services.AddScoped<equivale.Application.Interfaces.Services.IUserActivityService, equivale.Application.Services.UserActivityService>();
 builder.Services.AddScoped<equivale.Domain.Interfaces.INotificationRepository, equivale.Infrastructure.Repositories.NotificationRepository>();
+
+// Scheduler em background (demurrage mensal automático)
+builder.Services.AddHostedService<DemurrageSchedulerHostedService>();
 
 // Config options
 builder.Services.Configure<equivale.Application.Configuration.TransactionFeeOptions>(builder.Configuration.GetSection(equivale.Application.Configuration.TransactionFeeOptions.SectionName));

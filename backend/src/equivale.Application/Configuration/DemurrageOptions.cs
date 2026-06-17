@@ -16,4 +16,13 @@ public class DemurrageOptions
 
     /// <summary>Usuários ativos (comprou/vendeu) nos últimos N dias são isentos. Default 30.</summary>
     public int InactivityDays { get; set; } = 30;
+
+    /// <summary>Scheduler habilitado (aplica automaticamente no ScheduleDay). Default true.</summary>
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>Dia do mês em que o demurrage é aplicado automaticamente. Default 1.</summary>
+    public int ScheduleDay { get; set; } = 1;
+
+    /// <summary>Intervalo (horas) entre verificações do scheduler. Default 6.</summary>
+    public int CheckIntervalHours { get; set; } = 6;
 }
