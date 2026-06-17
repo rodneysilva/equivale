@@ -24,4 +24,7 @@ public interface ITransactionRepository : IBaseRepository<Transaction>, ITransac
     /// atividade do demurrage.
     /// </summary>
     Task<bool> WasUserActiveSinceAsync(string userId, DateTime sinceUtc, CancellationToken cancellationToken = default);
+
+    /// <summary>Marca o chat da transação como lido pelo participante (comprador ou vendedor).</summary>
+    Task MarkChatReadAsync(string transactionId, bool isBuyer, DateTime readAtUtc, CancellationToken cancellationToken = default);
 }

@@ -45,4 +45,8 @@ export const chatService = {
     );
     return mapMessage(raw);
   },
+
+  async getUnreadCount(): Promise<number> {
+    return api.get<number>('/transactions/unread-chat-count');
+  },
 };

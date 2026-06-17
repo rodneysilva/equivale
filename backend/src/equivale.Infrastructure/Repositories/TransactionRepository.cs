@@ -88,4 +88,12 @@ public class TransactionRepository : BaseRepository<Transaction>, ITransactionRe
         var count = await _transactions.CountDocumentsAsync(filter, new CountOptions { Limit = 1 }, cancellationToken);
         return count > 0;
     }
+
+    public async Task MarkChatReadAsync(string transactionId, bool isBuyer, DateTime readAtUtc, CancellationToken cancellationToken = default)
+    {
+        var field = isBuyer ? "BuyerLastReadAt" : "SellerLastReadAt";
+        var update = Builders<Transaction>.Update.Set(field, readAtUtc);
+        await _transactions.UpdateOneAsync(
+            Builders<Transaction>.Filter.Eq(t => t.Id, transactionId), update, cancellationToken: cancellationToken);
+    }
 }

@@ -5,6 +5,7 @@ import { useAuth } from '../../store/auth';
 import { isDark, toggleTheme } from '../../store/theme';
 import ThemeToggle from '../ui/ThemeToggle';
 import NotificationBell from './NotificationBell';
+import ChatBell from './ChatBell';
 import SearchBar from './SearchBar';
 
 const Navbar: Component = () => {
@@ -80,6 +81,7 @@ const Navbar: Component = () => {
 
             {/* Right side */}
             <div class="flex items-center gap-1 shrink-0">
+              {auth.isAuthenticated() && <ChatBell />}
               {auth.isAuthenticated() && <NotificationBell />}
               <ThemeToggle />
 

@@ -21,4 +21,14 @@ public class ChatMessageRepository : BaseRepository<ChatMessage>, IChatMessageRe
             .ToListAsync(cancellationToken);
         return items.AsReadOnly();
     }
+
+    public async Task<long> CountUnreadAsync(string userId, IReadOnlyList<ChatUnreadScope> scopes, CancellationToken cancellationToken = default)
+    {
+        if (scopes.Count == 0) return 0;
+        var orFilters = scopes.Select(s => (FilterDefinition<ChatMessage>)Builders<ChatMessage>.Filter.And(
+            Builders<ChatMessage>.Filter.Eq(m => m.TransactionId, s.TransactionId),
+            Builders<ChatMessage>.Filter.Ne(m => m.SenderId, userId),
+            Builders<ChatMessage>.Filter.Gt(m => m.CreatedAt, s.SinceUtc)));
+        return await _collection.CountDocumentsAsync(Builders<ChatMessage>.Filter.Or(orFilters), cancellationToken: cancellationToken);
+    }
 }

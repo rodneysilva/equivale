@@ -52,8 +52,12 @@ public class ChatController : ControllerBase
     {
         try
         {
-            var (_, userId, _) = await ResolveAccessAsync(transactionId, ct);
+            var (tx, userId, _) = await ResolveAccessAsync(transactionId, ct);
             var messages = await _chatRepo.GetByTransactionIdAsync(transactionId, ct);
+
+            // Marca o chat como lido para este participante (atualiza o lastReadAt).
+            var isBuyer = tx.BuyerId == userId;
+            _ = _transactionRepo.MarkChatReadAsync(transactionId, isBuyer, DateTime.UtcNow, ct);
 
             var senderIds = messages.Select(m => m.SenderId).Distinct();
             var users = await _userRepo.GetByIdsAsync(senderIds, ct);
@@ -122,5 +126,20 @@ public class ChatController : ControllerBase
         }
         catch (UnauthorizedAccessException ex) { return StatusCode(403, new { error = ex.Message }); }
         catch (KeyNotFoundException ex) { return NotFound(new { error = ex.Message }); }
+    }
+
+    /// <summary>Total de mensagens de chat não-lidas nas transações do usuário.</summary>
+    [HttpGet("/api/transactions/unread-chat-count")]
+    public async Task<ActionResult<int>> UnreadCount(CancellationToken ct)
+    {
+        var userId = GetUserId();
+        var (txs, _) = await _transactionRepo.GetByUserIdAsync(userId, role: null, page: 1, pageSize: 500, ct);
+        if (txs.Count == 0) return Ok(0);
+
+        var scopes = txs.Select(t => new ChatUnreadScope(
+            t.Id,
+            (t.BuyerId == userId ? t.BuyerLastReadAt : t.SellerLastReadAt) ?? DateTime.MinValue)).ToList();
+        var count = await _chatRepo.CountUnreadAsync(userId, scopes, ct);
+        return Ok((int)count);
     }
 }
