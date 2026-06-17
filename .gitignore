@@ -105,3 +105,7 @@ dev-dist/
 .env.cloudflare
 .env.local
 .env*.local
+
+# Kilo local config
+.kilo/
+
