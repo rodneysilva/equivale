@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { Transaction, PaginatedResponse } from '../types';
+import type { Transaction, PaginatedResponse, Review } from '../types';
 
 export interface BackendTransactionDto {
   id: string;

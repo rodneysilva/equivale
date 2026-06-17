@@ -68,7 +68,7 @@ const ImageUpload: Component<ImageUploadProps> = (props) => {
             </div>
           ))}
         </Show>
-        <label class="w-16 h-16 rounded border-2 border-dashed flex items-center justify-center cursor-pointer hover:border-[var(--color-primary)] transition-colors" style={{ borderColor: 'var(--color-border)' }}>
+        <label class="w-16 h-16 rounded border-2 border-dashed flex items-center justify-center cursor-pointer hover:border-[var(--color-primary)] transition-colors" style={{ 'border-color': 'var(--color-border)' }}>
           <input type="file" accept="image/*" multiple onChange={handleFileChange} class="hidden" disabled={uploading()} />
           <Show when={!uploading()} fallback={<div class="eq-spinner w-4 h-4" />}>
             <Upload size={16} style={{ color: 'var(--color-text-muted)' }} />

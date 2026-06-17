@@ -219,7 +219,7 @@ const CommunityDetailPage: Component = () => {
     setPostsLoading(true);
     try {
       const res = await postsService.getByCommunity(params.id);
-      setPosts(res.items || res.data || []);
+      setPosts(res.data || []);
     } catch { /* ignore */ }
     finally { setPostsLoading(false); }
   };

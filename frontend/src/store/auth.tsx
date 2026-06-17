@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'solid-js';
 import { createSignal, createEffect } from 'solid-js';
-import type { User, RegisterDto, LoginDto } from '../types';
+import type { User, RegisterDto, LoginDto, SocialLink } from '../types';
 import { authService } from '../services/auth.service';
 
 interface AuthState {
@@ -12,7 +12,7 @@ interface AuthState {
   register: (data: RegisterDto) => Promise<void>;
   logout: () => void;
   clearError: () => void;
-  updateProfile: (data: { fullName?: string; bio?: string; avatarUrl?: string }) => Promise<void>;
+  updateProfile: (data: { fullName?: string; bio?: string; avatarUrl?: string; socialLinks?: SocialLink[] }) => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -73,7 +73,7 @@ export function AuthProvider(props: { children: any }) {
     }
   };
 
-  const updateProfile = async (data: { fullName?: string; bio?: string; avatarUrl?: string }) => {
+  const updateProfile = async (data: { fullName?: string; bio?: string; avatarUrl?: string; socialLinks?: SocialLink[] }) => {
     setError(null);
     try {
       const updated = await authService.updateProfile(data);

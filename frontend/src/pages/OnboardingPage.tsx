@@ -22,7 +22,7 @@ const OnboardingPage: Component = () => {
 
   const [communities] = createResource(async (): Promise<Community[]> => {
     const res = await communitiesService.getAll(1, 6);
-    return res.items;
+    return res.data;
   });
 
   const user = () => auth.currentUser();
@@ -63,7 +63,7 @@ const OnboardingPage: Component = () => {
   const finish = () => navigate('/', { replace: true });
 
   return (
-    <div class="max-w-lg mx-auto px-4 py-12" style={{ background: 'var(--color-cream)', minHeight: 'calc(100vh - 7rem)' }}>
+    <div class="max-w-lg mx-auto px-4 py-12" style={{ background: 'var(--color-cream)', 'min-height': 'calc(100vh - 7rem)' }}>
       <div class="mb-8">
         <h1 class="eq-display text-2xl text-center mb-2" style={{ color: 'var(--color-primary)' }}>
           Bem-vindo ao eqüivale

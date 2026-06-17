@@ -45,7 +45,7 @@ const CommunityProductsPage: Component = () => {
 
       {loading() ? <LoadingSpinner class="py-20" /> : (
         <>
-          <ProductGrid products={products()} emptyMessage="Nenhum produto nesta comunidade." />
+          <ProductGrid products={products()} emptyTitle="Nenhum produto nesta comunidade." />
           <Show when={totalPages() > 1}>
             <div class="flex items-center justify-center gap-2 mt-8">
               <button onClick={() => { setPage(p => Math.max(1, p - 1)); loadProducts(); }} disabled={page() <= 1} class="eq-btn eq-btn-outline eq-btn-sm">Anterior</button>

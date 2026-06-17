@@ -137,7 +137,7 @@ const ProfilePage: Component = () => {
                   <button
                     onClick={() => setAvatarUrl(url)}
                     class={`w-full aspect-square rounded-full overflow-hidden transition-all ${avatarUrl() === url ? 'ring-2 ring-offset-2' : ''}`}
-                    style={avatarUrl() === url ? { 'ring-color': 'var(--color-primary)' } : { border: '1px solid var(--color-border)' }}
+                    style={avatarUrl() === url ? { border: '2px solid var(--color-primary)' } : { border: '1px solid var(--color-border)' }}
                   >
                     <img src={url} alt="" class="w-full h-full object-cover" loading="lazy" />
                   </button>

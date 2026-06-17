@@ -100,8 +100,8 @@ const Navbar: Component = () => {
                     {dropdownOpen() && (
                       <>
                         <div class="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
-                        <div class="absolute right-0 top-full mt-1 w-48 eq-card p-1.5 z-50" style={{ boxShadow: 'var(--shadow-md)' }}>
-                          <div class="px-3 py-2 border-b mb-1" style={{ borderColor: 'var(--color-border)' }}>
+                        <div class="absolute right-0 top-full mt-1 w-48 eq-card p-1.5 z-50" style={{ 'box-shadow': 'var(--shadow-md)' }}>
+                          <div class="px-3 py-2 border-b mb-1" style={{ 'border-color': 'var(--color-border)' }}>
                             <p class="text-sm font-semibold truncate eq-text">{auth.currentUser()!.fullName}</p>
                             <p class="text-xs truncate eq-text-muted">{auth.currentUser()!.email}</p>
                           </div>

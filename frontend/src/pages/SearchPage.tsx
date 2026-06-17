@@ -87,7 +87,7 @@ const SearchPage: Component = () => {
   const renderCard = (item: FlatResult) => {
     if (item.type === 'product') return <ProductCard product={{ id: item.id, title: item.title, description: item.description, price: item.price, category: item.category, imageUrl: item.imageUrl, sellerId: '', sellerName: item.authorName, condition: 'new', status: 'available', createdAt: '', updatedAt: '' }} />;
     if (item.type === 'service') return <ServiceCard service={{ id: item.id, title: item.title, description: item.description, price: item.price, category: item.category, providerId: '', providerName: item.authorName, status: 'available', createdAt: '', updatedAt: '' }} />;
-    return <CommunityCard community={{ id: item.id, name: item.title, description: item.description, imageUrl: item.imageUrl, ownerId: '', membersCount: item.membersCount || 0, postsCount: 0, type: 'open', moderators: [], productVisibility: 'public', createdAt: '' }} />;
+    return <CommunityCard community={{ id: item.id, name: item.title, description: item.description, imageUrl: item.imageUrl, ownerId: '', membersCount: item.membersCount || 0, postsCount: 0, type: 'open', createdAt: '' }} />;
   };
 
   const typeCount = (type: string) => allResults().filter(i => i.type === type).length;
@@ -98,7 +98,7 @@ const SearchPage: Component = () => {
       <form onSubmit={handleSubmit} class="mb-6">
         <div class="relative max-w-2xl">
           <input type="text" value={term()} onInput={(e) => setTerm(e.currentTarget.value)} placeholder="Buscar produtos, serviços, comunidades..." class="eq-input pr-10 h-12 text-base" autofocus />
-          <button type="submit" class="absolute right-0 top-0 bottom-0 px-4 flex items-center eq-btn-ghost" style={{ borderLeft: '1px solid var(--color-border)' }}>
+          <button type="submit" class="absolute right-0 top-0 bottom-0 px-4 flex items-center eq-btn-ghost" style={{ 'border-left': '1px solid var(--color-border)' }}>
             <Search size={20} />
           </button>
         </div>

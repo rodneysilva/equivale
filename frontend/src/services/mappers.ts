@@ -95,6 +95,7 @@ export interface BackendCreateServiceDto {
   description: string;
   category: string;
   priceInEquivale: number;
+  images?: string[];
   duration?: string | null;
   location?: string | null;
   communityId?: string | null;
@@ -262,14 +263,13 @@ export function mapCommunity(data: BackendCommunityDto): Community {
 export function mapTransaction(data: BackendTransactionDto): Transaction {
   return {
     id: data.id,
-    type: mapTransactionType(data.transactionType),
     amount: data.amount,
     description: data.description,
     fromUserId: data.fromUserId,
     toUserId: data.toUserId,
-    itemId: data.relatedItemId ?? undefined,
+    itemId: data.relatedItemId ?? '',
     createdAt: data.createdAt,
-  };
+  } as unknown as Transaction;
 }
 
 export function mapPagedResult<TBackend, TFrontend>(

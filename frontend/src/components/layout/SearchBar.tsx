@@ -73,7 +73,7 @@ const SearchBar: Component = () => {
             class="eq-input pr-10 h-10 w-full"
             autocomplete="off"
           />
-          <button type="submit" class="absolute right-0 top-0 bottom-0 px-3 flex items-center eq-btn-ghost" style={{ borderLeft: '1px solid var(--color-border)' }}>
+          <button type="submit" class="absolute right-0 top-0 bottom-0 px-3 flex items-center eq-btn-ghost" style={{ 'border-left': '1px solid var(--color-border)' }}>
             <Search size={18} />
           </button>
         </div>

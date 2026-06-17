@@ -24,7 +24,8 @@ export const usersService = {
   },
 
   async getCommunities(id: string): Promise<UserCommunity[]> {
-    return api.get<BackendUserCommunityDto[]>(`/users/${id}/communities`);
+    const raw = await api.get<BackendUserCommunityDto[]>(`/users/${id}/communities`);
+    return raw.map((c) => ({ ...c, imageUrl: c.imageUrl ?? undefined }));
   },
 
   async updateProfile(data: { fullName?: string; bio?: string; avatarUrl?: string; socialLinks?: SocialLink[] }): Promise<User> {

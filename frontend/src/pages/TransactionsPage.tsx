@@ -39,7 +39,7 @@ const TransactionsPage: Component = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await transactionsService.getAll(tab() === 'all' ? undefined : tab(), 1, 50);
+      const res = await transactionsService.getAll((tab() === 'all' ? undefined : tab()) as 'buyer' | 'seller' | undefined, 1, 50);
       setTransactions(res.data);
     } catch { toast.error('Não foi possível carregar suas transações.'); }
     finally { setLoading(false); }

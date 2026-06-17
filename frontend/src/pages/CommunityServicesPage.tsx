@@ -45,7 +45,7 @@ const CommunityServicesPage: Component = () => {
 
       {loading() ? <LoadingSpinner class="py-20" /> : (
         <>
-          <ServiceGrid services={services()} emptyMessage="Nenhum serviço nesta comunidade." />
+          <ServiceGrid services={services()} emptyTitle="Nenhum serviço nesta comunidade." />
           <Show when={totalPages() > 1}>
             <div class="flex items-center justify-center gap-2 mt-8">
               <button onClick={() => { setPage(p => Math.max(1, p - 1)); loadServices(); }} disabled={page() <= 1} class="eq-btn eq-btn-outline eq-btn-sm">Anterior</button>

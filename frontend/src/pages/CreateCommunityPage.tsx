@@ -46,8 +46,8 @@ const CreateCommunityPage: Component = () => {
       name: name().trim(),
       description: description().trim(),
       imageUrl: imageUrl().trim() || undefined,
-      type,
-      productVisibility,
+      type: type(),
+      productVisibility: productVisibility(),
     };
 
     setLoading(true);
